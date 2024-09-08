@@ -1,0 +1,55 @@
+FT-Wiki:
+  type: article
+  title: Fourier Transform
+  author: Wikipedia
+  url: 
+    value: https://en.wikipedia.org/wiki/Fourier_transform
+    date: 2024-09-08
+
+FFT-Wiki:
+  type: article
+  title: Fast Fourier Transform
+  author: Wikipedia
+  url: 
+    value: https://en.wikipedia.org/wiki/Fast_fourier_transform
+    date: 2024-09-08
+
+Acerola-Vid:
+  type: video
+  title: I Tried Simulating The Entire Ocean
+  author: Acerola
+  url: 
+    value: https://www.youtube.com/watch?v=yPfagLeUa7k
+    date: 2024-09-08
+
+OW-Spectra:
+  type: article
+  title: Ocean-wave Spectra
+  author: wikiwaves
+  url: 
+    value: https://wikiwaves.org/Ocean-Wave_Spectra
+    date: 2024-09-08
+
+Halvorsen:
+  type: web
+  title: Strange Attractors
+  author: Dynamic Mathematics
+  url: 
+    value: https://www.dynamicmath.xyz/strange-attractors/
+    date: 2024-06-14
+
+TJessendorf:
+  type: report
+  title: Simulating Ocean Water
+  author: Jerry Tessendorf
+  url:
+    value: https://people.computing.clemson.edu/~jtessen/reports/papers_files/coursenotes2004.pdf
+    date: 2024-09-08
+
+SimSlides:
+  type: web
+  title: An introduction to realistic ocean rendering through FFT
+  author: Fabio Suriano
+  url:
+    value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025#1
+    date: 2024-09-08
