@@ -6,6 +6,7 @@
 #set heading(numbering: "1.")
 #set text(12pt)
 #set enum(numbering: "1.1", full: true)
+#set list(marker: ([•], [‣],[--]))
 
 // Title Page
 #page(numbering: none, [
@@ -27,7 +28,7 @@
 = Analysis
 
 == Prelude
-
+\/\/ Fill Later
 == Client
 
 === Introduction
@@ -35,33 +36,70 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 === Questions
 + Functionality
-  + "What specific ocean phenomena need to be simulated? (e.g. waves, foam, spray, currents)"
-  + "What parameters of the simulation need to be configurable?"
-  + "Does there need to be an accompanying GUI?"
+  + "what specific ocean phenomena need to be simulated? (e.g. waves, foam, spray, currents)"
+  + "what parameters of the simulation need to be configurable?"
+  + "does there need to be an accompanying GUI?"
 + Visuals
-  + "Do I need to implement an atmosphere / skybox?"
-  + "Do I need to implement a PBR water shader?"
-  + "Do I need to implement caustics, reflections, or other light-related phenomena?"
+  + "do i need to implement an atmosphere / skybox?"
+  + "do i need to implement a pbr water shader?"
+  + "do i need to implement caustics, reflections, or other light-related phenomena?"
 + Technologies
-  + "Are there any limitations due to existing technology?"
-  + "Does this need to interop with existing shader code?"
+  + "are there any limitations due to existing technology?"
+  + "does this need to interop with existing shader code?"
 + Scope
-  + "Are there limitations due to the target device(s)?"
-  + ""
+  + "are there limitations due to the target device(s)?"
+  + "are there other performance intesive systems in place?"
+  + "is the product targeted to low / mid / high end systems?"
 
-=== Notes
 
+#pagebreak()
+=== Interview Notes
++ Functionality
+  + it should simulate waves in all real world conditions and be able to generate foam, if possible simulating other phenomena would be nice.
+  + all necessary parameters in order to simulate real world conditions, ability to control tile size / individual wave quantity
+  + accompanying GUI to control parameters and tile size. GUI should also output debug information and performance statistics
++ Visuals
+  + a basic skybox would be nice, if possible include an atmosphere shader
+  + implement a PBR water shader, include a microfacet BRDF
+  + caustics are out of scope, implement approximate subsurface scattering, use beckmann distribution in combination with brdf to simulate reflections
++ Technologies
+  + client has not started technical implementation of project, so is not beholden to an existing technical stack
+  + see response 3.1
++ Scope
+  + the game is intended to run on both x86 and arm64 devices
+  + see response 3.1
+  + the game is targeted towards mid to high end systems, however it would be ideal for the solution to be performant on lower end hardware 
+
+#pagebreak()
 == Research
 === Technologies
-- mention naga for cross compilation
-- can interop with any major engine
-- wgpu and rust can work directly w/ c / cpp bindings
+- Rust:
+  - Fast, memory efficient programming language
+- WGPU:
+  - Graphics library
+- Rust GPU:
+  - (Rust as a) shader language
+- Winit:
+  - cross platform window creation and event loop management library
+- Dear IMGUI
+  - Bloat-free GUI library with minimal dependencies
+- Naga:
+  - Shader translation library
+- GLAM:
+  - Linear algebra library
+- Nix:
+  - Declarative development shell
+
 === Algorithms
+- DFT
+- FFT
 === Formulae
+- 
 === Prototyping
 prototyped using tech stack for basic project
 https://github.com/CmrCrabs/chaotic-attractors
 
+#pagebreak()
 == Objectives
 
 #pagebreak()
