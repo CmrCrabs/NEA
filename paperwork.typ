@@ -2,7 +2,10 @@
 #set par(justify: true)
 #show link: underline
 #set page(numbering: "1", margin: 2cm) 
-#set text(hyphenate: false)
+#set text(
+  hyphenate: false,
+  //font: "EB Garamond"
+)
 #set heading(numbering: "1.")
 #set text(12pt)
 #set enum(numbering: "1.1", full: true)
@@ -88,13 +91,34 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 - GLAM:
   - Linear algebra library
 - Nix:
-  - Declarative development shell
+  - Declarative, reproducible development environment
 
 === Algorithms
-- DFT
-- FFT
+- Discrete Fourier Transform @FT-Wiki
+- Fast Fourier Transform (Cooley-Tukey) @FFT-Wiki
+
+#pagebreak()
 === Formulae
-- 
+\
+*Fresnel Specular Reflection (Schlicks Approximation)* []
+  - $R(theta) = R_0 + (1 - R_0)(1 - cos(theta))^5$
+  - $R_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
+  - where $theta$ is the angle between the direction from which incident light is coming and the normal
+\
+*Dual JONSWAP (4 layered frequency bands) @OW-Spectra*
+  - 
+\
+*Microfacet BRDF / BSDFSFSFSF*
+  - 
+\
+*Beckmann Distribution*
+  - 
+\
+diffuse atmospheric skylight
+  - 
+\
+
+
 === Prototyping
 prototyped using tech stack for basic project
 https://github.com/CmrCrabs/chaotic-attractors

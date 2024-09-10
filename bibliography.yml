@@ -53,3 +53,11 @@ SimSlides:
   url:
     value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025#1
     date: 2024-09-08
+
+Fresnel:
+  type: article
+  title: Schlick's Approximation
+  author: Wikipedia
+  url: 
+    value: https://en.wikipedia.org/wiki/Schlick's_approximation
+    date: 2024-10-08
