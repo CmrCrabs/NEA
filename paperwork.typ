@@ -10,6 +10,8 @@
 #set text(12pt)
 #set enum(numbering: "1.1", full: true)
 #set list(marker: ([•], [‣],[--]))
+#set math.mat(delim: "[");
+#set math.vec(delim: "[");
 
 // Title Page
 #page(numbering: none, [
@@ -84,7 +86,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - (Rust as a) shader language
 - Winit:
   - cross platform window creation and event loop management library
-- Dear IMGUI
+- Dear ImGui
   - Bloat-free GUI library with minimal dependencies
 - Naga:
   - Shader translation library
@@ -99,22 +101,31 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 #pagebreak()
 === Formulae
+
+*Fresnel Specular Reflection (Schlicks Approximation)*  @Schlicks @Blinn-Phong
+  $ R(theta) = R_0 + (1 - R_0)(1 - cos theta)^5 $
+  
+  $ R_0 = ((n_1 - n_2) / (n_1 + n_2))^2 $
+  - $theta$ is the angle between the incident light and the halfway vector @Blinn-Phong
+  - $n_1$ & $n_2$ are the refractive indices of the two media @Schlicks
 \
-*Fresnel Specular Reflection (Schlicks Approximation)* []
-  - $R(theta) = R_0 + (1 - R_0)(1 - cos(theta))^5$
-  - $R_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
-  - where $theta$ is the angle between the direction from which incident light is coming and the normal
+*Beckmann Distribution* @Specular-Highlight
+  $ k_s = (exp((-tan^2 alpha) / m)) / (pi m^2 cos^4 alpha) $
+  $ alpha = arccos(N dot H) $
+  - where $m$ is the $"RMS"$ slope of the surface microfacets
+
 \
+
 *Dual JONSWAP (4 layered frequency bands) @OW-Spectra*
   - 
 \
-*Microfacet BRDF / BSDFSFSFSF*
+*Microfacet BRDF*
   - 
 \
-*Beckmann Distribution*
+*(Approximate) Subsurface Scattering*
   - 
 \
-diffuse atmospheric skylight
+*Diffuse atmospheric skylight*
   - 
 \
 
