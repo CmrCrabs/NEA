@@ -14,7 +14,7 @@ FFT-Wiki:
     value: https://en.wikipedia.org/wiki/Fast_fourier_transform
     date: 2024-09-08
 
-Acerola-Vid:
+Acerola-FFT:
   type: video
   title: I Tried Simulating The Entire Ocean
   author: Acerola
@@ -60,7 +60,7 @@ Schlicks:
   author: Wikipedia
   url: 
     value: https://en.wikipedia.org/wiki/Schlick's_approximation
-    date: 2024-10-08
+    date: 2024-09-10
 
 Blinn-Phong:
   type: article
@@ -68,7 +68,7 @@ Blinn-Phong:
   author: Wikipedia
   url: 
     value: https://en.wikipedia.org/wiki/Blinn-Phong_reflection_model
-    date: 2024-11-08
+    date: 2024-09-11
 
 Specular-Highlight:
   type: article
@@ -76,4 +76,46 @@ Specular-Highlight:
   author: Wikipedia
   url: 
     value: https://en.wikipedia.org/wiki/Specular_highlight
-    date: 2024-11-08
+    date: 2024-09-11
+
+Acerola-SOS:
+  type: video
+  title: How Games Fake Water
+  author: Acerola
+  url: 
+    value: https://youtu.be/PH9q0HNBjT4
+    date: 2024-09-13
+
+JONSWAP-2:
+  type: article
+  title: The JONSWAP spectra in the wave-frequency domain
+  author: CodeCogs
+  url: 
+    value: https://www.codecogs.com/library/engineering/fluid_mechanics/waves/spectra/jonswap.php
+    date: 2024-09-13
+
+Jump-Trajectory:
+  type: video
+  title: Ocean waves simulation with Fast Fourier transform 
+  author: Jump Trajectory
+  url:
+    value: https://youtu.be/kGEqaX4Y4bQ
+    date: 2024-09-13
+
+Atlas-Water:
+  type: conference
+  author: ["Mark Mihelich", "Tim Tcheblokov"]
+  title: Wakes, Explosions and Lighting:Interactive Water Simulation in Atlas
+  url: 
+    value: https://www.youtube.com/watch?v=Dqld965-Vv0
+    date: 2024-09-13
+
+Atlas-Water-Slides:
+  type: misc
+  author: ["Mark Mihelich", "Tim Tcheblokov"]
+  title: Wakes, Explosions and Lighting:Interactive Water Simulation in Atlas
+  url: 
+    value: https://gpuopen.com/gdc-presentations/2019/gdc-2019-agtd6-interactive-water-simulation-in-atlas.pdf
+    date: 2024-09-13
+
+

@@ -18,11 +18,11 @@
   #v(2fr)
   #align(center, [
     //#image("/Assets/Paperboat.svg", width: 60%)
-    #text(24pt, weight: 700, [NEA])
+    #text(23pt, weight: 700, [NEA])
     #v(0.1fr)
-    #text(24pt, weight: 700, [Physically Based Ocean Simulation])
+    #text(23pt, weight: 700, [Real-Time Physically Based Ocean Simulation])
     #v(0.1fr)
-    #text(16pt, weight: 500, [Zayaan Azam])
+    #text(20pt, weight: 500, [Zayaan Azam])
   ])
   #v(2fr)
 ])
@@ -95,44 +95,84 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 - Nix:
   - Declarative, reproducible development environment
 
-=== Algorithms
-- Discrete Fourier Transform @FT-Wiki
-- Fast Fourier Transform (Cooley-Tukey) @FFT-Wiki
-
 #pagebreak()
-=== Formulae
+=== Algorithms & Formulae
+*Fast Fourier Transform (Cooley-Tukey)* @FFT-Wiki
+- \/\/ Currently do not have the prerequisite math to properly understand this - waiting until ive learnt roots of unity
+\
 
-*Fresnel Specular Reflection (Schlicks Approximation)*  @Schlicks @Blinn-Phong
+*JONSWAP (Joint North Sea Wave Observation Project) Spectrum* @OW-Spectra @JONSWAP-2
+  $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
+  $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
+  $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
+  where
+  - $alpha$ is the intensity of the spectra
+  - $beta = 5/4$, a "shape factor", rarely changed @JONSWAP-2
+  - $gamma = 3.3$
+  - $sigma = cases(
+      0.07 "if" omega <= omega_p,
+      0.09 "if" omega > omega_p,
+    )$ @OW-Spectra
+  - $omega$ is the wave frequency ($(2pi) / s$) @JONSWAP-2
+  - $omega_p$ is the peak wave frequency
+  - $omega_p = 22( (g^2) / (U_10 F))^(1/3) $
+  - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @JONSWAP-2
+  - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra
+  - $g$ is gravity
+\
+*Fresnel Specular Reflection (Schlick's Approximation)*  @Schlicks @Blinn-Phong
   $ R(theta) = R_0 + (1 - R_0)(1 - cos theta)^5 $
-  
-  $ R_0 = ((n_1 - n_2) / (n_1 + n_2))^2 $
+  where 
+  - $R_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
   - $theta$ is the angle between the incident light and the halfway vector @Blinn-Phong
   - $n_1$ & $n_2$ are the refractive indices of the two media @Schlicks
 \
 *Beckmann Distribution* @Specular-Highlight
   $ k_s = (exp((-tan^2 alpha) / m)) / (pi m^2 cos^4 alpha) $
-  $ alpha = arccos(N dot H) $
-  - where $m$ is the $"RMS"$ slope of the surface microfacets
-
+  where
+  - $alpha = arccos(N dot H)$
+  - $m$ is the $"RMS"$ slope of the surface microfacets
 \
 
-*Dual JONSWAP (4 layered frequency bands) @OW-Spectra*
-  - 
-\
 *Microfacet BRDF*
   - 
 \
-*(Approximate) Subsurface Scattering*
+*(Approximate) Subsurface Scattering (Atlas Paper)*
   - 
 \
-*Diffuse atmospheric skylight*
+*Distance fog post processing*
+  - 
+\
+*attenuate distance fog based based on height*
+  - 
+\
+*sample hdri skybox for reflections, multiple yiwth schlicks*
+  - 
+\
+*jacobian*
   - 
 \
 
+*exponential decay*
+  - 
+\
 
+*Asynchronous GPU Readback*
+- 
+\
+
+
+#pagebreak()
 === Prototyping
-prototyped using tech stack for basic project
-https://github.com/CmrCrabs/chaotic-attractors
+A project was undertook in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller.
+\
+#figure(
+  image("assets/chaotic_attractor.png", width: 50%),
+  caption: [
+    Found at https://github.com/CmrCrabs/chaotic-attractors
+  ],
+)
+
 
 #pagebreak()
 == Objectives
