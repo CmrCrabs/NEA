@@ -118,4 +118,20 @@ Atlas-Water-Slides:
     value: https://gpuopen.com/gdc-presentations/2019/gdc-2019-agtd6-interactive-water-simulation-in-atlas.pdf
     date: 2024-09-13
 
+Sea-of-Thieves:
+  type: conference
+  title: The Technical Art of Sea of Thieves
+  author: siggraph
+  url: 
+    value: https://history.siggraph.org/learning/the-technical-art-of-sea-of-thieves/
+    date: 2024-09-14
+
+Exponential-Decay:
+  type: article
+  title: Exponential Decay
+  author: Wikipedia
+  url: 
+    value: https://en.wikipedia.org/wiki/Exponential_decay
+    date: 2024-09-11
+
 
