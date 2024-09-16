@@ -21,14 +21,24 @@
     #text(23pt, weight: 700, [NEA])
     #v(0.1fr)
     #text(23pt, weight: 700, [Real-Time, Physically Based Ocean Simulation & Rendering])
-    #v(0.1fr)
+    #v(1.1fr)
     #text(20pt, weight: 500, [Zayaan Azam])
   ])
   #v(2fr)
 ])
 
+// TODOTODOTODOTODO
+// EXPLAIN WHAT EACH FUNCTION DOES
+// COLLAPSE PBR / NON PBR
+// INCLUDE ENV. REFLECTIONS TERM FROM BOTH ACEROLA AND ATLAS PAPER
+// EXPAND UPON POST PROCESSING EFFECTS
+// WRITE CONSIDERATIONS
+// WRITE OBJECTIVES
+// CHANGE HEADING STRUCTURE TO USE PROPER HEADINGS
+
+
 // Contents Page
-#page(outline(indent: true))
+#page(outline(indent: true, depth: 3))
 
 = Analysis
 
@@ -56,6 +66,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   + "are there other performance intesive systems in place?"
   + "is the product targeted to low / mid / high end systems?"
 
+==== skibidi
 
 #pagebreak()
 === Interview Notes
@@ -138,7 +149,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 === Non-PBR Lighting Algorithms & Formulae
 
 *Rendering Equation* @Atlas-Water @Acerola-FFT @Acerola-SOS
-  $ L_"eye" = (1 - F) L_"scatter" + L_"specular" + F L_"env_reflected" $
+  $ L_"eye" = (1 - F) L_"scatter" + F(L_"specular" + L_"env_reflected") $
   where
   - $F$ is the fresnel reflectance
   - $L_"scatter"$ (atlas subs approx) (includes ambient)
@@ -220,16 +231,6 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 *Geometric Attenuation Function, Smith GGX (Unfinished)*
   - 
-\
-
-*Fresnel Reflectance (Schlick's Approximation )*  @Acerola-SOS @Blinn-Phong @Schlicks
-  $ F(theta) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
-  where 
-  - $F_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
-  - $theta$ is the angle between the incident light and the halfway vector @Blinn-Phong
-  - $n_1$ & $n_2$ are the refractive indices of the two media @Schlicks
-  - $arrow(N)$ is the normal vector
-  - $arrow(V)$ is the view vector
 \
 
 *Specular Reflection* @Atlas-Water
