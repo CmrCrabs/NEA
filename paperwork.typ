@@ -27,15 +27,10 @@
   #v(2fr)
 ])
 
-// TODOTODOTODOTODO
-// EXPLAIN WHAT EACH FUNCTION DOES
-// COLLAPSE PBR / NON PBR
-// INCLUDE ENV. REFLECTIONS TERM FROM BOTH ACEROLA AND ATLAS PAPER
+// TODO: 
 // EXPAND UPON POST PROCESSING EFFECTS
-// WRITE CONSIDERATIONS
+// DETERMINE WHAT LAMBDA FUNCTION IS FOR SCATTER
 // WRITE OBJECTIVES
-// CHANGE HEADING STRUCTURE TO USE PROPER HEADINGS
-
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -65,8 +60,6 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   + "are there limitations due to the target device(s)?"
   + "are there other performance intesive systems in place?"
   + "is the product targeted to low / mid / high end systems?"
-
-==== skibidi
 
 #pagebreak()
 === Interview Notes
@@ -107,12 +100,9 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - Declarative, reproducible development environment
 
 === Simulation Algorithms & Formulae
-*Fast Fourier Transform (Cooley-Tukey)* @FFT-Wiki
-- Currently do not have the prerequisite math to properly understand this - waiting until ive learnt roots of unity
-- this is where most of the complexity of the project comes from
-\
 
-*JONSWAP (Joint North Sea Wave Observation Project) Spectrum* @OW-Spectra @JONSWAP-2
+==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2
+The JONSWAP frequency spectrum is a more parameterised version of the Philips Spectrum @JTessendorf that simulates an ocean that is not fully developed. The increase in parameters allows simulating a wider breadth of real world conditions. It is used to generate the initial waves that are transformed with time by the FFT.
   $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
@@ -132,33 +122,48 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - $g$ is gravity
 \
 
-*Jacobian*
-  - \/\/ Similar to the FFT, I need more math knowledge to properly understand how to do this - waiting until Ive completed all of matrices.
-  - need to find the jacobian determinant of the transform
-  - of water displacement vectors
-  - and then offset to bias negative results
+==== Fast Fourier Transform (Cooley-Tukey) @FFT-Wiki
+The (inverse) FFT is responsible for transforming the generated signal from JONSWAP into a single usable wave, whose vectors are then encoded into the RGB channels of a texture, and read by the vertex shader in order to displace the geometry.
+  $ "will write up after learning roots of unity & partial derivatives" $
 \
 
-*Exponential Decay* @Exponential-Decay
+
+
+==== The Jacobian @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
+The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the transformation goes negative. We can then offset this result to bias the results and generate more foam.  
+
+  $ "Will write up once I better understand partial derivatives." $
+\
+
+==== Exponential Decay @Exponential-Decay @Atlas-Water @Acerola-FFT @JTessendorf
+In order to dissipate the stored foam over time instead of instantaneously, we apply an exponential decay function to each pixel in the texture. This may potentially be replaced by a gaussian blur and fade pass depending on results produced.
   $ N(t) = N_0 e ^(-lambda t) $ 
   where 
   - $N_0$ is the initial quantity
   - $lambda$ is the rate constant
 \
 
-=== Non-PBR Lighting Algorithms & Formulae
+=== Lighting Algorithms & Formulae
 
-*Rendering Equation* @Atlas-Water @Acerola-FFT @Acerola-SOS
-  $ L_"eye" = (1 - F) L_"scatter" + F(L_"specular" + L_"env_reflected") $
+==== Rendering Equation @Atlas-Water @Acerola-FFT @Acerola-SOS
+This abstract equation models how a light ray incoming to a viewer is "formed" (in the context of this simulation). Due to there only being a single light source (the sun), and subsurface scattering @Atlas-Water allowing us to replace the $L_"diffuse"$ and $L_"ambient"$ terms, we are able to take an analytical approach to solving this.
+
+To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  $ L_"eye" = (1 - F) L_"scatter" + F(L_"specular" + L_"env_reflected") $
   where
-  - $F$ is the fresnel reflectance
-  - $L_"scatter"$ (atlas subs approx) (includes ambient)
-  - $L_"specular"$ either atlas approx or blinn-phong
-  - $L_"env_reflected"$ cubemap reflections per acerola or atlas 
-  - multiply specular and env. reflections by fresnel
-  to include surface foam, _lerp_ between the foam color and $L_"eye"$ based on foam density. Increase the roughness in areas covered with foam for $L_"specular"$.
+  - $F$ is the fresnel reflectance term
+  - $L_"scatter"$ is the light emitted due to subsurface scattering
+  - $L_"specular"$ is the reflected light from the source
+  - $L_"env_reflected"$ is the reflectioned light from the environemnt
 
-*Subsurface Scattering* @Atlas-Water
+==== Normalisation @Blinn-Phong @Specular-Highlight
+When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors. For notation, a vector $arrow(A)$ when normalised is represented with $hat(A)$.
+  $ arrow(A) dot arrow(B) = abs(A) abs(B) cos theta $
+  $ hat(A) = arrow(A) / abs(A) => abs(hat(A)) = 1 $ 
+  $ therefore hat(A) dot hat(B) = cos theta $
+where
+  - $theta$ is the angle between vectors $A$ and $B$
+==== Subsurface Scattering @Atlas-Water
+This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
   $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + Lambda (omega_i)) $
   $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
   where
@@ -171,16 +176,19 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - $omega_n$ is the normal
 \
 
-*Blinn-Phong Specular Reflection* @Blinn-Phong
-  $ L_"specular" = arrow(H) dot arrow(N) $
-  $ arrow(H) = (arrow(L) + arrow(V)) / (abs(arrow(L) + arrow(V))) $
+==== Blinn-Phong Specular Reflection @Blinn-Phong
+This is a (relatively) simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
+  $ L_"specular" = (hat(N) dot hat(H))^S $
+  $ hat(H) = hat(L) + hat(V) $
   where
-  - $arrow(H)$ is the normalised halfway vector
-  - $arrow(N)$ is the normalised surface normal
-  - $arrow(V)$ is the camera view vector
-  - $arrow(L)$ is the light source vector
+  - $hat(H)$ is the normalised halfway vector
+  - $hat(N)$ is the normalised surface normal
+  - $hat(V)$ is the camera view vector
+  - $hat(L)$ is the light source vector
+  - $S$ is the shininess of the material
 
-*Fresnel Reflectance (Schlick's Approximation )*  @Acerola-SOS @Blinn-Phong @Schlicks
+==== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks
+The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
   $ F(theta) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
   where 
   - $F_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
@@ -190,31 +198,26 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - $arrow(V)$ is the view vector
 \
 
-*Environment Reflections* @Acerola-SOS
-  $ arrow(R) = 2 arrow(N) ( arrow(N) dot arrow(V)) - arrow(V) $
+==== Environment Reflections @Acerola-SOS
+In order to get the color of the reflection for a given pixel, we compute the reflected vector from the normal and view vector. We then sample the corresponding point on the skybox's cubemap and use that color as the reflected color. This method is somewhat simplistic, and not physically based.
+  $ hat(R) = 2 hat(N) ( hat(N) dot hat(V)) - hat(V) $
   where
-  - $arrow(N)$ is the normal vector for the point
-  - $arrow(V)$ is the camera view vector
-  - $arrow(R)$ is the vector that points to the point on the cubemap which we sample
+  - $hat(N)$ is the normal vector for the point
+  - $hat(V)$ is the camera view vector
+  - $hat(R)$ is the vector that points to the point on the cubemap which we sample
 
-*Distance Fog Post Processing (Unfinished)* @Acerola-SOS
-  - hides issues with fresnel at grazing angles @Atlas-Water
+==== Post Processing @Acerola-SOS
+To hide the imperfect horizon line we use a distance fog. This is then attenuated based oon height. In order to do this we use the depth buffer to determine the depth of each pixel and then based on that scale the light color to be closer to a defined fog color. Finally we blend a sun into the skybox based on the light position.
 \
 
-*Atmospheric Scattering (Unfinished)* @Acerola-SOS
-  - attenuate distance fog based on height 
+==== Color Grading @Acerola-SOS
+in order to really sell the sun being as bright as it would be on an open ocean, we apply a bloom pass to the whole image. In order to prevent it from being completely blown out we then apply a tone mapping to rebalance the colors. 
+
 \
 
-*General Effects (Unfinished)* @Acerola-SOS
-  - additively blend a sun with skybox
-  - apply a bloom pass
-  - cinematic tone mapping
-\
-
-
-
-=== PBR Lighting Algorithms / Formulae
-*Microfacet BRDF* @Atlas-Water
+=== PBR-Specific Algorithms / Formulae
+==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF
+The BRDF (Bidirectional Reflectance Distribution Function) is used to determine the reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D(h)$ can be any distribution function. The geometric attenuation is a function that models how some reflections are masked / shadowed by the microfacets "geometry" and serves to counteract the fresnel.
   $ f_"microfacet" = (F(omega_i, h) G(omega_i, omega_o, h) D(h)) / (4(n dot omega_i) (n dot omega_o)   ) $ 
   where
   - $F(omega_i, h)$ is the Fresnel Reflectance
@@ -222,27 +225,47 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - $G(omega_i, omega_o, h)$ is the Geometric Attenuation
 \
 
-*Beckmann Distribution* @Atlas-Water @Specular-Highlight
-  $ k_s = (exp((-tan^2 alpha) / m)) / (pi m^2 cos^4 alpha) $
+==== Beckmann Distribution @Atlas-Water @Specular-Highlight @CC-BRDF
+This is now legacy and I will be replacing it with the GGX distribution per @CC-BRDF.
+  $ D_"beckmann" = (exp((-tan^2 alpha) / m)) / (pi m^2 cos^4 alpha) $
   where
   - $alpha = arccos(N dot H)$
   - $m$ is the $"RMS"$ slope of the surface microfacets
 \
 
-*Geometric Attenuation Function, Smith GGX (Unfinished)*
-  - 
+==== GGX Distribution @CC-BRDF
+The distribution function used in the BRDF. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
+  $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)cos^2 theta_h + 1)^2) $
+where
+  - $alpha = "roughness" ^2$
+  - $cos theta_h = hat(n) dot hat(H)$
+  - where $hat(n)$ and $hat(H)$ are the surface normal and halfway vector respectively
+
+==== Geometric Attenuation Function (Smith's $G_1$ Function) @CC-BRDF
+The geometric attenuation function used within the microfacet BRDF. The $lambda$ term changes depending on the distribution function used. 
+  $ G_1 = 1 / (1 + lambda(a)) $
+  $ a = (hat(H) dot hat(S)) / (alpha sqrt(1 - (hat(H) dot hat(S))^2)) $
+  $ lambda = (-1 + sqrt( 1 + a^(-2))) / 2 $
+where
+- $alpha = "roughness"^2$
+- $hat(H)$ is a microfacet normal
+- $hat(S)$ is either the (normalised) light or view vector
 \
 
-*Specular Reflection* @Atlas-Water
+==== Specular Reflection @Atlas-Water
+A physically based specular reflection model. This is an analytical approach to the indefinete integral which determines the specular color @Atlas-Water. Undecided on whether this will be used as depending on other facets may result in a minimal visual difference for maximal effort.
   $ L_"specular" = (L_"sun" F(omega_h, omega_"sun") p_22 (omega_h)) / (4 (omega_n dot omega_"eye") (1 + Lambda (omega_"sun")) + Lambda (omega_"eye")) $
   where
   - $omega_"sun", omega_"eye", omega_h$ is the sun / eye / half vector direction
   - $omega_n$ is the macronormal, in this case $vec(0, 0, 1)$
 \
 
+==== Environment Reflections @Atlas-Water @CC-BRDF
+Based on the LEADR paper on the topic. The implementation of this will be heavily dependent on how the simple cubemap reflections look and remaining timeframe so theres no reason to research it yet.
+
 #pagebreak()
 === Prototyping
-A project was undertook in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
+A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
 \
 #figure(
   image("assets/chaotic_attractor.png", width: 50%),
@@ -252,15 +275,32 @@ A project was undertook in order to test the technical stack and gain experience
 )
 
 === Project Considerations
-- talk abt pbr complexities in each part
-- complexitites of distribution functions
-- microfacet theory
-- (so) using blinn phong
-- if time allows will also use pbr cubemap reflection sampling
+The project will be split into 3 major stages, being the simulation, non PBR lighting and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
+If time were to allow so, I would also implement the PBR environment reflections model as seen in the LEADR paper @LEADR, however doing so would require overhauling most of my lighting systems, and implementing math I cannot even begin to understand.
+
+finally, I would also like to look into implementing a sky color simulation - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
 
 #pagebreak()
-== Objectives
+== Objectives (Unfinished)
+
++ Scene
+  + Language & Environment Setup
+  + Window & Compatability
+  + Render Pipeline
+  + Buffers
+  + Event Loop
++ Simulation
+  + Startup
+  + On Parameter Change
+  + Every Frame
++ Rendering
+  + Lighting
+  + PBR
+  + Post Processing
++ Interaction
+  + Camera
+  + Graphical User Interface
 
 #pagebreak()
 = Bibliography

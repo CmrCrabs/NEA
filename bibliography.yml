@@ -38,7 +38,7 @@ Halvorsen:
     value: https://www.dynamicmath.xyz/strange-attractors/
     date: 2024-06-14
 
-TJessendorf:
+JTessendorf:
   type: report
   title: Simulating Ocean Water
   author: Jerry Tessendorf
@@ -134,4 +134,28 @@ Exponential-Decay:
     value: https://en.wikipedia.org/wiki/Exponential_decay
     date: 2024-09-11
 
+LEADR:
+  type: report
+  title: Linear Efficient Antialiased Displacement and Reflectance Mapping
+  author: [ "Jonathan Dupuy" , "Eric Heitz", "Jean-Claude Iehl" , "Pierre Poulin" , "Fabrice Neyret", "Victor Ostromoukhov" ]
+  url:
+    value: https://inria.hal.science/hal-00858220/en
+    date: 2024-09-17
 
+
+CC-BRDF:
+  type: report
+  title: Crash Course in BRDF Implementation
+  author: Jakub Bokansky
+  url:
+    value: https://boksajak.github.io/files/CrashCourseBRDF.pdf
+    date: 2024-09-17
+
+
+Acerola-BRDF:
+  type: video
+  title: The Secret Behind Photorealistic And Stylized Graphics 
+  author: Acerola
+  url: 
+    value: https://youtu.be/KkOkx0FiHDA
+    date: 2024-09-17
