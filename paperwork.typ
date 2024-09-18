@@ -21,15 +21,14 @@
     #text(23pt, weight: 700, [NEA])
     #v(0.1fr)
     #text(23pt, weight: 700, [Real-Time, Physically Based Ocean Simulation & Rendering])
+    #v(0.1fr)
+    #text(23pt, weight: 500, [Zayaan Azam])
     #v(1.1fr)
-    #text(20pt, weight: 500, [Zayaan Azam])
   ])
   #v(2fr)
 ])
 
 // TODO: 
-// EXPAND UPON POST PROCESSING EFFECTS
-// DETERMINE WHAT LAMBDA FUNCTION IS FOR SCATTER
 // WRITE OBJECTIVES
 
 // Contents Page
@@ -102,7 +101,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 === Simulation Algorithms & Formulae
 
 ==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2
-The JONSWAP frequency spectrum is a more parameterised version of the Philips Spectrum @JTessendorf that simulates an ocean that is not fully developed. The increase in parameters allows simulating a wider breadth of real world conditions. It is used to generate the initial waves that are transformed with time by the FFT.
+The JONSWAP frequency spectrum is a more parameterised version of the Philips Spectrum @JTessendorf that simulates an ocean that is not fully developed. The increase in parameters allows simulating a wider breadth of real world conditions. It is used to generate the initial waves that are transformed through time by the FFT.
   $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
@@ -127,10 +126,8 @@ The (inverse) FFT is responsible for transforming the generated signal from JONS
   $ "will write up after learning roots of unity & partial derivatives" $
 \
 
-
-
 ==== The Jacobian @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
-The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the transformation goes negative. We can then offset this result to bias the results and generate more foam.  
+The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  
 
   $ "Will write up once I better understand partial derivatives." $
 \
@@ -156,7 +153,7 @@ To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on
   - $L_"env_reflected"$ is the reflectioned light from the environemnt
 
 ==== Normalisation @Blinn-Phong @Specular-Highlight
-When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors. For notation, a vector $arrow(A)$ when normalised is represented with $hat(A)$.
+When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors. henceforth, a vector $arrow(A)$ when normalised is represented with $hat(A)$.
   $ arrow(A) dot arrow(B) = abs(A) abs(B) cos theta $
   $ hat(A) = arrow(A) / abs(A) => abs(hat(A)) = 1 $ 
   $ therefore hat(A) dot hat(B) = cos theta $
@@ -164,7 +161,7 @@ where
   - $theta$ is the angle between vectors $A$ and $B$
 ==== Subsurface Scattering @Atlas-Water
 This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
-  $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + Lambda (omega_i)) $
+  $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
   $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
   where
   - $H$ is the $"max"(0, "wave height")$
@@ -174,6 +171,7 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   - $P_f$ is the density of air bubbles spread in water
   - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, omega_a dot omega_b)$
   - $omega_n$ is the normal
+  - $lambda$ is the function defined under Smith's $G_1$
 \
 
 ==== Blinn-Phong Specular Reflection @Blinn-Phong
@@ -234,7 +232,7 @@ This is now legacy and I will be replacing it with the GGX distribution per @CC-
 \
 
 ==== GGX Distribution @CC-BRDF
-The distribution function used in the BRDF. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
+The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
   $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)cos^2 theta_h + 1)^2) $
 where
   - $alpha = "roughness" ^2$
@@ -254,14 +252,16 @@ where
 
 ==== Specular Reflection @Atlas-Water
 A physically based specular reflection model. This is an analytical approach to the indefinete integral which determines the specular color @Atlas-Water. Undecided on whether this will be used as depending on other facets may result in a minimal visual difference for maximal effort.
-  $ L_"specular" = (L_"sun" F(omega_h, omega_"sun") p_22 (omega_h)) / (4 (omega_n dot omega_"eye") (1 + Lambda (omega_"sun")) + Lambda (omega_"eye")) $
+  $ L_"specular" = (L_"sun" F(omega_h, omega_"sun") p_22 (omega_h)) / (4 (omega_n dot omega_"eye") (1 + lambda (omega_"sun")) + lambda (omega_"eye")) $
   where
   - $omega_"sun", omega_"eye", omega_h$ is the sun / eye / half vector direction
-  - $omega_n$ is the macronormal, in this case $vec(0, 0, 1)$
+  - $omega_n$ is the macronormal
+  - $p_22$ is a distribution function, defined further in LEADR @LEADR
+  - $lambda$ is the function defined under Smith's $G_1$
 \
 
-==== Environment Reflections @Atlas-Water @CC-BRDF
-Based on the LEADR paper on the topic. The implementation of this will be heavily dependent on how the simple cubemap reflections look and remaining timeframe so theres no reason to research it yet.
+==== Environment Reflections @Atlas-Water @CC-BRDF @LEADR
+Bleeding edge environment reflections based on the LEADR paper on the topic @LEADR. The implementation of this will be heavily dependent on how the simple cubemap reflections look as implementing this in conjunction with other PBR lighting can constitute an nea on its own.
 
 #pagebreak()
 === Prototyping
@@ -288,7 +288,6 @@ finally, I would also like to look into implementing a sky color simulation - as
   + Language & Environment Setup
   + Window & Compatability
   + Render Pipeline
-  + Buffers
   + Event Loop
 + Simulation
   + Startup
@@ -299,7 +298,10 @@ finally, I would also like to look into implementing a sky color simulation - as
   + PBR
   + Post Processing
 + Interaction
-  + Camera
+  + Orbit Camera
+    + zoom
+    + revolve
+    + aspect ratio
   + Graphical User Interface
 
 #pagebreak()
