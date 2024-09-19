@@ -171,7 +171,7 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   - $P_f$ is the density of air bubbles spread in water
   - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, omega_a dot omega_b)$
   - $omega_n$ is the normal
-  - $lambda$ is the function defined under Smith's $G_1$
+  - $lambda$ is the masking function defined under Smith's $G_1$
 \
 
 ==== Blinn-Phong Specular Reflection @Blinn-Phong
@@ -277,32 +277,74 @@ A prototype was made in order to test the technical stack and gain experience wi
 === Project Considerations
 The project will be split into 3 major stages, being the simulation, non PBR lighting and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
-If time were to allow so, I would also implement the PBR environment reflections model as seen in the LEADR paper @LEADR, however doing so would require overhauling most of my lighting systems, and implementing math I cannot even begin to understand.
+If time were to allow so, I would also implement the PBR environment reflections model as seen in the LEADR paper @LEADR, however doing so would require overhauling most of my lighting systems, and implementing math I barely understand.
 
-finally, I would also like to look into implementing a sky color simulation - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
+finally, I would also like to look into implementing a sky color simulation based on sun position - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
 
 #pagebreak()
 == Objectives (Unfinished)
 
 + Scene
   + Language & Environment Setup
+    + setup all dependencies 
+    + have development shell to ensure correct execution
+    + ensure compatability for all engines
   + Window & Compatability
+    + ensure compatability with windows, macos & wayland (& X11?) linux
+    + title & respects client side rendering of respective os
+  + Data Structure
+    + talk abt shared data structures
+    + create struct for all variables 
+    + camera struct etc
   + Render Pipeline
+    + list steps and that it works
   + Event Loop
+    + able to detect mouse movement for camera inputs
+    + able to detect mouse down for camera inputs
+    + escape to close
+    + resize
+    + redraw requested
 + Simulation
   + Startup
   + On Parameter Change
   + Every Frame
+// generate spectrum -> evolve in frequency domain -> transform to spatial domain using inverse FFT,
 + Rendering
   + Lighting
-  + PBR
-  + Post Processing
+    + calculate light / view / halfway / normal vectors
+    + normalise all vectors
+    + fresnel
+    + subsurface scattering
+    + specular reflections 
+      + blinn-phong
+      + pbr
+        + microfacet brdf
+        + distribution function
+        + geometric attenuation
+    + env reflections 
+      + acerola
+      + LEADR
+    + lerp between this and foam
+    + adjust roughness of areas with foam
+  + Post Processing / Scene
+    + HDRI
+    + Sun
+    + distance fog
+    + attenuation of fog
+    + bloom pass for sun
+    + tone mapping
 + Interaction
   + Orbit Camera
     + zoom
     + revolve
     + aspect ratio
   + Graphical User Interface
+    + select hdri - file picker
+    + parameter sliders
+    + parameter input boxes
+    + parameter checkboxes
+      + toggle between pbr / non pbr lighting
+    + color select wheel (imgui) for parameters 
 
 #pagebreak()
 = Bibliography
