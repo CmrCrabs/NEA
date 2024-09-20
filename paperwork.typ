@@ -74,9 +74,9 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   + client has not started technical implementation of project, so is not beholden to an existing technical stack
   + see response 3.1
 + Scope
-  + the game is intended to run on both x86 and arm64 devices
+  + the simulation is intended to run on both x86 and arm64 devices
   + see response 3.1
-  + the game is targeted towards mid to high end systems, however it would be ideal for the solution to be performant on lower end hardware 
+  + the simulation is targeted towards mid to high end systems, however it would be ideal for the solution to be performant on lower end hardware 
 
 #pagebreak()
 == Research
