@@ -159,3 +159,9 @@ Acerola-BRDF:
   url: 
     value: https://youtu.be/KkOkx0FiHDA
     date: 2024-09-17
+
+Empirical-Spectra:
+  type: report
+  title: Empirical directional wave spectra for computer graphics
+  author: Christopher J. Horvath
+  date: 2024-09-22

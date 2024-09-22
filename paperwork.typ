@@ -29,7 +29,8 @@
 ])
 
 // TODO: 
-// WRITE OBJECTIVES
+// write objectives
+// Expand upon technologies
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -98,10 +99,46 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 - Nix:
   - Declarative, reproducible development environment
 
-=== Simulation Algorithms & Formulae
+=== Simulation Concepts, Formulae, & Algorithms
 
-==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2
-The JONSWAP frequency spectrum is a more parameterised version of the Philips Spectrum @JTessendorf that simulates an ocean that is not fully developed. The increase in parameters allows simulating a wider breadth of real world conditions. It is used to generate the initial waves that are transformed through time by the FFT.
+_I realise I am defining quite a few concepts here. Defining these in reasonable detail is in my opinon a needed step to understand and implement the overarching algorithm._
+==== Wave Summation  @Jump-Trajectory @Acerola-SOS
+On a high level, the simulation works by summating multiple varying waves as defined below, displacing the vertices of the mesh by the corresponding amplitude for every timestep. When actually implementing this Gerstner waves would be used instead of sine waves, as their vertical and horizontal displacement components would sine and cosine respectively.
+  $ A sin (k dot arrow(x) + omega t + Phi) $
+  $ &= A e^(i(k dot arrow(x) + omega t + Phi)) \ 
+    &= h e^(i(k dot arrow(x) + omega t)) $
+  $ eta (arrow(x), t) = sum_k h_0 (k) e^(i(k dot arrow(x) + omega t)) $
+where 
+- $A$ controls the amplitude of the wave
+- $k$ defines the distance between wave maxima, referred to as the wave number
+- $t$ is the time
+- $omega$ defines the period of time between two maxima, referred to as its angular frequency
+- $Phi$ shifts the wave by adding an initial phase
+- $k arrow(x) = k_x x + k_z z$, the wave vector, as the wave is 2D so has $x$ & $z$ components
+- $eta (arrow(x), t)$ is the displacement of the surface from the sum of waves
+- $m,n = - N/2 .. N/2$
+- $h_0$ is the fourier amplitude, explained below
+
+==== The (Inverse) Discrete Fourier Transform (DFT) (Unfinished) @Jump-Trajectory
+The sum of waves can be computed as an (inverse) DFT if the following conditions are met:
+- The Number of Points ($N$)= The Number of Waves ($M$)
+- The Coordinates $arrow(x)$ = $m / n L$
+- The wavenumbers $k = (2 pi n) / L$
+- the coordinates & wavenumbers lie on regular grids
+Assuming the above, it can be shown that the summation is equivalent to the DFT ($F_n$) as defined below, just with differing summation limits. Derivation can be seen at 4:35 in @Jump-Trajectory.
+
+  $ "Inverse DFT": F_n = sum_(m=0)^(N-1) f_m e^(2 pi i m/n) $
+  $ "Waves Sum": eta_"axis" (t) = sum_(m = - (n / 2))^(N / 2) h_m (t) e^(2 pi i m / N n) $
+the parameters here are defined further in the wave spectra.
+
+==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
+The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the discrete fourier transform. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
+// fft is a faster implementation of the dft, computed on O(Nlogn) instead of O(N^2), massive improvement when you are dealing with potentially millions of waves
+  $ "this algorithm is ridiculous, will write up after learning roots of unity & partial derivatives" $
+\
+
+==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2 @Jump-Trajectory @Empirical-Spectra
+The fourier amplitude is made up of 2 components, being the directional spread $D (theta, omega)$ and energy spectrum $S(omega)$. The energy spectrum determines the height of the wave at a given frequency. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in  @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
@@ -121,12 +158,21 @@ The JONSWAP frequency spectrum is a more parameterised version of the Philips Sp
   - $g$ is gravity
 \
 
-==== Fast Fourier Transform (Cooley-Tukey) @FFT-Wiki
-The (inverse) FFT is responsible for transforming the generated signal from JONSWAP into a single usable wave, whose vectors are then encoded into the RGB channels of a texture, and read by the vertex shader in order to displace the geometry.
-  $ "will write up after learning roots of unity & partial derivatives" $
+==== Hasselman Directional Spread Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra
+  - 
 \
 
-==== The Jacobian @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
+==== Gaussian Random Numbers (Unfinished)
+
+==== Fourier Amplitude Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra
+This is the function that determines the amplitude of the displacement at a given position. It takes together the direction spread function, energy spectra, and gaussian random numbers in order to produce a function $h_0$ for the vertical displacement. this function is then multiplied by $i$ in order to give the horizontal displacement (cosine) instead of the vertical displacement (sine) of the gerstner waves. this is then multiplied by the normalised wave vector $k$ to get the correct direction.
+  $ h_0^((y)) = 1 / sqrt(2) (epsilon_1 + i epsilon_2) sqrt( 2 S(omega) D(theta, omega) ( (d omega (k)) / (d k)) Delta k_x Delta k_z) $ 
+  $ h_0^((x)) = i k_x 1 / k h_0^((y)) $
+  $ h_0^((z)) = i k_z 1 / k h_0^((y)) $
+\
+
+
+==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  
 
   $ "Will write up once I better understand partial derivatives." $
@@ -139,6 +185,17 @@ In order to dissipate the stored foam over time instead of instantaneously, we a
   - $N_0$ is the initial quantity
   - $lambda$ is the rate constant
 \
+
+==== The Ocean Simulation Algorithm @JTessendorf @Jump-Trajectory @Acerola-FFT @Atlas-Water
+\/\/ like 20x more complex than this 
+- generate gaussian noise (4 bands)
+- jonswap it based on params
+- fft to frequency domain (for all 4 bands)
+- evolve frequencies with time
+- inverse fft to spatial domain
+- postprocess results for brdf / pbr
+- recombine 4 bands in vertex shader?
+
 
 === Lighting Algorithms & Formulae
 
@@ -153,12 +210,18 @@ To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on
   - $L_"env_reflected"$ is the reflectioned light from the environemnt
 
 ==== Normalisation @Blinn-Phong @Specular-Highlight
-When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors. henceforth, a vector $arrow(A)$ when normalised is represented with $hat(A)$.
+When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors. Throughout this document, a vector $arrow(A)$ when normalised is represented with $hat(A)$.
   $ arrow(A) dot arrow(B) = abs(A) abs(B) cos theta $
   $ hat(A) = arrow(A) / abs(A) => abs(hat(A)) = 1 $ 
   $ therefore hat(A) dot hat(B) = cos theta $
 where
   - $theta$ is the angle between vectors $A$ and $B$
+
+==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
+In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
+  $ arrow(n) = vec(- s_x, 1, -s_z) $
+  $ arrow(s) = vec( ((delta eta_y) / (delta x)) / (1 + ((delta eta_x) / (delta x))) ,  ((delta eta_y) / (delta z)) / (1 + ((delta eta_z) / (delta z)))) $
+
 ==== Subsurface Scattering @Atlas-Water
 This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
   $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
@@ -223,14 +286,6 @@ The BRDF (Bidirectional Reflectance Distribution Function) is used to determine 
   - $G(omega_i, omega_o, h)$ is the Geometric Attenuation
 \
 
-==== Beckmann Distribution @Atlas-Water @Specular-Highlight @CC-BRDF
-This is now legacy and I will be replacing it with the GGX distribution per @CC-BRDF.
-  $ D_"beckmann" = (exp((-tan^2 alpha) / m)) / (pi m^2 cos^4 alpha) $
-  where
-  - $alpha = arccos(N dot H)$
-  - $m$ is the $"RMS"$ slope of the surface microfacets
-\
-
 ==== GGX Distribution @CC-BRDF
 The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
   $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)cos^2 theta_h + 1)^2) $
@@ -250,7 +305,7 @@ where
 - $hat(S)$ is either the (normalised) light or view vector
 \
 
-==== Specular Reflection @Atlas-Water
+==== Specular Reflection (Unfinished) @Atlas-Water
 A physically based specular reflection model. This is an analytical approach to the indefinete integral which determines the specular color @Atlas-Water. Undecided on whether this will be used as depending on other facets may result in a minimal visual difference for maximal effort.
   $ L_"specular" = (L_"sun" F(omega_h, omega_"sun") p_22 (omega_h)) / (4 (omega_n dot omega_"eye") (1 + lambda (omega_"sun")) + lambda (omega_"eye")) $
   where
@@ -260,7 +315,7 @@ A physically based specular reflection model. This is an analytical approach to 
   - $lambda$ is the function defined under Smith's $G_1$
 \
 
-==== Environment Reflections @Atlas-Water @CC-BRDF @LEADR
+==== Environment Reflections (Unfinished) @Atlas-Water @CC-BRDF @LEADR
 Bleeding edge environment reflections based on the LEADR paper on the topic @LEADR. The implementation of this will be heavily dependent on how the simple cubemap reflections look as implementing this in conjunction with other PBR lighting can constitute an nea on its own.
 
 #pagebreak()
@@ -298,6 +353,7 @@ finally, I would also like to look into implementing a sky color simulation base
     + camera struct etc
   + Render Pipeline
     + list steps and that it works
+    // alot of yap
   + Event Loop
     + able to detect mouse movement for camera inputs
     + able to detect mouse down for camera inputs
