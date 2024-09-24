@@ -20,7 +20,7 @@
     //#image("/Assets/Paperboat.svg", width: 60%)
     #text(23pt, weight: 700, [NEA])
     #v(0.1fr)
-    #text(23pt, weight: 700, [Real-Time, Physically Based Ocean Simulation & Rendering])
+    #text(23pt, weight: 700, [Real-Time, Physically Based Ocean Simulation & Renderer])
     #v(0.1fr)
     #text(23pt, weight: 500, [Zayaan Azam])
     #v(1.1fr)
@@ -127,16 +127,16 @@ Assuming the above, it can be shown that the summation is equivalent to the DFT 
   //$ "Inverse DFT": F_n = sum_(m=0)^(N-1) f_m e^(2 pi i m/n) $
   //$ "Waves Sum": eta_n (t) = sum_(m = - (N / 2))^(N / 2) h_m (t) e^(2 pi i m / N n) $
   $ "Vertical Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
-  $ "Horizontal Displacement:" $
+  $ "Horizontal Displacement:" D(arrow(x), t) = sum_arrow(k) -i arrow(k) / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
   $ "Derivatives": epsilon(arrow(x), t) = nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
 where
   - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
   - $hat(h) (arrow(k), t)$ is the frequency spectrum function
-  - $arrow(D)(x,t)$ gives the horizontal displacement vector at the point $x$ at time $t$
+  - $arrow(D)(arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$
 
 ==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
 In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
-  $ arrow(n) = vec(- s_x, 1, -s_z) $
+  $ arrow(N)(arrow(x), t) = vec(- epsilon_x(arrow(x),t), 1, -epsilon_z(arrow(x), t)) $
   $ arrow(s) = vec( ((delta eta_y) / (delta x)) / (1 + ((delta eta_x) / (delta x))) ,  ((delta eta_y) / (delta z)) / (1 + ((delta eta_z) / (delta z)))) $
 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
