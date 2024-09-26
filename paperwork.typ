@@ -102,27 +102,29 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 === Simulation Concepts, Formulae, & Algorithms
 
-_I realise I am defining quite a few concepts here. Defining these in reasonable detail is in my opinon a needed step to understand and implement the overarching algorithm._
 ==== Defining The Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf
-On a high level, for a height field of dimensions $L_x$ and $L_z$, the simulation works by summating multiple sinusoids with complex, time dependant ampltiudes @JTessendorf.
+For a height field of dimensions $L_x$ and $L_z$, we calculate the height ($h$) at a position $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf.
   $ h (arrow(x), t) = sum_(arrow(k)) hat(h)_0 (arrow(k)) e^(i omega(arrow(k)) t) $
 where 
 - $t$ is the time
 - $arrow(k) = (k_x, k_z)$ is the direction vector of the spectrum's texture
 - $k_x = (2 pi n) / L_x, k_z = (2 pi m) / L_z$  
-- $n, m$ are integers with bounds $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$ 
+- $n, m$ are the simulation domain resolutions, integers with bounds $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$ 
 - $omega(arrow(k)) = sqrt( abs(k) g) $ is the dispersion relation, a multiplier that determines the speed of the ocean
 - $arrow(x) = ((n L_x) / N, (m L_z) / M)$, the direction vector for the height map for which we are summing
 - $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
 - $hat(h)_0 (arrow(k))$ is the frequency spectrum function, which determines the structure of the surface
 
 
-==== The (Inverse) Discrete Fourier Transform (DFT) (Unfinished) @Jump-Trajectory @Acerola-FFT
-The sum of waves can be computed as an (inverse) DFT if the following conditions are met:
-- The Number of Points ($N$)= The Number of Waves ($M$)
+==== The Inverse Discrete Fourier Transform (IDFT), Abstract (Unfinished) @Jump-Trajectory @Acerola-FFT
+The sum of waves can be computed as an IDFT if the following conditions are met:
+- The Number of Points ($N$) = The Number of Waves ($M$)
 - $L_x = L_z = L$
 - the coordinates & wavenumbers lie on regular grids
-Assuming the above, it can be shown that the summation is equivalent to the DFT ($F_n$) as defined below, just with differing summation limits. Derivation can be seen at 4:35 in @Jump-Trajectory.
+Given this, the frequency domain representation of the wave-height field can be converted to a spatial domain in a reasonable timeframe. This is split into 3 components:
+- Vertical Displacement to determine each points height
+- Horizontal Displacement to simulate "choppy waves" @JTessendorf (Represent larger moving waves)
+- Derivatives, used to calculate exact normal to the surface at a given point. This is important for lighting calculations shown below.
 
   //$ "Inverse DFT": F_n = sum_(m=0)^(N-1) f_m e^(2 pi i m/n) $
   //$ "Waves Sum": eta_n (t) = sum_(m = - (N / 2))^(N / 2) h_m (t) e^(2 pi i m / N n) $
@@ -130,14 +132,19 @@ Assuming the above, it can be shown that the summation is equivalent to the DFT 
   $ "Horizontal Displacement:" D(arrow(x), t) = sum_arrow(k) -i arrow(k) / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
   $ "Derivatives": epsilon(arrow(x), t) = nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
 where
-  - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
   - $hat(h) (arrow(k), t)$ is the frequency spectrum function
-  - $arrow(D)(arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$
+  - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
+  - $arrow(D)(arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves" @JTessendorf (Simulate larger moving waves)
+  - $epsilon(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
 
-==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
-In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
-  $ arrow(N)(arrow(x), t) = vec(- epsilon_x(arrow(x),t), 1, -epsilon_z(arrow(x), t)) $
-  $ arrow(s) = vec( ((delta eta_y) / (delta x)) / (1 + ((delta eta_x) / (delta x))) ,  ((delta eta_y) / (delta z)) / (1 + ((delta eta_z) / (delta z)))) $
+==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
+  $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(arrow(k))t) + h_0 (-k) e^(-i omega(arrow(k)) t) $
+  $ hat(h)_0(k) = 1 / sqrt(2) (zeta_r + i zeta_i) sqrt( S(omega) ) $ 
+  $ h_0^((x)) = i k_x 1 / k h_0^((y)) $
+  $ h_0^((z)) = i k_z 1 / k h_0^((y)) $
+\
+
+==== The IDFT, In terms of indices @Jump-Trajectory @JTessendorf @Code-Motion
 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the discrete fourier transform. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
@@ -146,7 +153,7 @@ The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fa
 \
 
 ==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2 @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
-The energy spectrum determines the height of the wave at a given frequency. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in  @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
+This energy spectrum determines is where the final height is ultimately derived from. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
@@ -167,13 +174,13 @@ The energy spectrum determines the height of the wave at a given frequency. The 
 \
 
 ==== Gaussian Random Numbers (Unfinished)
-The wave spectrum function requires random numbers in order to generate the wave displacement(s) at a given point. the ocean exhibits gaussian variance in the possible waves so by generating gaussian numbers you simulate this. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
-==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
-  $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(arrow(k))t) + h_0 (-k) e^(-i omega(arrow(k)) t) $
-  $ hat(h)_0(k) = 1 / sqrt(2) (zeta_r + i zeta_i) sqrt( S(omega) ) $ 
-  $ h_0^((x)) = i k_x 1 / k h_0^((y)) $
-  $ h_0^((z)) = i k_z 1 / k h_0^((y)) $
-\
+The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean 0 and standard deviation 1. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
+
+
+
+==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
+In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
+  $ arrow(N)(arrow(x), t) = vec(- epsilon_x(arrow(x),t), 1, -epsilon_z(arrow(x), t)) $
 
 ==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  

@@ -165,3 +165,10 @@ Empirical-Spectra:
   title: Empirical directional wave spectra for computer graphics
   author: Christopher J. Horvath
   date: 2024-09-22
+
+Code-Motion:
+  type: conference
+  title: An introduction to Realistic Ocean Rendering through FFT - Fabio Suriano - Codemotion Rome 2017
+  url: 
+    value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025
+    date: 2024-09-25
