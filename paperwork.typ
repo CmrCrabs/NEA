@@ -101,8 +101,8 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - Declarative, reproducible development environment
 
 === Simulation Concepts, Formulae, & Algorithms
-
-==== Defining The Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf
+Note that throughout this project we are defining the $y$ axis as "up".
+==== Defining the Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf
 For a height field of dimensions $L_x$ and $L_z$, we calculate the height ($h$) at a position $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf.
   $ h (arrow(x), t) = sum_(arrow(k)) hat(h)_0 (arrow(k)) e^(i omega(arrow(k)) t) $
 where 
@@ -115,42 +115,40 @@ where
 - $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
 - $hat(h)_0 (arrow(k))$ is the frequency spectrum function, which determines the structure of the surface
 
-
-==== The Inverse Discrete Fourier Transform (IDFT), Abstract (Unfinished) @Jump-Trajectory @Acerola-FFT
+==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Acerola-FFT
 The sum of waves can be computed as an IDFT if the following conditions are met:
 - The Number of Points ($N$) = The Number of Waves ($M$)
 - $L_x = L_z = L$
 - the coordinates & wavenumbers lie on regular grids
 Given this, the frequency domain representation of the wave-height field can be converted to a spatial domain in a reasonable timeframe. This is split into 3 components:
-- Vertical Displacement to determine each points height
-- Horizontal Displacement to simulate "choppy waves" @JTessendorf (Represent larger moving waves)
-- Derivatives, used to calculate exact normal to the surface at a given point. This is important for lighting calculations shown below.
 
-  //$ "Inverse DFT": F_n = sum_(m=0)^(N-1) f_m e^(2 pi i m/n) $
-  //$ "Waves Sum": eta_n (t) = sum_(m = - (N / 2))^(N / 2) h_m (t) e^(2 pi i m / N n) $
-  $ "Vertical Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
-  $ "Horizontal Displacement:" D(arrow(x), t) = sum_arrow(k) -i arrow(k) / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
-  $ "Derivatives": epsilon(arrow(x), t) = nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "Y Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "X Displacement:" lambda D_x (arrow(x), t) = sum_arrow(k) -i arrow(k)_x / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
+  $ "Z Displacement:" lambda D_z (arrow(x), t) = sum_arrow(k) -i arrow(k)_z / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
+  $ "Derivatives": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
 where
   - $hat(h) (arrow(k), t)$ is the frequency spectrum function
   - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
-  - $arrow(D)(arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves" @JTessendorf (Simulate larger moving waves)
-  - $epsilon(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
+  - $arrow(D)_x (arrow(x),t), arrow(D)_z (arrow(x),t$ give the horizontal displacement at $arrow(x)$ at time $t$ for the given axis, used to simulate "choppy waves". @JTessendorf
+  - $lambda$ is a convenient scale factor in order to create sharper wave peaks @JTessendorf
+  - $nabla h(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
 
 ==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
+This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(arrow(k))t) + h_0 (-k) e^(-i omega(arrow(k)) t) $
-  $ hat(h)_0(k) = 1 / sqrt(2) (zeta_r + i zeta_i) sqrt( S(omega) ) $ 
-  $ h_0^((x)) = i k_x 1 / k h_0^((y)) $
-  $ h_0^((z)) = i k_z 1 / k h_0^((y)) $
-\
+  $ hat(h)_0 = hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S(omega) ) $ 
+where
+  - $hat(h)$ evolves $hat(h)_0$ through time using eulers formula. by combining a positive and negative version of the wave number you ensure the functions output is real @JTessendorf
+  - $hat(h)_0$ is the initial wave state as determined by the energy spectra & gaussian distribution. This is only computed on parameter change / startup and then stored into a texture
 
-==== The IDFT, In terms of indices @Jump-Trajectory @JTessendorf @Code-Motion
+==== The IDFT, In terms of indices (Unfinished) @Jump-Trajectory @JTessendorf @Code-Motion
+for our simulation, we will use indices $n prime, m prime$, which will run from $0 <= n prime < N, 0 <= m prime < M$. So, we can write equations for $n, m$ in terms of $n prime, m prime$:
+- $n = n prime - N / 2$
+- $m = m prime - M / 2$
 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the discrete fourier transform. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
-// fft is a faster implementation of the dft, computed on O(Nlogn) instead of O(N^2), massive improvement when you are dealing with potentially millions of waves
-  $ "this algorithm is ridiculous, will write up after learning roots of unity & partial derivatives" $
-\
+  $ "very complex, will write up after learning roots of unity & partial derivatives" $
 
 ==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2 @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
 This energy spectrum determines is where the final height is ultimately derived from. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
@@ -165,28 +163,24 @@ This energy spectrum determines is where the final height is ultimately derived 
       0.07 "if" omega <= omega_p,
       0.09 "if" omega > omega_p,
     )$ @OW-Spectra
-  - $omega$ is the wave frequency ($(2pi) / s$) @JONSWAP-2
+  - $omega = 2 pi f$ where $f$ is the wave frequency in $"Hz"$ @JONSWAP-2
   - $omega_p$ is the peak wave frequency
   - $omega_p = 22( (g^2) / (U_10 F))^(1/3) $
   - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @JONSWAP-2
   - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra
   - $g$ is gravity
-\
 
 ==== Gaussian Random Numbers (Unfinished)
 The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean 0 and standard deviation 1. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
 
-
-
 ==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
 In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
-  $ arrow(N)(arrow(x), t) = vec(- epsilon_x(arrow(x),t), 1, -epsilon_z(arrow(x), t)) $
+  $ arrow(N)(arrow(x), t) = vec(- nabla h_x(arrow(x),t), 1, -nabla h_z(arrow(x), t)) $
 
 ==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  
 
   $ "Will write up once I better understand partial derivatives & eignevectors" $
-\
 
 ==== Exponential Decay @Exponential-Decay @Atlas-Water @Acerola-FFT @JTessendorf
 In order to dissipate the stored foam over time instead of instantaneously, we apply an exponential decay function to each pixel in the texture. This may potentially be replaced by a gaussian blur and fade pass depending on results produced.
@@ -196,7 +190,7 @@ In order to dissipate the stored foam over time instead of instantaneously, we a
   - $lambda$ is the rate constant
 \
 
-==== The Ocean Simulation Algorithm @JTessendorf @Jump-Trajectory @Acerola-FFT @Atlas-Water
+==== The Ocean Simulation Algorithm @JTessendorf @Jump-Trajectory @Acerola-FFT @Atlas-Water @Sea-of-Thieves @Code-Motion
 \/\/ like 20x more complex than this 
 - generate gaussian noise (4 bands)
 - jonswap it based on params
@@ -228,7 +222,7 @@ where
   - $theta$ is the angle between vectors $A$ and $B$
 
 
-==== Subsurface Scattering @Atlas-Water
+==== Subsurface Scattering @Atlas-Water @Acerola-FFT
 This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
   $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
   $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
@@ -243,7 +237,7 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   - $lambda$ is the masking function defined under Smith's $G_1$
 \
 
-==== Blinn-Phong Specular Reflection @Blinn-Phong
+==== Blinn-Phong Specular Reflection @Blinn-Phong @Acerola-BRDF
 This is a (relatively) simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^S $
   $ hat(H) = hat(L) + hat(V) $
@@ -254,7 +248,7 @@ This is a (relatively) simplistic, empirical model to determine the specular ref
   - $hat(L)$ is the light source vector
   - $S$ is the shininess of the material
 
-==== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks
+==== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks @Acerola-BRDF
 The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
   $ F(theta) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
   where 
@@ -283,7 +277,7 @@ in order to really sell the sun being as bright as it would be on an open ocean,
 \
 
 === PBR-Specific Algorithms / Formulae
-==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF
+==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF
 The BRDF (Bidirectional Reflectance Distribution Function) is used to determine the reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D(h)$ can be any distribution function. The geometric attenuation is a function that models how some reflections are masked / shadowed by the microfacets "geometry" and serves to counteract the fresnel.
   $ f_"microfacet" = (F(omega_i, h) G(omega_i, omega_o, h) D(h)) / (4(n dot omega_i) (n dot omega_o)   ) $ 
   where
@@ -292,7 +286,7 @@ The BRDF (Bidirectional Reflectance Distribution Function) is used to determine 
   - $G(omega_i, omega_o, h)$ is the Geometric Attenuation
 \
 
-==== GGX Distribution @CC-BRDF
+==== GGX Distribution @CC-BRDF @Acerola-BRDF
 The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
   $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)cos^2 theta_h + 1)^2) $
 where

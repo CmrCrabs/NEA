@@ -172,3 +172,11 @@ Code-Motion:
   url: 
     value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025
     date: 2024-09-25
+
+Keith-Lantz:
+  type: article
+  title: Ocean simulation part one:using the discrete fourier Fourier transform
+  url:
+    value: https://www.keithlantz.net/2011/10/ocean-simulation-part-one-using-the-discrete-fourier-transform/
+    date: 2024-09-27
+    
