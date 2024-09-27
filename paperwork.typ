@@ -31,7 +31,16 @@
 // TODO: 
 // write objectives
 // Expand upon technologies
-// USING TESSENDORF ONLY EXPAND UPON DFT & FREQ.SPECT.FUNC
+// finish IDFT
+// explain IDFT in terms of indices limits
+// gaussian random numbers
+// explain jacobian / eigenvalues & foam
+// explain exponential decay better
+// explain 4 frequency bands
+// distance fog post processing explain
+// post processing tonemapping & bloom pass
+// Ocean LOD
+// FFT!!
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -102,7 +111,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 === Simulation Concepts, Formulae, & Algorithms
 Note that throughout this project we are defining the $y$ axis as "up".
-==== Defining the Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf
+==== Defining the Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf @Keith-Lantz @Code-Motion
 For a height field of dimensions $L_x$ and $L_z$, we calculate the height ($h$) at a position $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf.
   $ h (arrow(x), t) = sum_(arrow(k)) hat(h)_0 (arrow(k)) e^(i omega(arrow(k)) t) $
 where 
@@ -115,7 +124,7 @@ where
 - $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
 - $hat(h)_0 (arrow(k))$ is the frequency spectrum function, which determines the structure of the surface
 
-==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Acerola-FFT
+==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Acerola-FFT @Keith-Lantz @JTessendorf @Code-Motion 
 The sum of waves can be computed as an IDFT if the following conditions are met:
 - The Number of Points ($N$) = The Number of Waves ($M$)
 - $L_x = L_z = L$
@@ -130,7 +139,7 @@ where
   - $hat(h) (arrow(k), t)$ is the frequency spectrum function
   - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
   - $arrow(D)_x (arrow(x),t), arrow(D)_z (arrow(x),t$ give the horizontal displacement at $arrow(x)$ at time $t$ for the given axis, used to simulate "choppy waves". @JTessendorf
-  - $lambda$ is a convenient scale factor in order to create sharper wave peaks @JTessendorf
+  - $lambda$ is a convenient scale factor "choppiness" in order to create sharper wave peaks @JTessendorf
   - $nabla h(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
 
 ==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
@@ -182,7 +191,7 @@ The jacobian describes the "uniqueness" of a transformation. This is useful as w
 
   $ "Will write up once I better understand partial derivatives & eignevectors" $
 
-==== Exponential Decay @Exponential-Decay @Atlas-Water @Acerola-FFT @JTessendorf
+==== Exponential Decay (Unfinished) @Exponential-Decay @Atlas-Water @Acerola-FFT @JTessendorf
 In order to dissipate the stored foam over time instead of instantaneously, we apply an exponential decay function to each pixel in the texture. This may potentially be replaced by a gaussian blur and fade pass depending on results produced.
   $ N(t) = N_0 e ^(-lambda t) $ 
   where 
@@ -190,7 +199,7 @@ In order to dissipate the stored foam over time instead of instantaneously, we a
   - $lambda$ is the rate constant
 \
 
-==== The Ocean Simulation Algorithm @JTessendorf @Jump-Trajectory @Acerola-FFT @Atlas-Water @Sea-of-Thieves @Code-Motion
+==== The Ocean Simulation Algorithm (Unfinished) @JTessendorf @Jump-Trajectory @Acerola-FFT @Atlas-Water @Sea-of-Thieves @Code-Motion
 \/\/ like 20x more complex than this 
 - generate gaussian noise (4 bands)
 - jonswap it based on params
@@ -199,6 +208,8 @@ In order to dissipate the stored foam over time instead of instantaneously, we a
 - inverse fft to spatial domain
 - postprocess results for brdf / pbr
 - recombine 4 bands in vertex shader?
+
+=== Level of Detail (LOD) Optimisations (Unfinished)@Code-Motion //@Crysis paper they mentioned
 
 
 === Lighting Algorithms & Formulae
