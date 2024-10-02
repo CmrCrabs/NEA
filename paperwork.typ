@@ -156,7 +156,7 @@ for our simulation, we will use indices $n prime, m prime$, which will run from 
 - $m = m prime - M / 2$
 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
-The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the discrete fourier transform. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
+The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
   $ "very complex, will write up after learning roots of unity & partial derivatives" $
 
 ==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2 @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
