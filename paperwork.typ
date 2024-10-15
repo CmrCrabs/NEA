@@ -119,30 +119,34 @@ where
 - $arrow(k) = (k_x, k_z)$ is the direction vector of the spectrum's texture
 - $k_x = (2 pi n) / L_x, k_z = (2 pi m) / L_z$  
 - $n, m$ are the simulation domain resolutions, integers with bounds $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$ 
-- $omega(arrow(k)) = sqrt( abs(k) g) $ is the dispersion relation, a multiplier that determines the speed of the ocean
+- $omega(arrow(k)) = sqrt( abs(arrow(k)) g) $ is the dispersion relation, a multiplier that determines the speed of the ocean
 - $arrow(x) = ((n L_x) / N, (m L_z) / M)$, the direction vector for the height map for which we are summing
 - $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
 - $hat(h)_0 (arrow(k))$ is the frequency spectrum function, which determines the structure of the surface
 
-==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Acerola-FFT @Keith-Lantz @JTessendorf @Code-Motion 
+==== Statistical Wave Summations (Unfinished) @Jump-Trajectory @Acerola-FFT @Keith-Lantz @JTessendorf @Code-Motion 
 The sum of waves can be computed as an IDFT if the following conditions are met:
 - The Number of Points ($N$) = The Number of Waves ($M$)
 - $L_x = L_z = L$
 - the coordinates & wavenumbers lie on regular grids
-Given this, the frequency domain representation of the wave-height field can be converted to a spatial domain in a reasonable timeframe. This is split into 3 components:
+Given this, the frequency domain representation of the wave-height field can be converted to the spatial domain in a reasonable timeframe. This is split into 3 components:
 
-  $ "Y Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
-  $ "X Displacement:" lambda D_x (arrow(x), t) = sum_arrow(k) -i arrow(k)_x / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
-  $ "Z Displacement:" lambda D_z (arrow(x), t) = sum_arrow(k) -i arrow(k)_z / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
-  $ "Derivatives": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "Vertical Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "Horizontal Displacement:" lambda D (arrow(x), t) = sum_arrow(k) -i arrow(k) / abs(arrow(k)) hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
+  $ "Vertical Derivative": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "Horizontal Derivative": nabla lambda D(arrow(x),t) = sum_(arrow(k))arrow(k) arrow(k)/abs(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  // X / Z Derivative
 where
   - $hat(h) (arrow(k), t)$ is the frequency spectrum function
   - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
-  - $arrow(D)_x (arrow(x),t), arrow(D)_z (arrow(x),t$ give the horizontal displacement at $arrow(x)$ at time $t$ for the given axis, used to simulate "choppy waves". @JTessendorf
+  - $arrow(D) (arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves". We would split the normalised vector $arrow(k)$ into its components and compute them seperately @JTessendorf
   - $lambda$ is a convenient scale factor "choppiness" in order to create sharper wave peaks @JTessendorf
   - $nabla h(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
 
-==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
+==== The Inverse Discrete Fourier Transform (IDFT) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
+For implementation, the statistical wave summations represented in terms of the indices $n$ and $m$, where $n$ is the number of points & $m$ is the number of waves
+
+==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Acerola-FFT
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(arrow(k))t) + h_0 (-k) e^(-i omega(arrow(k)) t) $
   $ hat(h)_0 = hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S(omega) ) $ 
@@ -157,41 +161,48 @@ for our simulation, we will use indices $n prime, m prime$, which will run from 
 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
-  $ "very complex, will write up after learning roots of unity & partial derivatives" $
+  $ "complex, will write up after learning roots of unity & partial derivatives" $
 
-==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @JONSWAP-2 @Jump-Trajectory @Empirical-Spectra @Acerola-FFT
+==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @Jump-Trajectory @Acerola-FFT
 This energy spectrum determines is where the final height is ultimately derived from. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S(omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
   where
   - $alpha$ is the intensity of the spectra
-  - $beta = 5/4$, a "shape factor", rarely changed @JONSWAP-2
+  - $beta = 5/4$, a "shape factor", rarely changed @OW-Spectra
   - $gamma = 3.3$
   - $sigma = cases(
       0.07 "if" omega <= omega_p,
       0.09 "if" omega > omega_p,
     )$ @OW-Spectra
-  - $omega = 2 pi f$ where $f$ is the wave frequency in $"Hz"$ @JONSWAP-2
+  - $omega = 2 pi f$ where $f$ is the wave frequency in $"Hz"$ @OW-Spectra
   - $omega_p$ is the peak wave frequency
   - $omega_p = 22( (g^2) / (U_10 F))^(1/3) $
-  - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @JONSWAP-2
+  - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @OW-Spectra
   - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra
   - $g$ is gravity
 
-==== Gaussian Random Numbers (Unfinished)
-The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean 0 and standard deviation 1. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
+==== Gaussian Random Numbers
+The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean ($tilde(x)$) 0 and standard deviation ($sigma$) 1. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
 
-==== Surface Normals (Unfinished) @Empirical-Spectra @JTessendorf @Jump-Trajectory
+$ 1 / sqrt(2 pi sigma ^2) e^(- ((x - tilde(x)^2))/(2 sigma^2)) $
+where
+- $sigma$ is the standard deviation
+- $tilde(x)$ is the mean
+- $x$ is a random number, $-1..1$
+
+
+==== Surface Normals (Unfinished) @JTessendorf @Jump-Trajectory
 In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
   $ arrow(N)(arrow(x), t) = vec(- nabla h_x(arrow(x),t), 1, -nabla h_z(arrow(x), t)) $
 
-==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @SimSlides
+==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @Code-Motion
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  
 
   $ "Will write up once I better understand partial derivatives & eignevectors" $
 
-==== Exponential Decay (Unfinished) @Exponential-Decay @Atlas-Water @Acerola-FFT @JTessendorf
+==== Exponential Decay (Unfinished) @Atlas-Water @Acerola-FFT @JTessendorf
 In order to dissipate the stored foam over time instead of instantaneously, we apply an exponential decay function to each pixel in the texture. This may potentially be replaced by a gaussian blur and fade pass depending on results produced.
   $ N(t) = N_0 e ^(-lambda t) $ 
   where 
@@ -232,24 +243,8 @@ When computing lighting using vectors, we are only concerned with the direction 
 where
   - $theta$ is the angle between vectors $A$ and $B$
 
-
-==== Subsurface Scattering @Atlas-Water @Acerola-FFT
-This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
-  $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
-  $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
-  where
-  - $H$ is the $"max"(0, "wave height")$
-  - $k_1, k_2, k_3, k_4$ are artistic parameters
-  - $C_"ss"$ is the water scatter color
-  - $C_f$ is the air bubbles color
-  - $P_f$ is the density of air bubbles spread in water
-  - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, omega_a dot omega_b)$
-  - $omega_n$ is the normal
-  - $lambda$ is the masking function defined under Smith's $G_1$
-\
-
 ==== Blinn-Phong Specular Reflection @Blinn-Phong @Acerola-BRDF
-This is a (relatively) simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
+This is a simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^S $
   $ hat(H) = hat(L) + hat(V) $
   where
@@ -259,15 +254,31 @@ This is a (relatively) simplistic, empirical model to determine the specular ref
   - $hat(L)$ is the light source vector
   - $S$ is the shininess of the material
 
+==== Subsurface Scattering @Atlas-Water @Acerola-FFT
+This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
+  $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
+  $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
+  where
+  - $omega_i, omega_o, omega_h$ are the sun / eye / half vectors
+  - $H$ is the $"max"(0, "wave height")$
+  - $k_1, k_2, k_3, k_4$ are artistic parameters
+  - $C_"ss"$ is the water scatter color
+  - $C_f$ is the air bubbles color
+  - $P_f$ is the density of air bubbles spread in water
+  - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, omega_a dot omega_b)$
+  - $omega_n$ is the normal vector
+  - $lambda$ is the masking function defined under Smith's $G_1$
+\
+
 ==== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks @Acerola-BRDF
 The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
-  $ F(theta) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
+  $ F(arrow(N),arrow(V)) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
   where 
   - $F_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
-  - $theta$ is the angle between the incident light and the halfway vector @Blinn-Phong
   - $n_1$ & $n_2$ are the refractive indices of the two media @Schlicks
   - $arrow(N)$ is the normal vector
-  - $arrow(V)$ is the view vector
+  - $arrow(V)$ is the view vector (in microfacet models can also be the light vector) @Schlicks
+  - if using a microfacet model, replace $arrow(N)$ with the Halfway vector ($arrow(H)$) @Schlicks
 \
 
 ==== Environment Reflections @Acerola-SOS
@@ -278,11 +289,11 @@ In order to get the color of the reflection for a given pixel, we compute the re
   - $hat(V)$ is the camera view vector
   - $hat(R)$ is the vector that points to the point on the cubemap which we sample
 
-==== Post Processing @Acerola-SOS
+==== Post Processing (Unfinished) @Acerola-SOS
 To hide the imperfect horizon line we use a distance fog. This is then attenuated based oon height. In order to do this we use the depth buffer to determine the depth of each pixel and then based on that scale the light color to be closer to a defined fog color. Finally we blend a sun into the skybox based on the light position.
 \
 
-==== Color Grading @Acerola-SOS
+==== Color Grading (Unfinished) @Acerola-SOS
 in order to really sell the sun being as bright as it would be on an open ocean, we apply a bloom pass to the whole image. In order to prevent it from being completely blown out we then apply a tone mapping to rebalance the colors. 
 
 \
@@ -290,7 +301,7 @@ in order to really sell the sun being as bright as it would be on an open ocean,
 === PBR-Specific Algorithms / Formulae
 ==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF
 The BRDF (Bidirectional Reflectance Distribution Function) is used to determine the reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D(h)$ can be any distribution function. The geometric attenuation is a function that models how some reflections are masked / shadowed by the microfacets "geometry" and serves to counteract the fresnel.
-  $ f_"microfacet" = (F(omega_i, h) G(omega_i, omega_o, h) D(h)) / (4(n dot omega_i) (n dot omega_o)   ) $ 
+  $ f_"microfacet" = (F(omega_i, h) D(h) G(omega_i, omega_o, h)) / (4(n dot omega_i) (n dot omega_o)   ) $ 
   where
   - $F(omega_i, h)$ is the Fresnel Reflectance
   - $D(h)$ is the Distribution Function
@@ -316,19 +327,6 @@ where
 - $hat(S)$ is either the (normalised) light or view vector
 \
 
-==== Specular Reflection (Unfinished) @Atlas-Water
-A physically based specular reflection model. This is an analytical approach to the indefinete integral which determines the specular color @Atlas-Water. Undecided on whether this will be used as depending on other facets may result in a minimal visual difference for maximal effort.
-  $ L_"specular" = (L_"sun" F(omega_h, omega_"sun") p_22 (omega_h)) / (4 (omega_n dot omega_"eye") (1 + lambda (omega_"sun")) + lambda (omega_"eye")) $
-  where
-  - $omega_"sun", omega_"eye", omega_h$ is the sun / eye / half vector direction
-  - $omega_n$ is the macronormal
-  - $p_22$ is a distribution function, defined further in LEADR @LEADR
-  - $lambda$ is the function defined under Smith's $G_1$
-\
-
-==== Environment Reflections (Unfinished) @Atlas-Water @CC-BRDF @LEADR
-Bleeding edge environment reflections based on the LEADR paper on the topic @LEADR. The implementation of this will be heavily dependent on how the simple cubemap reflections look as implementing this in conjunction with other PBR lighting can constitute an nea on its own.
-
 #pagebreak()
 === Prototyping
 A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
@@ -341,9 +339,7 @@ A prototype was made in order to test the technical stack and gain experience wi
 )
 
 === Project Considerations
-The project will be split into 3 major stages, being the simulation, non PBR lighting and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
-
-If time were to allow so, I would also implement the PBR environment reflections model as seen in the LEADR paper @LEADR, however doing so would require overhauling most of my lighting systems, and implementing math I barely understand.
+The project will be split into 3 major stages, being the simulation, non PBR lighting and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
 finally, I would also like to look into implementing a sky color simulation based on sun position - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
 

@@ -46,14 +46,6 @@ JTessendorf:
     value: https://people.computing.clemson.edu/~jtessen/reports/papers_files/coursenotes2004.pdf
     date: 2024-09-08
 
-SimSlides:
-  type: web
-  title: An introduction to realistic ocean rendering through FFT
-  author: Fabio Suriano
-  url:
-    value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025#1
-    date: 2024-09-08
-
 Schlicks:
   type: article
   title: Schlick's Approximation
@@ -86,14 +78,6 @@ Acerola-SOS:
     value: https://youtu.be/PH9q0HNBjT4
     date: 2024-09-13
 
-JONSWAP-2:
-  type: article
-  title: The JONSWAP spectra in the wave-frequency domain
-  author: CodeCogs
-  url: 
-    value: https://www.codecogs.com/library/engineering/fluid_mechanics/waves/spectra/jonswap.php
-    date: 2024-09-13
-
 Jump-Trajectory:
   type: video
   title: Ocean waves simulation with Fast Fourier transform 
@@ -110,14 +94,6 @@ Atlas-Water:
     value: https://www.youtube.com/watch?v=Dqld965-Vv0
     date: 2024-09-13
 
-Atlas-Water-Slides:
-  type: misc
-  author: ["Mark Mihelich", "Tim Tcheblokov"]
-  title: Wakes, Explosions and Lighting:Interactive Water Simulation in Atlas
-  url: 
-    value: https://gpuopen.com/gdc-presentations/2019/gdc-2019-agtd6-interactive-water-simulation-in-atlas.pdf
-    date: 2024-09-13
-
 Sea-of-Thieves:
   type: conference
   title: The Technical Art of Sea of Thieves
@@ -125,23 +101,6 @@ Sea-of-Thieves:
   url: 
     value: https://history.siggraph.org/learning/the-technical-art-of-sea-of-thieves/
     date: 2024-09-14
-
-Exponential-Decay:
-  type: article
-  title: Exponential Decay
-  author: Wikipedia
-  url: 
-    value: https://en.wikipedia.org/wiki/Exponential_decay
-    date: 2024-09-11
-
-LEADR:
-  type: report
-  title: Linear Efficient Antialiased Displacement and Reflectance Mapping
-  author: [ "Jonathan Dupuy" , "Eric Heitz", "Jean-Claude Iehl" , "Pierre Poulin" , "Fabrice Neyret", "Victor Ostromoukhov" ]
-  url:
-    value: https://inria.hal.science/hal-00858220/en
-    date: 2024-09-17
-
 
 CC-BRDF:
   type: report
@@ -151,7 +110,6 @@ CC-BRDF:
     value: https://boksajak.github.io/files/CrashCourseBRDF.pdf
     date: 2024-09-17
 
-
 Acerola-BRDF:
   type: video
   title: The Secret Behind Photorealistic And Stylized Graphics 
@@ -159,12 +117,6 @@ Acerola-BRDF:
   url: 
     value: https://youtu.be/KkOkx0FiHDA
     date: 2024-09-17
-
-Empirical-Spectra:
-  type: report
-  title: Empirical directional wave spectra for computer graphics
-  author: Christopher J. Horvath
-  date: 2024-09-22
 
 Code-Motion:
   type: conference
