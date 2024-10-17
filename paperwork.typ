@@ -111,57 +111,55 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 === Simulation Concepts, Formulae, & Algorithms
 Note that throughout this project we are defining the $y$ axis as "up".
-==== Defining the Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf @Keith-Lantz @Code-Motion
+==== the Statistical Wave Summation @Jump-Trajectory @Acerola-SOS @Acerola-FFT @JTessendorf @Keith-Lantz @Code-Motion
 For a height field of dimensions $L_x$ and $L_z$, we calculate the height ($h$) at a position $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf.
-  $ h (arrow(x), t) = sum_(arrow(k)) hat(h)_0 (arrow(k)) e^(i omega(arrow(k)) t) $
-where 
-- $t$ is the time
-- $arrow(k) = (k_x, k_z)$ is the direction vector of the spectrum's texture
-- $k_x = (2 pi n) / L_x, k_z = (2 pi m) / L_z$  
-- $n, m$ are the simulation domain resolutions, integers with bounds $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$ 
-- $omega(arrow(k)) = sqrt( abs(arrow(k)) g) $ is the dispersion relation, a multiplier that determines the speed of the ocean
-- $arrow(x) = ((n L_x) / N, (m L_z) / M)$, the direction vector for the height map for which we are summing
-- $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
-- $hat(h)_0 (arrow(k))$ is the frequency spectrum function, which determines the structure of the surface
+The frequency domain representation of the waves are converted to the spatial domain using an inverse discrete fourier transform. This is split into 2 components, with the derivatives computed seperately to find exact normals:
 
-==== Statistical Wave Summations (Unfinished) @Jump-Trajectory @Acerola-FFT @Keith-Lantz @JTessendorf @Code-Motion 
-The sum of waves can be computed as an IDFT if the following conditions are met:
-- The Number of Points ($N$) = The Number of Waves ($M$)
-- $L_x = L_z = L$
-- the coordinates & wavenumbers lie on regular grids
-Given this, the frequency domain representation of the wave-height field can be converted to the spatial domain in a reasonable timeframe. This is split into 3 components:
-
-  $ "Vertical Displacement": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
+  $ "Wave Height": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement:" lambda D (arrow(x), t) = sum_arrow(k) -i arrow(k) / abs(arrow(k)) hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
-  $ "Vertical Derivative": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
-  $ "Horizontal Derivative": nabla lambda D(arrow(x),t) = sum_(arrow(k))arrow(k) arrow(k)/abs(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x) + omega(arrow(k)) t) $
-  // X / Z Derivative
+  $ "Height Derivative": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
+  $ "Displacement Derivative": lambda nabla D(arrow(x),t) = sum_(arrow(k))arrow(k) arrow(k)/abs(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
+
 where
-  - $hat(h) (arrow(k), t)$ is the frequency spectrum function
-  - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
-  - $arrow(D) (arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves". We would split the normalised vector $arrow(k)$ into its components and compute them seperately @JTessendorf
-  - $lambda$ is a convenient scale factor "choppiness" in order to create sharper wave peaks @JTessendorf
-  - $nabla h(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector for post processing effects.
+- $t$ is the time
+- $arrow(k) = [k_x, k_z]$, the wave vector, direction vector of the spectrum's texture
+- $omega(arrow(k)) = sqrt( abs(arrow(k)) g) $ is the dispersion relation, a multiplier that determines the speed of the ocean
+- $arrow(x) = [x_x,x_z]$, the direction vector for the height map for which we are summing
+- $hat(h) (arrow(k), t)$ is the frequency spectrum function
+- $h (arrow(x), t)$ is the wave height at horizontal position $arrow(x)$ 
+- $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
+- $arrow(D) (arrow(x),t)$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves". We would split the normalised vector $arrow(k)$ into its components and compute them seperately @JTessendorf
+- $lambda$ is a convenient scale factor "choppiness" in order to create sharper wave peaks @JTessendorf
+- $nabla h(arrow(x), t)$ gives the rate of change of the height, used to calculate the normal vector
+- $nabla arrow(D)(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector
 
 ==== The Inverse Discrete Fourier Transform (IDFT) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
-For implementation, the statistical wave summations represented in terms of the indices $n$ and $m$, where $n$ is the number of points & $m$ is the number of waves
+The IDFT can be computed using the fast fourier transform if the following conditions are met:
+- $N = M =L_x = L_z$
+- the coordinates & wavenumbers lie on regular grids
+- $N,M,L_x,L_z = 2^x$, for any positive integer $x$
+For implementation, the statistical wave summation is represented in terms of the indices $n$ and $m$ as below
+
+where
+- $N,M$ are the number of points & waves respectively
+- $L_x,L_z$ are the horizontal dimensions of a wave tile
+- $n, m$ are the simulation domain resolutions, integers with bounds $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$ 
+- $arrow(k) = [(2 pi n) / L_x, (2 pi m) / L_z]$  
+- $arrow(x) = [(n L_x) / N, (m L_z) / M]$
+
 
 ==== Frequency Spectrum Function (Unfinished) @JTessendorf @Jump-Trajectory @Acerola-FFT
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(arrow(k))t) + h_0 (-k) e^(-i omega(arrow(k)) t) $
-  $ hat(h)_0 = hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S(omega) ) $ 
+  $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S(omega) ) $ 
 where
   - $hat(h)$ evolves $hat(h)_0$ through time using eulers formula. by combining a positive and negative version of the wave number you ensure the functions output is real @JTessendorf
   - $hat(h)_0$ is the initial wave state as determined by the energy spectra & gaussian distribution. This is only computed on parameter change / startup and then stored into a texture
 
-==== The IDFT, In terms of indices (Unfinished) @Jump-Trajectory @JTessendorf @Code-Motion
-for our simulation, we will use indices $n prime, m prime$, which will run from $0 <= n prime < N, 0 <= m prime < M$. So, we can write equations for $n, m$ in terms of $n prime, m prime$:
-- $n = n prime - N / 2$
-- $m = m prime - M / 2$
-
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @FFT-Wiki
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
   $ "complex, will write up after learning roots of unity & partial derivatives" $
+
 
 ==== JONSWAP (Joint North Sea Wave Observation Project) Spectrum @OW-Spectra @Jump-Trajectory @Acerola-FFT
 This energy spectrum determines is where the final height is ultimately derived from. The JONSWAP energy spectrum is a more parameterised version of the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
@@ -177,8 +175,7 @@ This energy spectrum determines is where the final height is ultimately derived 
       0.09 "if" omega > omega_p,
     )$ @OW-Spectra
   - $omega = 2 pi f$ where $f$ is the wave frequency in $"Hz"$ @OW-Spectra
-  - $omega_p$ is the peak wave frequency
-  - $omega_p = 22( (g^2) / (U_10 F))^(1/3) $
+  - $omega_p = 22( (g^2) / (U_10 F))^(1/3) $, the peak wave frequency
   - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @OW-Spectra
   - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra
   - $g$ is gravity
@@ -194,13 +191,13 @@ where
 
 
 ==== Surface Normals (Unfinished) @JTessendorf @Jump-Trajectory
-In order to compute the surface normals we need the derivatives of the displacement(s). the values for the derivatives are obtained from the derivative fft above.
+In order to compute the surface normals we need the derivatives of the displacement(s), the values for which are obtained from the fourier transform above.
   $ arrow(N)(arrow(x), t) = vec(- nabla h_x(arrow(x),t), 1, -nabla h_z(arrow(x), t)) $
 
 ==== The Jacobian (Unfinished) @JTessendorf @Acerola-FFT @Atlas-Water @Code-Motion
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian of the displacements goes negative. We can then offset this to bias the results and generate more foam.  
 
-  $ "Will write up once I better understand partial derivatives & eignevectors" $
+  $ "Will write up once I better understand" $
 
 ==== Exponential Decay (Unfinished) @Atlas-Water @Acerola-FFT @JTessendorf
 In order to dissipate the stored foam over time instead of instantaneously, we apply an exponential decay function to each pixel in the texture. This may potentially be replaced by a gaussian blur and fade pass depending on results produced.
@@ -220,7 +217,24 @@ In order to dissipate the stored foam over time instead of instantaneously, we a
 - postprocess results for brdf / pbr
 - recombine 4 bands in vertex shader?
 
-=== Level of Detail (LOD) Optimisations (Unfinished)@Code-Motion //@Crysis paper they mentioned
+startup:
+- generate gaussian random number pairs and store into texture on cpu
+param change:
+- generate energy spectrum for every wave and store into texture
+- generate dispersion relation for every wave and store into texture
+every frame:
+- evolve spectrum
+- inverse fft for all 3 axes 
+- inverse fft for all 5 derivatives
+- store results into textures
+- displace vertices per textures
+- compute jacobian of textures
+- inject foam into foam texture
+- lighting
+- color pixels for foam
+- exponential decay function on foam
+
+=== Level of Detail (LOD) Optimisations (Unfinished) @Code-Motion //@Crysis paper they mentioned, acerola video
 
 
 === Lighting Algorithms & Formulae
