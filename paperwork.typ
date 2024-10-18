@@ -17,7 +17,7 @@
 #page(numbering: none, [
   #v(2fr)
   #align(center, [
-    //#image("/Assets/Paperboat.svg", width: 60%)
+    //#image("/Assets/ocean.png", width: 60%)
     #text(23pt, weight: 700, [NEA])
     #v(0.1fr)
     #text(23pt, weight: 700, [Real-Time, Physically Based Ocean Simulation & Renderer])
@@ -33,9 +33,7 @@
 // Expand upon technologies
 // finish IDFT
 // explain IDFT in terms of indices limits
-// gaussian random numbers
 // explain jacobian / eigenvalues & foam
-// explain exponential decay better
 // explain 4 frequency bands
 // distance fog post processing explain
 // post processing tonemapping & bloom pass
@@ -47,8 +45,9 @@
 
 = Analysis
 
-== Prelude
+== Abstract
 \/\/ Fill Later
+// the goal of this project was to....
 == Client
 
 === Introduction
@@ -257,45 +256,44 @@ When computing lighting using vectors, we are only concerned with the direction 
 where
   - $theta$ is the angle between vectors $A$ and $B$
 
-==== Blinn-Phong Specular Reflection @Blinn-Phong @Acerola-BRDF
+==== Blinn-Phong Specular Reflection  & Vector Definitions @Blinn-Phong @Acerola-BRDF
 This is a simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^S $
   $ hat(H) = hat(L) + hat(V) $
   where
-  - $hat(H)$ is the normalised halfway vector
-  - $hat(N)$ is the normalised surface normal
+  - $hat(H)$ is the halfway vector
+  - $hat(N)$ is the surface normal
   - $hat(V)$ is the camera view vector
   - $hat(L)$ is the light source vector
   - $S$ is the shininess of the material
 
-==== Subsurface Scattering @Atlas-Water @Acerola-FFT
+==== Subsurface Scattering (Unfinished, rewrite vectors) @Atlas-Water @Acerola-FFT
 This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context with current computing power. Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
-  $ L_"scatter" = ((k_1 H angle.l omega_i dot -omega_o angle.r ^4 (0.5 - 0.5(omega_i dot omega_n))^3 + k_2 angle.l omega_o dot omega_n angle.r ^2) C_"ss" L_"sun") / (1 + lambda (omega_i)) $
-  $ L_"scatter" += k_3 angle.l omega_i dot w_n angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
+  $ L_"scatter" = ((k_1 W_"max" angle.l hat(L), -hat(V) angle.r ^4 (0.5 - 0.5(hat(L) dot hat(N)))^3 + k_2 angle.l hat(V), hat(N) angle.r ^2) C_"ss" L_"sun") / (1 + lambda_"GGX") $
+  $ L_"scatter" += k_3 angle.l hat(L), hat(N) angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
   where
-  - $omega_i, omega_o, omega_h$ are the sun / eye / half vectors
-  - $H$ is the $"max"(0, "wave height")$
+  - $hat(L), hat(V), hat(H), hat(N)$ are the sun / eye / half / normal vectors respectively
+  - $W_"max"$ is the $"max"(0, "wave height")$
   - $k_1, k_2, k_3, k_4$ are artistic parameters
   - $C_"ss"$ is the water scatter color
   - $C_f$ is the air bubbles color
   - $P_f$ is the density of air bubbles spread in water
-  - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, omega_a dot omega_b)$
-  - $omega_n$ is the normal vector
-  - $lambda$ is the masking function defined under Smith's $G_1$
+  - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, (omega_a dot omega_b))$
+  - $lambda_"GGX"$ is the masking function defined under Smith's $G_1$
 \
 
 ==== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks @Acerola-BRDF
 The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
-  $ F(arrow(N),arrow(V)) = F_0 + (1 - F_0)(1 - arrow(N) dot arrow(V))^5 $
+  $ F(hat(N),hat(V)) = F_0 + (1 - F_0)(1 - hat(N) dot hat(V))^5 $
   where 
   - $F_0 = ((n_1 - n_2) / (n_1 + n_2))^2$
   - $n_1$ & $n_2$ are the refractive indices of the two media @Schlicks
-  - $arrow(N)$ is the normal vector
-  - $arrow(V)$ is the view vector (in microfacet models can also be the light vector) @Schlicks
-  - if using a microfacet model, replace $arrow(N)$ with the Halfway vector ($arrow(H)$) @Schlicks
+  - $hat(N)$ is the normal vector
+  - $hat(V)$ is the view vector (in microfacet models can also be the light vector) @Schlicks
+  - if using a microfacet model, replace $hat(N)$ with the Halfway vector, $hat(H)$) @Schlicks
 \
 
-==== Environment Reflections @Acerola-SOS
+==== Environment Reflections @Acerola-SOS @Blinn-Phong
 In order to get the color of the reflection for a given pixel, we compute the reflected vector from the normal and view vector. We then sample the corresponding point on the skybox's cubemap and use that color as the reflected color. This method is somewhat simplistic, and not physically based.
   $ hat(R) = 2 hat(N) ( hat(N) dot hat(V)) - hat(V) $
   where
@@ -314,31 +312,30 @@ in order to really sell the sun being as bright as it would be on an open ocean,
 
 === PBR-Specific Algorithms / Formulae
 ==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF
-The BRDF (Bidirectional Reflectance Distribution Function) is used to determine the reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D(h)$ can be any distribution function. The geometric attenuation is a function that models how some reflections are masked / shadowed by the microfacets "geometry" and serves to counteract the fresnel.
-  $ f_"microfacet" = (F(omega_i, h) D(h) G(omega_i, omega_o, h)) / (4(n dot omega_i) (n dot omega_o)   ) $ 
+This BRDF (Bidirectional Reflectance Distribution Function) is used to determine the specular reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D(h)$ can be any distribution function. The geometric attenuation is a function that models how some reflections are masked / shadowed by the microfacets "geometry" and serves to counteract the fresnel.
+  $ L_"specular" = f_"microfacet" (hat(N),hat(H),hat(L),hat(V)) = (F(hat(N),hat(H)) G(hat(L), hat(H)) D(hat(N),hat(H))) / (4(hat(N) dot hat(L)) (hat(N) dot hat(V))   ) $ 
   where
-  - $F(omega_i, h)$ is the Fresnel Reflectance
-  - $D(h)$ is the Distribution Function
-  - $G(omega_i, omega_o, h)$ is the Geometric Attenuation
+  - $F(hat(N),hat(H))$ is the Fresnel Reflectance
+  - $D(hat(N),hat(H))$ is the Distribution Function
+  - $G(hat(L), hat(V), hat(H))$ is the Geometric Attenuation Function
 \
 
 ==== GGX Distribution @CC-BRDF @Acerola-BRDF
 The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
-  $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)cos^2 theta_h + 1)^2) $
+  $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)(hat(N) dot hat(H))^2 + 1)^2) $
 where
-  - $alpha = "roughness" ^2$
-  - $cos theta_h = hat(n) dot hat(H)$
-  - where $hat(n)$ and $hat(H)$ are the surface normal and halfway vector respectively
+  - $alpha = "roughness"^2$
+  - $hat(N)$ and $hat(H)$ are the surface normal and halfway vector respectively
 
 ==== Geometric Attenuation Function (Smith's $G_1$ Function) @CC-BRDF
-The geometric attenuation function used within the microfacet BRDF. The $lambda$ term changes depending on the distribution function used. 
-  $ G_1 = 1 / (1 + lambda(a)) $
-  $ a = (hat(H) dot hat(S)) / (alpha sqrt(1 - (hat(H) dot hat(S))^2)) $
-  $ lambda = (-1 + sqrt( 1 + a^(-2))) / 2 $
+Used to counteract the fresnel term, mimics the phenomena of masking & shadowing presented by the microfactets. The $lambda_"GGX"$ term changes depending on the distribution function used. 
+  $ G_1 = 1 / (1 + lambda_"GGX" (a)) $
+  $ a = (hat(H) dot hat(L)) / (alpha sqrt(1 - (hat(H) dot hat(L))^2)) $
+  $ lambda_"GGX" = (-1 + sqrt( 1 + a^(-2))) / 2 $
 where
 - $alpha = "roughness"^2$
 - $hat(H)$ is a microfacet normal
-- $hat(S)$ is either the (normalised) light or view vector
+- $hat(L)$ is the light vector (can also be the view vector)
 \
 
 #pagebreak()
@@ -353,7 +350,7 @@ A prototype was made in order to test the technical stack and gain experience wi
 )
 
 === Project Considerations
-The project will be split into 3 major stages, being the simulation, non PBR lighting and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
+The project will be split into 3 major stages - the simulation, non PBR lighting, and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the FFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
 finally, I would also like to look into implementing a sky color simulation based on sun position - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
 
