@@ -210,6 +210,8 @@ where
 ==== Directional Spectrum Function  @Empirical-Spectra
 the TMA spectrum is a directional spectrum, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
+this takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf. We also need to multiply it be the directional spread function @Empirical-Spectra.
+$ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D_"final" (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
 
 === #text(14pt, [Ocean Geometry & Foam (Unfinished)])
 Note that throughout this project we are defining the positive $y$ direction as "up".
@@ -237,7 +239,7 @@ where
 ==== Frequency Spectrum Function @JTessendorf @Jump-Trajectory @Acerola-FFT
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(|arrow(k)|)t) + h_0 (-k) e^(-i omega(|arrow(k)|) t) $
-  $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( 2 S_"TMA" (arrow(k))) $ 
+  $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S_"TMA" (arrow(k))) $ 
 where
   - $hat(h)$ evolves $hat(h)_0$ through time using eulers formula. by combining a positive and negative version of the wave number you ensure the functions output is real @JTessendorf
   - $hat(h)_0$ is the initial wave state as determined by the energy spectra & gaussian distribution. This is only computed on parameter change / startup and then stored into a texture
