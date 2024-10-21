@@ -147,8 +147,6 @@ where
 - $g$ is gravity
 - $h$ is the ocean depth
 
-
-
 ==== Non-Directional Spectrum (JONSWAP) @OW-Spectra @Jump-Trajectory @Acerola-FFT @Empirical-Spectra 
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
@@ -181,7 +179,6 @@ where
 - $omega$ is the dispersion relation
 - $h$ is the ocean depth
 - $g$ is gravity
-
 
 ==== Directional Spread Function (Donelan-Banner) & Swell @Empirical-Spectra
 This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
