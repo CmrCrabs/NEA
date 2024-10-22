@@ -75,7 +75,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   + "do i need to implement caustics, reflections, or other light-related phenomena?"
 + Technologies
   + "are there any limitations due to existing technology?"
-  + "does this need to interop with existing shader code?"
+  + "does this need to interop with existing code?"
 + Scope
   + "are there limitations due to the target device(s)?"
   + "are there other performance intesive systems in place?"
@@ -151,6 +151,8 @@ The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fa
 ==== Dispersion Relation @Empirical-Spectra @JTessendorf
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using approximate relationships @Empirical-Spectra.
 $ omega(arrow(k)) = sqrt(g |arrow(k)| tanh (|arrow(k)| h)) $
+$ (d omega(arrow(k))) / (d arrow(k)) = $
+
 where
 - $g$ is gravity
 - $h$ is the ocean depth
@@ -192,7 +194,7 @@ where
 This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
 $ theta = arctan (k_z / k_x) - theta_0$
-$ D_"base" (omega, theta) = beta_s / 2 tanh (beta_s pi) sech^2(beta_s theta) $
+$ D_"base" (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
 $ beta_s = cases( 
   2.61 (omega / omega_p)^1.3 "if" omega / omega_p < 0.95,
   2.28 (omega / omega_p)^(-1.3) "if" 0.95 <= omega / omega_p < 1.6,
@@ -203,7 +205,7 @@ where
 - $theta_0$ is a wind direction offset
 
 ==== Directional Spread Function including Swell (Unfinished) @Empirical-Spectra
-Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. in practice these would be the larger waves seen over a greater area. the final function is based on combining the directional spread function with a swell function as below.
+Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. in practice these would be the larger waves seen over a greater area. the final function is based on combining the donelan-banner directional spread function with a swell function as below. It is worth noting that, bar the "magic value" of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical @Empirical-Spectra.
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
 $ Q_"final" = $ 
@@ -215,7 +217,7 @@ where
 ==== Directional Spectrum Function @Empirical-Spectra
 the TMA spectrum is a directional spectrum, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
-this takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf. We also need to multiply it be the directional spread function @Empirical-Spectra.
+this takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf. In order to do this we apply the following 'transformation'. In order to make the function directional, we also need to multiply it be the directional spread function  @Empirical-Spectra.
 $ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D_"final" (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
 
 #pagebreak()
