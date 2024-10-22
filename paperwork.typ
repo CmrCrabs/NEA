@@ -8,7 +8,7 @@
 ) 
 #set text(
   hyphenate: false,
-  //font: "EB Garamond"
+  font: "EB Garamond"
 )
 #set heading(numbering: "1.", offset: 0)
 #set text(12pt)
@@ -33,16 +33,23 @@
 ])
 
 // TODO: 
+
+// cascades
+// IFFT
+// dispersion relation derivative
+// define delta K
+// jacobian & eigenvalue
+// define derivatives
+// how to pack 8 ffts into 4
+// expand upon technologies
 // write objectives
-// Expand upon technologies
-// finish IDFT
-// explain IDFT in terms of indices limits
-// explain jacobian / eigenvalues & foam
-// explain 4 frequency bands
-// distance fog post processing explain
-// post processing tonemapping & bloom pass
-// Ocean LOD
-// FFT!!
+// explain IDFT in terms of indices (keith lantz & jump trajectory)
+// post processing tonemapping
+// bloom pass
+// cubemap sampling
+//
+// Objectives
+
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -138,6 +145,7 @@ every frame:
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
   $ "complex, will write up after learning roots of unity & partial derivatives" $
 
+#pagebreak()
 === #text(14pt, [Spectrum Generation (Unfinished)])
 // overview
 ==== Dispersion Relation @Empirical-Spectra @JTessendorf
@@ -180,7 +188,7 @@ where
 - $h$ is the ocean depth
 - $g$ is gravity
 
-==== Directional Spread Function (Donelan-Banner) & Swell @Empirical-Spectra
+==== Directional Spread Function (Donelan-Banner) @Empirical-Spectra
 This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
 $ theta = arctan (k_z / k_x) - theta_0$
@@ -194,7 +202,7 @@ $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
 where
 - $theta_0$ is a wind direction offset
 
-==== Directional Spread Function including Swell @Empirical-Spectra
+==== Directional Spread Function including Swell (Unfinished) @Empirical-Spectra
 Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. in practice these would be the larger waves seen over a greater area. the final function is based on combining the directional spread function with a swell function as below.
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
@@ -204,12 +212,13 @@ $ s_xi = 16 tanh (omega_p / omega) xi^2 $
 where
 - - $xi$ is a "swell" parameter, in the range $0..1$
 
-==== Directional Spectrum Function  @Empirical-Spectra
+==== Directional Spectrum Function @Empirical-Spectra
 the TMA spectrum is a directional spectrum, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
 this takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf. We also need to multiply it be the directional spread function @Empirical-Spectra.
 $ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D_"final" (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
 
+#pagebreak()
 === #text(14pt, [Ocean Geometry & Foam (Unfinished)])
 Note that throughout this project we are defining the positive $y$ direction as "up".
 // other overview
@@ -281,8 +290,6 @@ we then threshold the value such that $J(x) < 0$, storing it into a texture. Thi
 ==== Level of Detail (LOD) Optimisations (Unfinished) @Code-Motion //@Crysis paper they mentioned, acerola video
 \/\/ i do not want to do this
 \/\/ will include frustum culling, gpu instancing & LOD scaling based on distance to camera
-
-=== #text(14pt, [Post Processing])
 
 #pagebreak()
 === #text(14pt, [Post Processing])
