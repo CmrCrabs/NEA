@@ -38,6 +38,7 @@
 // IFFT
 // dispersion relation derivative
 // define delta K
+// Q final
 // jacobian & eigenvalue
 // define derivatives
 // how to pack 8 ffts into 4
@@ -140,15 +141,10 @@ every frame:
 - exponential decay function on foam
 @JTessendorf @Empirical-Spectra
 
-=== #text(14pt, [The IFFT (Unfinished)])
-==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
-The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
-  $ "complex, will write up after learning roots of unity & partial derivatives" $
 
-#pagebreak()
 === #text(14pt, [Spectrum Generation (Unfinished)])
 // overview
-==== Dispersion Relation @Empirical-Spectra @JTessendorf
+==== Dispersion Relation (Unfinished) @Empirical-Spectra @JTessendorf
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using approximate relationships @Empirical-Spectra.
 $ omega(arrow(k)) = sqrt(g |arrow(k)| tanh (|arrow(k)| h)) $
 $ (d omega(arrow(k))) / (d arrow(k)) = $
@@ -191,9 +187,9 @@ where
 - $g$ is gravity
 
 ==== Directional Spread Function (Donelan-Banner) @Empirical-Spectra
-This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
+The directional spread models how waves react to wind direction @Jump-Trajectory. This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
-$ theta = arctan (k_z / k_x) - theta_0$
+$ theta = arctan (k_z / k_x) - theta_0 $
 $ D_"base" (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
 $ beta_s = cases( 
   2.61 (omega / omega_p)^1.3 "if" omega / omega_p < 0.95,
@@ -205,19 +201,20 @@ where
 - $theta_0$ is a wind direction offset
 
 ==== Directional Spread Function including Swell (Unfinished) @Empirical-Spectra
-Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. in practice these would be the larger waves seen over a greater area. the final function is based on combining the donelan-banner directional spread function with a swell function as below. It is worth noting that, bar the "magic value" of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical @Empirical-Spectra.
+Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the final function is based on combining the donelan-banner directional spread function with a swell function as below. It is worth noting that, bar the "magic value" of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical @Empirical-Spectra.
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
-$ Q_"final" = $ 
+$ Q_"final" (omega) = [ integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega_ theta) d theta ]^(-1)  $
 $ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
 $ s_xi = 16 tanh (omega_p / omega) xi^2 $
 where
-- - $xi$ is a "swell" parameter, in the range $0..1$
+ - $xi$ is a "swell" parameter, in the range $0..1$
+please note I currently have no clue how to efficiently compute $Q_"final"$ - if I cannot find a nice solution will be dropping swell as a feature of the simulation.
 
 ==== Directional Spectrum Function @Empirical-Spectra
-the TMA spectrum is a directional spectrum, combining the above functions. 
+The TMA spectrum below is an undirectional spectrum that considers depth, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
-this takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf. In order to do this we apply the following 'transformation'. In order to make the function directional, we also need to multiply it be the directional spread function  @Empirical-Spectra.
+This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following 'transformation'. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
 $ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D_"final" (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
 
 #pagebreak()
@@ -244,6 +241,21 @@ where
 - $nabla h(arrow(x), t)$ gives the rate of change of the height, used to calculate the normal vector
 - $nabla arrow(D)(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector
 
+==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
+The IDFT can be computed using the fast fourier transform if the following conditions are met:
+- $N = M =L_x = L_z$
+- the coordinates & wavenumbers lie on regular grids
+- $N,M,L_x,L_z = 2^x$, for any positive integer $x$
+For implementation, the statistical wave summation is represented in terms of the indices $n'$ and $m'$, where $n',m'$ are of bounds $0 <= n' < N$ & $0 <= m' < M$
+
+where
+- $N,M$ are the number of points & waves respectively, the simulation resolution
+- $L_x,L_z$ are the worldspace dimensions
+- $arrow(k) = [(2 pi n) / L_x, (2 pi m) / L_z]$  
+- $arrow(x) = [(n L_x) / N, (m L_z) / M]$
+
+note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$, but for ease of implemntation we shift the bounds (and all subsequent values) to begin at 0. I am thus glossing over some redundant information, further details on how / why are seen at @Jump-Trajectory @Keith-Lantz
+
 ==== Frequency Spectrum Function @JTessendorf @Jump-Trajectory @Acerola-FFT
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(|arrow(k)|)t) + h_0 (-k) e^(-i omega(|arrow(k)|) t) $
@@ -264,20 +276,7 @@ where
 - $tilde(x)$ is the mean
 - $x$ is a random number, $-1..1$
 
-==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
-The IDFT can be computed using the fast fourier transform if the following conditions are met:
-- $N = M =L_x = L_z$
-- the coordinates & wavenumbers lie on regular grids
-- $N,M,L_x,L_z = 2^x$, for any positive integer $x$
-For implementation, the statistical wave summation is represented in terms of the indices $n'$ and $m'$, where $n',m'$ are of bounds $0 <= n' < N$ & $0 <= m' < M$
 
-where
-- $N,M$ are the number of points & waves respectively, the simulation resolution
-- $L_x,L_z$ are the worldspace dimensions
-- $arrow(k) = [(2 pi n) / L_x, (2 pi m) / L_z]$  
-- $arrow(x) = [(n L_x) / N, (m L_z) / M]$
-
-note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$, but for ease of implemntation we shift the bounds (and all subsequent values) to begin at 0. I am thus glossing over some redundant information, further details on how / why are seen at @Jump-Trajectory @Keith-Lantz
 
 ==== Foam, The Jacobian & Eigenvalues (Unfinished) @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the displacements goes negative. Per Tessendorf @JTessendorf, we compute the determinant of the jacobian for the horizontal displacement, $D(arrow(x), t)$.
@@ -293,6 +292,11 @@ we then threshold the value such that $J(x) < 0$, storing it into a texture. Thi
 \/\/ i do not want to do this
 \/\/ will include frustum culling, gpu instancing & LOD scaling based on distance to camera
 
+=== #text(14pt, [The IFFT (Unfinished)])
+==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
+The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
+  $ "complex, will write up after learning roots of unity & partial derivatives" $
+
 #pagebreak()
 === #text(14pt, [Post Processing])
 ==== Rendering Equation @Atlas-Water @Acerola-FFT @Acerola-SOS
@@ -300,7 +304,7 @@ This abstract equation models how a light ray incoming to a viewer is "formed" (
 
 To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  
 
-$ L_"eye" = (1 - F) L_"scatter" + F(L_"sun" L_"specular" + L_"env_reflected") $
+$ L_"eye" = (1 - F) L_"scatter" + L_"sun" L_"specular" + F L_"env_reflected" $
 
   where
   - $F$ is the fresnel reflectance term
@@ -316,7 +320,7 @@ When computing lighting using vectors, we are only concerned with the direction 
   - $hat(V)$ is the camera view vector
   - $hat(L)$ is the light source vector
 
-==== Surface Normals (Unfinished) @JTessendorf @Jump-Trajectory
+==== Surface Normals @JTessendorf @Jump-Trajectory
 In order to compute the surface normals we need the derivatives of the displacement(s), the values for which are obtained from the fourier transform above.
   $ arrow(N)(arrow(x), t) = vec(- nabla h_x(arrow(x),t), 1, -nabla h_z(arrow(x), t)) $
 note that we need to normalise this for actual usage.
@@ -344,7 +348,7 @@ The fresnel factor is a multiplier that scales the amount of reflected light bas
   - if using a microfacet model, replace $hat(N)$ with the Halfway vector, $hat(H)$) @Schlicks
 \
 
-==== Blinn-Phong Specular Reflection  & Vector Definitions @Blinn-Phong @Acerola-BRDF
+==== Blinn-Phong Specular Reflection @Blinn-Phong @Acerola-BRDF
 This is a simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^S $
   $ hat(H) = hat(L) + hat(V) $
@@ -359,8 +363,9 @@ In order to get the color of the reflection for a given pixel, we compute the re
 
 ==== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF
 This BRDF (Bidirectional Reflectance Distribution Function) is used to determine the specular reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D$ can be any distribution function - the geometric attenuation function $G$ changing accordingly.
-$ L_"specular" = f_"microfacet" (hat(N),hat(H),hat(L),hat(V)) = (F(hat(N),hat(H)) G(hat(L), hat(H)) D(hat(N),hat(H))) / (4(hat(N) dot hat(L)) (hat(N) dot hat(V))   ) $ 
+$ L_"specular" = L_"sun" f_"microfacet" (hat(N),hat(H),hat(L),hat(V)) = (F(hat(N),hat(H)) G(hat(L), hat(H)) D(hat(N),hat(H))) / (4(hat(N) dot hat(L)) (hat(N) dot hat(V))   ) $ 
   where
+  - $L_"sun"$ is the color of the sun
   - $F(hat(N),hat(H))$ is the Fresnel Reflectance
   - $D(hat(N),hat(H))$ is the Distribution Function
   - $G(hat(L), hat(V), hat(H))$ is the Geometric Attenuation Function
@@ -373,7 +378,7 @@ where
 
 ==== Geometric Attenuation Function (Smith's $G_1$ Function) @CC-BRDF
 Used to counteract the fresnel term, mimics the phenomena of masking & shadowing presented by the microfactets. The $lambda_"GGX"$ term changes depending on the distribution function used. 
-  $ G_1 = 1 / (1 + lambda_"GGX" (a)) $
+  $ G_1 = 1 / (1 + a lambda_"GGX") $
   $ a = (hat(H) dot hat(L)) / (alpha sqrt(1 - (hat(H) dot hat(L))^2)) $
   $ lambda_"GGX" = (-1 + sqrt( 1 + a^(-2))) / 2 $
 where
@@ -401,6 +406,8 @@ A prototype was made in order to test the technical stack and gain experience wi
 The project will be split into 4 major stages - the simulation, implementing the IFFT, non PBR lighting, and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the spectrums, DFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
 finally, I would also like to look into implementing a sky color simulation based on sun position - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
+
+If time were to permit, I would also implement environment reflections per a very interesting papar on Linear Efficient Antialiased Displacement and Reflectance mapping.
 
 #pagebreak()
 == Objectives (Unfinished)
