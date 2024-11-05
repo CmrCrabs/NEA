@@ -36,21 +36,21 @@
 
 // cascades
 // IFFT
-// dispersion relation derivative
-// define delta K
-// Q final
+// dispersion relation derivative (check if equal)
+// define delta K (2pi / lengthscale (video))
+// Q final analytical
 // jacobian & eigenvalue
 // define derivatives
 // how to pack 8 ffts into 4
 // expand upon technologies
 // write objectives
-// explain IDFT in terms of indices (keith lantz & jump trajectory)
 // post processing tonemapping
 // bloom pass
 // cubemap sampling
 //
 // Objectives
 
+// explain IDFT in terms of indices (keith lantz & jump trajectory)
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -146,12 +146,13 @@ every frame:
 // overview
 ==== Dispersion Relation (Unfinished) @Empirical-Spectra @JTessendorf
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using approximate relationships @Empirical-Spectra.
-$ omega(arrow(k)) = sqrt(g |arrow(k)| tanh (|arrow(k)| h)) $
-$ (d omega(arrow(k))) / (d arrow(k)) = $
+$ omega(|arrow(k)|) = sqrt(g |arrow(k)| tanh (|arrow(k)| h)) $
+$ (d omega(|arrow(k)|)) / (d arrow(k)) = (g tanh (h |arrow(k)|) + h |arrow(k)| sech^2 (h |arrow(k)|)) / (2 sqrt(g |arrow(k)| tanh (h |arrow(k)|))) $
 
 where
 - $g$ is gravity
 - $h$ is the ocean depth
+- $arrow(k)$ is defined with the wave summation below
 
 ==== Non-Directional Spectrum (JONSWAP) @OW-Spectra @Jump-Trajectory @Acerola-FFT @Empirical-Spectra 
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
@@ -175,7 +176,6 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
 
 ==== Depth Attenuation Function (Kitaiigorodskii) @Empirical-Spectra
 JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra.
-
 $ Phi (omega, h) = cases(
   1 / 2 omega_h ^2 "if" omega_h <= 1,
   1 - 1 / 2 (2 - omega_h)^2 "if" omega_h > 1,
@@ -200,16 +200,17 @@ $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
 where
 - $theta_0$ is a wind direction offset
 
-==== Directional Spread Function including Swell (Unfinished) @Empirical-Spectra
-Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the final function is based on combining the donelan-banner directional spread function with a swell function as below. It is worth noting that, bar the "magic value" of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical @Empirical-Spectra.
+==== Swell (Unfinished) @Empirical-Spectra
+Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra.
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
-$ Q_"final" (omega) = [ integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega_ theta) d theta ]^(-1)  $
+$ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega_ theta) d theta )^(-1)  $
 $ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
 $ s_xi = 16 tanh (omega_p / omega) xi^2 $
 where
  - $xi$ is a "swell" parameter, in the range $0..1$
-please note I currently have no clue how to efficiently compute $Q_"final"$ - if I cannot find a nice solution will be dropping swell as a feature of the simulation.
+ - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
+
 
 ==== Directional Spectrum Function @Empirical-Spectra
 The TMA spectrum below is an undirectional spectrum that considers depth, combining the above functions. 
@@ -293,6 +294,7 @@ we then threshold the value such that $J(x) < 0$, storing it into a texture. Thi
 \/\/ will include frustum culling, gpu instancing & LOD scaling based on distance to camera
 
 === #text(14pt, [The IFFT (Unfinished)])
+Everything in this section is subject to significant change, I am opting not to work on this now so I can begin implementation faster
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
   $ "complex, will write up after learning roots of unity & partial derivatives" $
@@ -304,12 +306,11 @@ This abstract equation models how a light ray incoming to a viewer is "formed" (
 
 To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  
 
-$ L_"eye" = (1 - F) L_"scatter" + L_"sun" L_"specular" + F L_"env_reflected" $
+$ L_"eye" = (1 - F) L_"scatter" + L_"specular" + F L_"env_reflected" $
 
   where
   - $F$ is the fresnel reflectance term
   - $L_"scatter"$ is the light re-emitted due to subsurface scattering
-  - $L_"sun"$ is the color of the sun
   - $L_"specular"$ is the reflected light from the sun 
   - $L_"env_reflected"$ is the reflected light from the environemnt
 
@@ -333,6 +334,7 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   - $W_"max"$ is the $"max"(0, "wave height")$
   - $k_1, k_2, k_3, k_4$ are artistic parameters //explain what each param does
   - $C_"ss"$ is the water scatter color
+  - $L_"sun"$ is the color of the sun
   - $C_f$ is the air bubbles color
   - $P_f$ is the density of air bubbles spread in water
   - $angle.l omega_a, omega_b angle.r$ is the $"max"(0, (omega_a dot omega_b))$
@@ -377,7 +379,7 @@ where
   - $alpha = "roughness"^2$
 
 ==== Geometric Attenuation Function (Smith's $G_1$ Function) @CC-BRDF
-Used to counteract the fresnel term, mimics the phenomena of masking & shadowing presented by the microfactets. The $lambda_"GGX"$ term changes depending on the distribution function used. 
+Used to counteract the fresnel term, mimics the phenomena of masking & shadowing presented by the microfactets. The $lambda_"GGX"$ term changes depending on the distribution function used (GGX). 
   $ G_1 = 1 / (1 + a lambda_"GGX") $
   $ a = (hat(H) dot hat(L)) / (alpha sqrt(1 - (hat(H) dot hat(L))^2)) $
   $ lambda_"GGX" = (-1 + sqrt( 1 + a^(-2))) / 2 $
