@@ -36,9 +36,9 @@
 
 // cascades
 // IFFT
-// dispersion relation derivative (check if equal)
-// define delta K (2pi / lengthscale (video))
-// Q final analytical
+// dispersion relation derivative (simplify / use fftocean)
+// change |k| notation to bold k
+// change dispersion relation to phi
 // jacobian & eigenvalue
 // define derivatives
 // how to pack 8 ffts into 4
@@ -142,17 +142,17 @@ every frame:
 @JTessendorf @Empirical-Spectra
 
 
-=== #text(14pt, [Spectrum Generation (Unfinished)])
+=== #text(14pt, [Spectrum Generation])
 // overview
-==== Dispersion Relation (Unfinished) @Empirical-Spectra @JTessendorf
+==== Dispersion Relation @Empirical-Spectra @JTessendorf
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using approximate relationships @Empirical-Spectra.
-$ omega(|arrow(k)|) = sqrt(g |arrow(k)| tanh (|arrow(k)| h)) $
-$ (d omega(|arrow(k)|)) / (d arrow(k)) = (g tanh (h |arrow(k)|) + h |arrow(k)| sech^2 (h |arrow(k)|)) / (2 sqrt(g |arrow(k)| tanh (h |arrow(k)|))) $
+$ phi(k) = sqrt(g k tanh (k h)) $
+$ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
 
 where
 - $g$ is gravity
 - $h$ is the ocean depth
-- $arrow(k)$ is defined with the wave summation below
+- $k = |arrow(k)|$, defined with the wave summation below
 
 ==== Non-Directional Spectrum (JONSWAP) @OW-Spectra @Jump-Trajectory @Acerola-FFT @Empirical-Spectra 
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
@@ -168,7 +168,7 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
   - $alpha$ is the intensity of the spectra
   - $beta = 5/4$, a "shape factor", rarely changed @OW-Spectra
   - $gamma = 3.3$
-  - $omega = omega(|arrow(k)|) $is the dispersion relation
+  - $omega = phi(k)$, the dispersion relation
   - $omega_p$ is the peak wave frequency
   - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @OW-Spectra
   - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra @Empirical-Spectra
@@ -182,7 +182,7 @@ $ Phi (omega, h) = cases(
 ) $
 $ omega_h = omega sqrt(h / g) $
 where 
-- $omega$ is the dispersion relation
+- $omega = phi(k)$, the dispersion relation
 - $h$ is the ocean depth
 - $g$ is gravity
 
@@ -190,7 +190,7 @@ where
 The directional spread models how waves react to wind direction @Jump-Trajectory. This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
 $ theta = arctan (k_z / k_x) - theta_0 $
-$ D_"base" (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
+$ D (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
 $ beta_s = cases( 
   2.61 (omega / omega_p)^1.3 "if" omega / omega_p < 0.95,
   2.28 (omega / omega_p)^(-1.3) "if" 0.95 <= omega / omega_p < 1.6,
@@ -200,23 +200,27 @@ $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
 where
 - $theta_0$ is a wind direction offset
 
-==== Swell (Unfinished) @Empirical-Spectra
-Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra.
-
-$ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
-$ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega_ theta) d theta )^(-1)  $
-$ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
-$ s_xi = 16 tanh (omega_p / omega) xi^2 $
-where
- - $xi$ is a "swell" parameter, in the range $0..1$
- - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
+//==== Swell (Unfinished) @Empirical-Spectra
+//Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra.
+//
+//$ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
+//$ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega_ theta) d theta )^(-1)  $
+//$ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
+//$ s_xi = 16 tanh (omega_p / omega) xi^2 $
+//where
+// - $xi$ is a "swell" parameter, in the range $0..1$
+// - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
 
 
 ==== Directional Spectrum Function @Empirical-Spectra
 The TMA spectrum below is an undirectional spectrum that considers depth, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
 This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following 'transformation'. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
-$ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D_"final" (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
+it is worth noting that, assuming I do not implement swell, the spectrum - and thus the entire simulation - is fully empirical.
+$ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
+$ Delta arrow(k)_x = Delta arrow(k)_z = (2 pi) / L $
+where 
+- $L$ is the lengthscale defined below
 
 #pagebreak()
 === #text(14pt, [Ocean Geometry & Foam (Unfinished)])
@@ -244,7 +248,7 @@ where
 
 ==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
 The IDFT can be computed using the fast fourier transform if the following conditions are met:
-- $N = M =L_x = L_z$
+- $N = M = L_x = L_z$
 - the coordinates & wavenumbers lie on regular grids
 - $N,M,L_x,L_z = 2^x$, for any positive integer $x$
 For implementation, the statistical wave summation is represented in terms of the indices $n'$ and $m'$, where $n',m'$ are of bounds $0 <= n' < N$ & $0 <= m' < M$
@@ -387,10 +391,10 @@ where
 - $alpha = "roughness"^2$
 
 ==== Distance Fog & Sun @Acerola-SOS
-To hide the imperfect horizon line we use a distance fog attenuated based on height. In order to do this we use the depth buffer to determine the depth of each pixel and then based on that scale the light color to be closer to a defined fog color. Finally we blend a sun into the skybox based on the light position.
+To hide the imperfect horizon line we use a distance fog attenuated based on height. In order to do this we use the depth buffer to determine the depth of each pixel and then based on that scale ($"lerp"$?) the light color to be closer to a defined fog color. Finally we blend a sun into the skybox based on the light position.
 
-==== Color Grading (Unfinished) @Acerola-SOS
-in order to really sell the sun being as bright as it would be on an open ocean, we apply a bloom pass to the whole image. In order to prevent it from being completely blown out we then apply a tone mapping to rebalance the colors. 
+//==== Color Grading (Unfinished) @Acerola-SOS
+//in order to really sell the sun being as bright as it would be on an open ocean, we apply a bloom pass to the whole image. In order to prevent it from being completely blown out we then apply a tone mapping to rebalance the colors. 
 
 
 #pagebreak()
@@ -407,9 +411,12 @@ A prototype was made in order to test the technical stack and gain experience wi
 == Project Considerations
 The project will be split into 4 major stages - the simulation, implementing the IFFT, non PBR lighting, and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the spectrums, DFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
 
-finally, I would also like to look into implementing a sky color simulation based on sun position - as this would allow the complete simulation of a realistic day night cycle of any real world ocean conditions.
-
-If time were to permit, I would also implement environment reflections per a very interesting papar on Linear Efficient Antialiased Displacement and Reflectance mapping.
+== Additional Features
+If given enough time I would like to implement the following:
+- Swell @Empirical-Spectra, the waves which have travelled out of their generating area @Empirical-Spectra.
+- Post Processing effects, like varying tonemapping options and a toggleable bloom pass
+- A sky color simulation, as this would allow the complete simulation of a realistic day night cycle for any real world ocean condition.
+- LEADR environment reflections, based on the paper by the same name (Linear Efficient Antialiased Displacement and Reflectance Mapping)
 
 #pagebreak()
 == Objectives (Unfinished)
