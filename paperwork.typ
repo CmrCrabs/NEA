@@ -36,7 +36,6 @@
 
 // cascades
 // IFFT
-// dispersion relation derivative (simplify / use fftocean)
 // change |k| notation to bold k
 // change dispersion relation to phi
 // jacobian & eigenvalue
@@ -120,7 +119,7 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 - Nix:
   - Declarative, reproducible development environment
 
-=== #text(14pt, [Algorithm Overview (Unfinished)])
+=== #text(14pt, [Algorithm Overview (Unfinished)]) @JTessendorf @Empirical-Spectra
 \/\/ like 20x more complex than this 
 \
 startup:
@@ -139,22 +138,26 @@ every frame:
 - lighting
 - color pixels for foam
 - exponential decay function on foam
-@JTessendorf @Empirical-Spectra
 
 
 === #text(14pt, [Spectrum Generation])
 // overview
-==== Dispersion Relation @Empirical-Spectra @JTessendorf
+==== Dispersion Relation @JTessendorf @Empirical-Spectra
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using approximate relationships @Empirical-Spectra.
-$ phi(k) = sqrt(g k tanh (k h)) $
-$ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
+
+//$ phi(k) = omega =  sqrt(g k tanh (k h)) $
+//$ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
+$ phi(k) = omega =  sqrt((g k + sigma / rho k^3) tanh (k h)) $
+$ (d phi(k)) / (d k) = (h(sigma / rho k^3 + g k) sech^2 (h k) +  (g k + sigma / rho k^3) tanh (k h))  / (2 sqrt((g k + sigma / rho k^3) tanh (k h))) $
 
 where
 - $g$ is gravity
 - $h$ is the ocean depth
 - $k = |arrow(k)|$, defined with the wave summation below
+- $sigma$ is the surface tension coefficient $N m^(-1)$
+- $rho$ is the density $"kg" m^(-3)$
 
-==== Non-Directional Spectrum (JONSWAP) @OW-Spectra @Jump-Trajectory @Acerola-FFT @Empirical-Spectra 
+==== Non-Directional Spectrum (JONSWAP) @Empirical-Spectra @OW-Spectra @Jump-Trajectory @Acerola-FFT
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
   $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
@@ -231,13 +234,14 @@ For a height field, of dimensions $L_x$ and $L_z$, we calculate the height ($h$)
 The frequency domain representation of the waves are converted to the spatial domain using an inverse discrete fourier transform. This is split into 2 components, with the derivatives computed seperately to find exact normals:
 
   $ "Wave Height": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
-  $ "Horizontal Displacement:" lambda D (arrow(x), t) = sum_arrow(k) -i arrow(k) / abs(arrow(k)) hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
+  $ "Horizontal Displacement:" lambda D (arrow(x), t) = sum_arrow(k) -i arrow(k) / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
   $ "Height Derivative": nabla h(arrow(x),t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
-  $ "Displacement Derivative": lambda nabla D(arrow(x),t) = sum_(arrow(k))arrow(k) arrow(k)/abs(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
+  $ "Displacement Derivative": lambda nabla D(arrow(x),t) = sum_(arrow(k))arrow(k) arrow(k)/k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
 
 where
 - $t$ is the time
 - $arrow(k) = [k_x, k_z]$, the wave vector, direction vector of the spectrum's texture
+- $k = |arrow(k)|$, the magnitude of the wave vector
 - $arrow(x) = [x_x,x_z]$, the direction vector for the height map for which we are summing
 - $hat(h) (arrow(k), t)$ is the frequency spectrum function
 - $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
@@ -246,24 +250,10 @@ where
 - $nabla h(arrow(x), t)$ gives the rate of change of the height, used to calculate the normal vector
 - $nabla arrow(D)(arrow(x), t)$ gives the rate of change of the displacement, used to calculate the normal vector
 
-==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
-The IDFT can be computed using the fast fourier transform if the following conditions are met:
-- $N = M = L_x = L_z$
-- the coordinates & wavenumbers lie on regular grids
-- $N,M,L_x,L_z = 2^x$, for any positive integer $x$
-For implementation, the statistical wave summation is represented in terms of the indices $n'$ and $m'$, where $n',m'$ are of bounds $0 <= n' < N$ & $0 <= m' < M$
-
-where
-- $N,M$ are the number of points & waves respectively, the simulation resolution
-- $L_x,L_z$ are the worldspace dimensions
-- $arrow(k) = [(2 pi n) / L_x, (2 pi m) / L_z]$  
-- $arrow(x) = [(n L_x) / N, (m L_z) / M]$
-
-note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$, but for ease of implemntation we shift the bounds (and all subsequent values) to begin at 0. I am thus glossing over some redundant information, further details on how / why are seen at @Jump-Trajectory @Keith-Lantz
 
 ==== Frequency Spectrum Function @JTessendorf @Jump-Trajectory @Acerola-FFT
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies.
-  $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i omega(|arrow(k)|)t) + h_0 (-k) e^(-i omega(|arrow(k)|) t) $
+  $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i phi(k)t) + h_0 (-k) e^(-i phi(k) t) $
   $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S_"TMA" (arrow(k))) $ 
 where
   - $hat(h)$ evolves $hat(h)_0$ through time using eulers formula. by combining a positive and negative version of the wave number you ensure the functions output is real @JTessendorf
@@ -289,9 +279,14 @@ The jacobian describes the "uniqueness" of a transformation. This is useful as w
   $ J_"xx" = 1 + lambda (delta D_x (arrow(x)))/(delta x) $
   $ J_"yy" = 1 + lambda (delta h (arrow(x)))/(delta y) $
   $ J_"yx" = J_"xy" = 1 + lambda (delta h (arrow(x)))/(delta x) $
-we then threshold the value such that $J(x) < 0$, storing it into a texture. This is multiplied by a saved foam texture to add some detailing and then an exponential decay function is applied every frame for smooth dissipation.
+we then threshold the value such that $J(x) < mu$, storing it into a folding map texture. 
 
+This is multiplied by an artistic foam texture. The intensity $I$ of each pixel is decayed every frame with the following equation:
+$ I = I_0 e^(- zeta) $
 
+where
+- $mu$ is a threshold value determining whether foam is drawn
+- $zeta$ is a constant which determines the rate of decay
 
 ==== Level of Detail (LOD) Optimisations (Unfinished) @Code-Motion //@Crysis paper they mentioned, acerola video
 \/\/ i do not want to do this
@@ -302,6 +297,22 @@ Everything in this section is subject to significant change, I am opting not to 
 ==== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
 The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
   $ "complex, will write up after learning roots of unity & partial derivatives" $
+
+==== The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
+The IDFT can be computed using the fast fourier transform if the following conditions are met:
+- $N = M = L_x = L_z$
+- the coordinates & wavenumbers lie on regular grids
+- $N,M,L_x,L_z = 2^x$, for any positive integer $x$
+For implementation, the statistical wave summation is represented in terms of the indices $n'$ and $m'$, where $n',m'$ are of bounds $0 <= n' < N$ & $0 <= m' < M$
+
+where
+- $N,M$ are the number of points & waves respectively, the simulation resolution
+- $L_x,L_z$ are the worldspace dimensions
+- $arrow(k) = [(2 pi n) / L_x, (2 pi m) / L_z]$  
+- $arrow(x) = [(n L_x) / N, (m L_z) / M]$
+
+note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$, but for ease of implemntation we shift the bounds (and all subsequent values) to begin at 0. I am thus glossing over some redundant information, further details on how / why are seen at @Jump-Trajectory @Keith-Lantz
+
 
 #pagebreak()
 === #text(14pt, [Post Processing])
