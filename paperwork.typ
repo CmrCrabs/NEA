@@ -34,22 +34,20 @@
 
 // TODO: 
 
-// cascades
-// IFFT
-// change |k| notation to bold k
-// change dispersion relation to phi
 // jacobian & eigenvalue
 // define derivatives
 // how to pack 8 ffts into 4
 // expand upon technologies
-// write objectives
 // post processing tonemapping
 // bloom pass
 // cubemap sampling
 //
+// cascades
 // Objectives
+// look into blurring for sea of thieves foam
 
 // explain IDFT in terms of indices (keith lantz & jump trajectory)
+// IFFT
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -275,17 +273,18 @@ where
 
 ==== Foam, The Jacobian & Eigenvalues (Unfinished) @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the displacements goes negative. Per Tessendorf @JTessendorf, we compute the determinant of the jacobian for the horizontal displacement, $D(arrow(x), t)$.
-  $ J(x) = J_"xx" J_"yy" - J_"xy" J_"xz" $
+  $ J(x) = J_"xx" J_"zz" - J_"xz" J_"zx" $
   $ J_"xx" = 1 + lambda (delta D_x (arrow(x)))/(delta x) $
-  $ J_"yy" = 1 + lambda (delta h (arrow(x)))/(delta y) $
-  $ J_"yx" = J_"xy" = 1 + lambda (delta h (arrow(x)))/(delta x) $
-we then threshold the value such that $J(x) < mu$, storing it into a folding map texture. 
+  $ J_"zz" = 1 + lambda (delta D_z (arrow(x)))/(delta z) $
+  $ J_"xz" = J_"zx" = 1 + lambda (delta D_x (arrow(x)))/(delta z) $
+we then threshold the value such that $J(x) < mu$, wherein if true we "inject" foam ($I_"injected"$) into the simulation at the given point. This value should accumulate (and decay) over time to mimic actual ocean foam, which can be achieved with the following, the result stored into a folding map texture. Finally, the folding map is multiplied by an artistic foam texture to add some detail.
 
-This is multiplied by an artistic foam texture. The intensity $I$ of each pixel is decayed every frame with the following equation:
-$ I = I_0 e^(- zeta) $
+$ I_"decayed" = I_0 e^(- zeta) $
+$ I_"final" = I_"decayed" + I_"injected" $
 
 where
-- $mu$ is a threshold value determining whether foam is drawn
+- $I_0$ is the previous foam value
+- $mu$ is a threshold value determining whether foam is injected
 - $zeta$ is a constant which determines the rate of decay
 
 ==== Level of Detail (LOD) Optimisations (Unfinished) @Code-Motion //@Crysis paper they mentioned, acerola video
@@ -319,7 +318,7 @@ note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2
 ==== Rendering Equation @Atlas-Water @Acerola-FFT @Acerola-SOS
 This abstract equation models how a light ray incoming to a viewer is "formed" (in the context of this simulation). Due to there only being a single light source (the sun), subsurface scattering @Atlas-Water can be used to replace the $L_"diffuse"$ and $L_"ambient"$ terms.
 
-To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  
+To include surface foam, we _lerp_ between the foam color and $L_"scatter"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  
 
 $ L_"eye" = (1 - F) L_"scatter" + L_"specular" + F L_"env_reflected" $
 
@@ -413,7 +412,7 @@ To hide the imperfect horizon line we use a distance fog attenuated based on hei
 A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
 
 #figure(
-  image("assets/chaotic_attractor.png", width: 50%),
+  image("paperwork_assets/chaotic_attractor.png", width: 50%),
   caption: [
     Found at https://github.com/CmrCrabs/chaotic-attractors
   ],

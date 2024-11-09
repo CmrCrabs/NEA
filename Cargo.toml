@@ -1,0 +1,23 @@
+[package]
+name = "NEA"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+winit = { version = "0.29", features = ["rwh_05"] }
+wgpu = { version = "0.18", features = ["spirv"] }
+pollster = "0.3"
+log = "0.4"
+glam = "0.24"
+env_logger = "0.10"
+rand = "0.8.5"
+image = { version = "0.24", default-features = false, features = ["png", "jpeg"]}
+gltf = "1.4.0"
+obj-rs = "0.7.1"
+
+shared = { path = "./shared" }
+
+[build-dependencies]
+spirv-builder = { version = "0.9", default-features = false, features = ["use-installed-tools"]}
