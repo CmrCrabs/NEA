@@ -528,7 +528,7 @@ fn main() -> Result {
                             store: wgpu::StoreOp::Store,
                         }),
                         stencil_ops: None,
-                    }),
+                   }),
                     timestamp_writes: None,
                     occlusion_query_set: None,
                     label: None,
