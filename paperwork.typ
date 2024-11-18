@@ -33,6 +33,8 @@
 ])
 
 // TODO: 
+// replicate old academic paper style
+// https://journals.ametsoc.org/view/journals/phoc/5/3/1520-0485_1975_005_0410_optoer_2_0_co_2.xml?tab_body=pdf
 
 // jacobian & eigenvalue
 // define derivatives
@@ -176,7 +178,7 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
   - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra @Empirical-Spectra
   - $g$ is gravity
 
-=== Depth Attenuation Function (Kitaiigorodskii) @Empirical-Spectra
+=== Depth Attenuation Function (Approximation of Kitaiigorodskii) @Empirical-Spectra
 JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra.
 $ Phi (omega, h) = cases(
   1 / 2 omega_h ^2 "if" omega_h <= 1,
