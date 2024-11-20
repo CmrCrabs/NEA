@@ -1,0 +1,6 @@
+- remove texture
+- clean vertex
+- import sphere
+- check sobel sphere
+- remove framebuf
+- remove sobel

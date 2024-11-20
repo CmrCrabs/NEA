@@ -179,7 +179,7 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
   - $g$ is gravity
 
 === Depth Attenuation Function (Approximation of Kitaiigorodskii) @Empirical-Spectra
-JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra.
+JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra. 
 $ Phi (omega, h) = cases(
   1 / 2 omega_h ^2 "if" omega_h <= 1,
   1 - 1 / 2 (2 - omega_h)^2 "if" omega_h > 1,
@@ -189,6 +189,7 @@ where
 - $omega = phi(k)$, the dispersion relation
 - $h$ is the ocean depth
 - $g$ is gravity
+Given time, I may derive a simpler approximation using $tanh(k)$ as that seems interesting.
 
 === Directional Spread Function (Donelan-Banner) @Empirical-Spectra
 The directional spread models how waves react to wind direction @Jump-Trajectory. This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 

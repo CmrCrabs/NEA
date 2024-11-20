@@ -3,8 +3,11 @@ use std::mem::size_of;
 use std::io::BufReader;
 use std::fs::File;
 use std::time::Instant;
-use winit::dpi::PhysicalPosition;
 use std::{mem, slice};
+use imgui::Context;
+use imgui_winit_support::winit::event::WindowEvent;
+use imgui_winit_support::{HiDpiMode, WinitPlatform};
+use winit::dpi::PhysicalPosition;
 use winit::keyboard::KeyCode;
 use winit::{event::*, event_loop::EventLoop, window::WindowBuilder};
 use wgpu::{util::DeviceExt, BindGroupLayoutDescriptor, BindGroupLayoutEntry};
@@ -13,6 +16,10 @@ use shared::SceneConstants;
 use log::LevelFilter;
 use image::GenericImageView;
 use obj::{Obj, TexturedVertex};
+
+mod ui;
+mod renderer;
+mod renderpass;
 
 type Result<T = (), E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
@@ -39,7 +46,11 @@ fn main() -> Result {
     env_logger::builder().filter_level(LevelFilter::Info).init();
 
     let event_loop = EventLoop::new()?;
-    let window = WindowBuilder::new().with_title("NEA").build(&event_loop)?;
+    let window = WindowBuilder::new().with_title("nea").build(&event_loop)?;
+
+    let mut imgui = Context::create();
+    let mut platform = WinitPlatform::new(&mut imgui);
+    platform.attach_window(imgui.to_mut(), &window, HiDpiMode::Default);
 
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
     let surface = unsafe { instance.create_surface(&window)? };
@@ -159,6 +170,9 @@ fn main() -> Result {
         }],
         label: None,
     });
+
+    // UI
+
 
     //OBJ
     let input = BufReader::new(File::open("assets/dinosaur.obj")?);
@@ -401,6 +415,7 @@ fn main() -> Result {
     });
 
     let mut cursor_down: bool = false;
+    let mut last_frame = Instant::now();
     // EVENT LOOP
     event_loop.run(move |event, elwt| match event {
         Event::WindowEvent { event, .. } => match event {
