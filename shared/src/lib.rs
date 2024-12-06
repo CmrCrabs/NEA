@@ -8,4 +8,6 @@ pub struct SceneConstants {
 
     pub width: f32,
     pub height: f32,
+
+    pub camera_proj: glam::Mat4
 }

@@ -8,11 +8,10 @@ use shared::SceneConstants;
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec3,
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] camera_view_proj: &Mat4,
-
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] scene_consts: &SceneConstants,
     #[spirv(position)] out_pos: &mut Vec4,
 ) {
-    *out_pos = *camera_view_proj * pos.extend(1.0);
+    *out_pos = scene_consts.camera_proj * pos.extend(1.0);
 }
 
 #[spirv(fragment)]

@@ -5,6 +5,8 @@
 - [X] remove framebuf
 - [X] remove sobel
 - [ ] refactor into different files
+  - [X] fix camera movement
+  - [ ] write objectives
   - [ ] create struct for renderer data
   - [ ] create seperate file for camera? !!! can write sigma camera
 - [ ] create scene, shader, sim, camera bufs

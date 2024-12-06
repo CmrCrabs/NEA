@@ -13,7 +13,6 @@ use log::LevelFilter;
 use obj::{Obj, TexturedVertex};
 use shared::SceneConstants;
 use wgpu::{util::DeviceExt, BindGroupLayoutDescriptor, BindGroupLayoutEntry};
-use winit::dpi::PhysicalPosition;
 use winit::keyboard::KeyCode;
 use winit::{event::*, event_loop::EventLoop, window::WindowBuilder};
 
@@ -70,43 +69,15 @@ fn main() -> Result {
     ))
     .unwrap();
 
-    // Scene Constants
-    let start_time = Instant::now();
+    // TIME
     let mut scene_consts = SceneConstants {
         time: 0.0,
         frametime: 0.0,
         width: 0.0,
         height: 0.0,
+        camera_proj: Mat4::ZERO,
     };
-
-    let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
-        size: size_of::<SceneConstants>() as u64,
-        mapped_at_creation: false,
-        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        label: None,
-    });
-    let scene_bind_group_layout =
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: None,
-        });
-    let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        layout: &scene_bind_group_layout,
-        entries: &[wgpu::BindGroupEntry {
-            binding: 0,
-            resource: scene_buf.as_entire_binding(),
-        }],
-        label: None,
-    });
+    let start_time = Instant::now();
 
     // CAMERA SETUP
     let mut pitch: f32 = 0.0;
@@ -129,40 +100,36 @@ fn main() -> Result {
 
     let mut view = Mat4::look_at_rh(camera.eye, camera.target, camera.up);
     let proj = Mat4::perspective_infinite_rh(camera.fovy.to_radians(), camera.aspect, camera.znear);
+    scene_consts.camera_proj = proj * view;
 
-    // CAMERA UNIFORM
-    let camera_uniform = proj * view;
-
-    let mut camera_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        contents: cast_slice(&[camera_uniform]),
+    // scene const buf
+    let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
+        size: size_of::<SceneConstants>() as u64,
+        mapped_at_creation: false,
         usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         label: None,
     });
-
-    let camera_bind_group_layout =
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: None,
-        });
-
-    let mut camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        layout: &camera_bind_group_layout,
-        entries: &[wgpu::BindGroupEntry {
+    let scene_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        entries: &[wgpu::BindGroupLayoutEntry {
             binding: 0,
-            resource: camera_buf.as_entire_binding(),
+            visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+            ty: wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
         }],
         label: None,
     });
-
+    let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        layout: &scene_bind_group_layout,
+        entries: &[wgpu::BindGroupEntry {
+            binding: 0,
+            resource: scene_buf.as_entire_binding(),
+        }],
+        label: None,
+    });
     //OBJ
     let input = BufReader::new(File::open("assets/sphere.obj")?);
     let obj: Obj<TexturedVertex, u32> = obj::load_obj(input)?;
@@ -212,7 +179,9 @@ fn main() -> Result {
 
     // PIPELINE
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-        bind_group_layouts: &[&camera_bind_group_layout],
+        bind_group_layouts: &[
+            &scene_bind_group_layout
+        ],
         push_constant_ranges: &[],
         label: None,
     });
@@ -272,7 +241,7 @@ fn main() -> Result {
                     MouseScrollDelta::LineDelta(_, y) => {
                         zoom -= y;
                     }
-                    MouseScrollDelta::PixelDelta(PhysicalPosition { y, .. }) => {
+                    MouseScrollDelta::PixelDelta(winit::dpi::PhysicalPosition { y, .. }) => {
                         zoom -= y as f32;
                     }
                 }
@@ -282,21 +251,8 @@ fn main() -> Result {
                     zoom * yaw.cos() * pitch.cos(),
                 );
                 view = Mat4::look_at_rh(camera.eye, camera.target, camera.up);
-
-                camera_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    contents: cast_slice(&[proj * view]),
-                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                    label: None,
-                });
-
-                camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                    layout: &camera_bind_group_layout,
-                    entries: &[wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: camera_buf.as_entire_binding(),
-                    }],
-                    label: None,
-                });
+                scene_consts.camera_proj = proj * view;
+                queue.write_buffer(&scene_buf, 0, cast_slice(&[scene_consts]));
             }
 
             WindowEvent::CursorMoved { position, .. } => {
@@ -315,21 +271,8 @@ fn main() -> Result {
                         zoom * yaw.cos() * pitch.cos(),
                     );
                     view = Mat4::look_at_rh(camera.eye, camera.target, camera.up);
-
-                    camera_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                        contents: cast_slice(&[proj * view]),
-                        usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-                        label: None,
-                    });
-
-                    camera_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                        layout: &camera_bind_group_layout,
-                        entries: &[wgpu::BindGroupEntry {
-                            binding: 0,
-                            resource: camera_buf.as_entire_binding(),
-                        }],
-                        label: None,
-                    });
+                    scene_consts.camera_proj = proj * view;
+                    queue.write_buffer(&scene_buf, 0, cast_slice(&[scene_consts]));
                 }
             }
 
@@ -343,6 +286,7 @@ fn main() -> Result {
                 scene_consts.height = dimensions.height as f32;
 
                 queue.write_buffer(&scene_buf, 0, cast_slice(&[scene_consts]));
+
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
@@ -365,7 +309,6 @@ fn main() -> Result {
                             store: wgpu::StoreOp::Store,
                         },
                     })],
-
                     depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                         view: &depth_view,
                         depth_ops: Some(wgpu::Operations {
@@ -380,8 +323,8 @@ fn main() -> Result {
                 });
 
                 render_pass.set_pipeline(&pipeline);
-                render_pass.set_bind_group(0, &camera_bind_group, &[]);
                 render_pass.set_vertex_buffer(0, vtx_buf.slice(..));
+                render_pass.set_bind_group(0, &scene_bind_group, &[]);
                 render_pass.set_index_buffer(idx_buf.slice(..), wgpu::IndexFormat::Uint32);
 
                 render_pass.draw_indexed(0..(obj.indices.len() as _), 0, 0..1);
@@ -404,16 +347,16 @@ fn main() -> Result {
                 surface.configure(&device, &config);
 
                 //FIXING FOV
-                camera.aspect =
-                    window.inner_size().width as f32 / window.inner_size().height as f32;
+                camera.aspect = window.inner_size().width as f32 / window.inner_size().height as f32;
                 let proj = Mat4::perspective_rh(
                     camera.fovy.to_radians(),
                     camera.aspect,
                     camera.znear,
                     camera.zfar,
                 );
-                let camera_uniform = proj * view;
-                queue.write_buffer(&camera_buf, 0, cast_slice(&[camera_uniform]));
+                scene_consts.camera_proj = proj * view;
+                
+                queue.write_buffer(&scene_buf, 0, cast_slice(&[scene_consts]));
 
                 // FIXING DEPTH BUFFER
                 let size = wgpu::Extent3d {
