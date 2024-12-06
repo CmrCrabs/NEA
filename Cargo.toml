@@ -18,8 +18,8 @@ gltf = "1.4.0"
 obj-rs = "0.7.1"
 
 shared = { path = "./shared" }
-imgui = "0.12.0"
-imgui-winit-support = "0.13.0"
+# imgui = "0.12.0"
+# imgui-winit-support = "0.13.0"
 
 [build-dependencies]
 spirv-builder = { version = "0.9", default-features = false, features = ["use-installed-tools"]}

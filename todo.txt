@@ -1,6 +1,10 @@
-- remove texture
-- clean vertex
-- import sphere
-- check sobel sphere
-- remove framebuf
-- remove sobel
+- [X] remove texture
+- [X] clean vertex
+- [X] import sphere
+- [X] check sobel sphere
+- [X] remove framebuf
+- [X] remove sobel
+- [ ] refactor into different files
+  - [ ] create struct for renderer data
+  - [ ] create seperate file for camera? !!! can write sigma camera
+- [ ] create scene, shader, sim, camera bufs

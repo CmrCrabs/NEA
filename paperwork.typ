@@ -205,23 +205,23 @@ $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
 where
 - $theta_0$ is a wind direction offset
 
-//=== Swell (Unfinished) @Empirical-Spectra
-//Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra.
-//
-//$ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
-//$ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega, theta) d theta )^(-1)  $
-//$ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
-//$ s_xi = 16 tanh (omega_p / omega) xi^2 $
-//where
-// - $xi$ is a "swell" parameter, in the range $0..1$
-// - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
+=== Swell (Unfinished) @Empirical-Spectra
+Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra. The integral seen in $Q_"final"$ is computed numerically.
+
+$ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
+$ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega, theta) d theta )^(-1)  $
+$ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
+$ s_xi = 16 tanh (omega_p / omega) xi^2 $
+$ Q_xi (s_xi) = $ //TODO EULER GAMMA
+where
+ - $xi$ is a "swell" parameter, in the range $0..1$
+ - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
 
 
 === Directional Spectrum Function @Empirical-Spectra
 The TMA spectrum below is an undirectional spectrum that considers depth, combining the above functions. 
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
 This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following 'transformation'. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
-it is worth noting that, assuming I do not implement swell, the spectrum - and thus the entire simulation - is fully empirical.
 $ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
 $ Delta arrow(k)_x = Delta arrow(k)_z = (2 pi) / L $
 where 
