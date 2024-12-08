@@ -14,7 +14,6 @@ glam = "0.24"
 env_logger = "0.10"
 rand = "0.8.5"
 image = { version = "0.24", default-features = false, features = ["png", "jpeg"]}
-gltf = "1.4.0"
 obj-rs = "0.7.1"
 
 shared = { path = "./shared" }
