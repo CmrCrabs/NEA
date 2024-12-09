@@ -1,5 +1,6 @@
+use std::time::Instant;
 use wgpu::ShaderModule;
-use winit::{event_loop::EventLoop,event::{Event, WindowEvent, MouseButton}};
+use winit::{event::{Event, MouseButton, WindowEvent}, event_loop::EventLoop, platform, keyboard::PhysicalKey};
 use winit::keyboard::KeyCode;
 use crate::{cast_slice, renderpass::StandardPipeline, scene::Scene, Result};
 
@@ -59,6 +60,8 @@ impl Renderer {
 
     pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene) -> Result {
         let mut cursor_down: bool = false;
+        let mut last_frame = Instant::now();
+
         let scene_buf = StandardPipeline::new_scene_buf(&self.device);
         let mut standard_pipeline = StandardPipeline::new(&self.device, &self.window, &self.shader, &scene_buf);
 
@@ -67,7 +70,7 @@ impl Renderer {
                 WindowEvent::CloseRequested => elwt.exit(),
 
                 WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
-                    winit::keyboard::PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
+                    PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
                     _ => (),
                 },
 
@@ -96,17 +99,18 @@ impl Renderer {
                     let surface = self.surface.get_current_texture().unwrap();
                     let surface_view = surface.texture.create_view(&wgpu::TextureViewDescriptor::default());
 
+                    // Standard Pass
                     let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-                    let mut standard_pass = standard_pipeline.render(&mut encoder, &surface_view);
+                    let mut pass = standard_pipeline.render(&mut encoder, &surface_view);
 
-                    standard_pass.set_pipeline(&standard_pipeline.pipeline);
-                    standard_pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
-                    standard_pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
-                    standard_pass.set_index_buffer(scene.mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
-                    standard_pass.draw_indexed(0..(scene.mesh.length as _), 0, 0..1);
-                    drop(standard_pass);
-
+                    pass.set_pipeline(&standard_pipeline.pipeline);
+                    pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
+                    pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
+                    pass.set_index_buffer(scene.mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
+                    pass.draw_indexed(0..(scene.mesh.length as _), 0, 0..1);
+                    drop(pass);
                     self.queue.submit([encoder.finish()]);
+
                     surface.present();
                 }
 
@@ -123,11 +127,10 @@ impl Renderer {
                     };
                     self.surface.configure(&self.device, &self.config);
 
-                    //Fix FOV
+                    //Update FOV
                     scene.camera.update_fov(&self.window);
                     scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
                     self.queue.write_buffer(&scene_buf, 0, cast_slice(&[scene.consts]));
-                    // if broken change from self to size
                     standard_pipeline.depth_view = StandardPipeline::new_depth_view(&self.window, &self.device);
                 }
                 _ => {}

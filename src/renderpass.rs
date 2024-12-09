@@ -13,7 +13,6 @@ pub struct StandardPipeline {
 
 impl StandardPipeline {
     pub fn new (device: &Device, window: &Window, shader: &ShaderModule, scene_buf: &Buffer) -> StandardPipeline {
-
         let scene_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,

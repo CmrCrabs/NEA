@@ -15,10 +15,10 @@ env_logger = "0.10"
 rand = "0.8.5"
 image = { version = "0.24", default-features = false, features = ["png", "jpeg"]}
 obj-rs = "0.7.1"
-
-shared = { path = "./shared" }
 # imgui = "0.12.0"
 # imgui-winit-support = "0.13.0"
+
+shared = { path = "./shared" }
 
 [build-dependencies]
 spirv-builder = { version = "0.9", default-features = false, features = ["use-installed-tools"]}
