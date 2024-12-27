@@ -1,34 +1,33 @@
-use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
-use crate::scene::Vertex;
-use std::mem;
-use winit::window::Window;
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
+use crate::scene::{Scene, Vertex};
 use shared::SceneConstants;
+use std::mem;
+use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
+use winit::window::Window;
 
 pub struct StandardPipeline {
     pub pipeline: RenderPipeline,
     pub scene_bind_group: BindGroup,
+    pub scene_buf: Buffer,
     pub depth_view: TextureView,
 }
 
 impl StandardPipeline {
-    pub fn new (device: &Device, window: &Window, shader: &ShaderModule, scene_buf: &Buffer) -> StandardPipeline {
-        let scene_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
+    pub fn new(
+        device: &Device,
+        window: &Window,
+        shader: &ShaderModule,
+        scene: &Scene,
+    ) -> StandardPipeline {
+        let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
+            size: mem::size_of::<SceneConstants>() as u64,
+            mapped_at_creation: false,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
         });
 
         let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &scene_bind_group_layout,
+            layout: &scene.scene_layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: scene_buf.as_entire_binding(),
@@ -37,9 +36,7 @@ impl StandardPipeline {
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[
-                &scene_bind_group_layout
-            ],
+            bind_group_layouts: &[&scene.scene_layout],
             push_constant_ranges: &[],
             label: None,
         });
@@ -81,17 +78,9 @@ impl StandardPipeline {
         StandardPipeline {
             pipeline,
             scene_bind_group,
+            scene_buf,
             depth_view,
         }
-    }
-
-    pub fn new_scene_buf(device: &Device) -> Buffer {
-        device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem::size_of::<SceneConstants>() as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
-        })
     }
 
     pub fn new_depth_view(window: &Window, device: &Device) -> TextureView {
@@ -114,7 +103,11 @@ impl StandardPipeline {
         depth_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 
-    pub fn render<'a> (&'a self, encoder: &'a mut wgpu::CommandEncoder, surface_view: &'a TextureView) -> wgpu::RenderPass {
+    pub fn render<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        surface_view: &'a TextureView,
+    ) -> wgpu::RenderPass {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: surface_view,

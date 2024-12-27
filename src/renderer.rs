@@ -1,8 +1,13 @@
+use crate::ui::gen_interface;
+use crate::{cast_slice, renderpass::StandardPipeline, scene::Scene, ui::UI, Result};
 use std::time::Instant;
 use wgpu::ShaderModule;
-use winit::{event::{Event, MouseButton, WindowEvent}, event_loop::EventLoop, platform, keyboard::PhysicalKey};
 use winit::keyboard::KeyCode;
-use crate::{cast_slice, renderpass::StandardPipeline, scene::Scene, Result};
+use winit::{
+    event::{Event, MouseButton, WindowEvent},
+    event_loop::EventLoop,
+    keyboard::PhysicalKey,
+};
 
 pub struct Renderer {
     pub surface: wgpu::Surface,
@@ -11,6 +16,7 @@ pub struct Renderer {
     pub config: wgpu::SurfaceConfiguration,
     pub window: winit::window::Window,
     pub shader: ShaderModule,
+    pub tex_layout: wgpu::BindGroupLayout,
 }
 
 pub const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
@@ -48,6 +54,28 @@ impl Renderer {
             view_formats: vec![],
         };
 
+        let tex_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+                    count: None,
+                },
+            ],
+            label: None,
+        });
+
         Self {
             surface,
             device,
@@ -55,87 +83,135 @@ impl Renderer {
             window,
             config,
             shader,
+            tex_layout,
         }
     }
 
-    pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene) -> Result {
+    pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI) -> Result {
         let mut cursor_down: bool = false;
         let mut last_frame = Instant::now();
 
-        let scene_buf = StandardPipeline::new_scene_buf(&self.device);
-        let mut standard_pipeline = StandardPipeline::new(&self.device, &self.window, &self.shader, &scene_buf);
+        let mut standard_pipeline =
+            StandardPipeline::new(&self.device, &self.window, &self.shader, &scene);
 
         event_loop.run(move |event, elwt| match event {
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::CloseRequested => elwt.exit(),
-
-                WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
-                    PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
-                    _ => (),
-                },
-
-                WindowEvent::MouseInput { state, button, .. } => match button {
-                    MouseButton::Left => cursor_down = state.is_pressed(),
-                    _ => (),
-                },
-
-                WindowEvent::MouseWheel { delta, .. } => {
-                    scene.camera.zoom(delta);
-                    scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                    //todo
-                    self.queue.write_buffer(&scene_buf, 0, cast_slice(&[scene.consts]));
-                }
-
-                WindowEvent::CursorMoved { position, .. } => if cursor_down {
-                    scene.camera.pan(position, &self.window);
-                    scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                    self.queue.write_buffer(&scene_buf, 0, cast_slice(&[scene.consts]));
-                }
-
-                WindowEvent::RedrawRequested => {
-                    scene.redraw(&self.window);
-                    self.queue.write_buffer(&scene_buf, 0, cast_slice(&[scene.consts]));
-
-                    let surface = self.surface.get_current_texture().unwrap();
-                    let surface_view = surface.texture.create_view(&wgpu::TextureViewDescriptor::default());
-
-                    // Standard Pass
-                    let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-                    let mut pass = standard_pipeline.render(&mut encoder, &surface_view);
-
-                    pass.set_pipeline(&standard_pipeline.pipeline);
-                    pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
-                    pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
-                    pass.set_index_buffer(scene.mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
-                    pass.draw_indexed(0..(scene.mesh.length as _), 0, 0..1);
-                    drop(pass);
-                    self.queue.submit([encoder.finish()]);
-
-                    surface.present();
-                }
-
-                WindowEvent::Resized(size) => {
-                    // Update Config
-                    self.config = wgpu::SurfaceConfiguration {
-                        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                        format: FORMAT,
-                        width: size.width,
-                        height: size.height,
-                        present_mode: wgpu::PresentMode::Fifo,
-                        alpha_mode: wgpu::CompositeAlphaMode::Opaque,
-                        view_formats: vec![],
-                    };
-                    self.surface.configure(&self.device, &self.config);
-
-                    //Update FOV
-                    scene.camera.update_fov(&self.window);
-                    scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                    self.queue.write_buffer(&scene_buf, 0, cast_slice(&[scene.consts]));
-                    standard_pipeline.depth_view = StandardPipeline::new_depth_view(&self.window, &self.device);
-                }
-                _ => {}
-            },
+            Event::NewEvents(_) => {
+                let now = Instant::now();
+                ui.context.io_mut().update_delta_time(now - last_frame);
+                last_frame = now;
+            }
             Event::AboutToWait => self.window.request_redraw(),
+
+            Event::WindowEvent { event, .. } => {
+                ui.handle_events(&event, &self.window);
+                match event {
+                    WindowEvent::CloseRequested => elwt.exit(),
+
+                    WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
+                        PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
+                        _ => (),
+                    },
+
+                    WindowEvent::MouseInput { state, button, .. } => match button {
+                        MouseButton::Left => cursor_down = state.is_pressed(),
+                        _ => (),
+                    },
+
+                    // move to scene handle_events
+                    WindowEvent::MouseWheel { delta, .. } => {
+                        scene.camera.zoom(delta);
+                        scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
+                        self.queue.write_buffer(
+                            &standard_pipeline.scene_buf,
+                            0,
+                            cast_slice(&[scene.consts]),
+                        );
+                    }
+
+                    WindowEvent::CursorMoved { position, .. } => {
+                        if cursor_down {
+                            scene.camera.pan(position, &self.window);
+                            scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
+                            self.queue.write_buffer(
+                                &standard_pipeline.scene_buf,
+                                0,
+                                cast_slice(&[scene.consts]),
+                            );
+                        }
+                    }
+
+                    WindowEvent::RedrawRequested => {
+                        scene.redraw(&self.window);
+                        self.queue.write_buffer(
+                            &standard_pipeline.scene_buf,
+                            0,
+                            cast_slice(&[scene.consts]),
+                        );
+
+                        let surface = self.surface.get_current_texture().unwrap();
+                        let surface_view = surface
+                            .texture
+                            .create_view(&wgpu::TextureViewDescriptor::default());
+
+                        // Standard Pass
+                        let mut encoder = self
+                            .device
+                            .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+                        let mut pass = standard_pipeline.render(&mut encoder, &surface_view);
+
+                        pass.set_pipeline(&standard_pipeline.pipeline);
+                        pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
+                        pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
+                        pass.set_index_buffer(
+                            scene.mesh.idx_buf.slice(..),
+                            wgpu::IndexFormat::Uint32,
+                        );
+                        pass.draw_indexed(0..(scene.mesh.length as _), 0, 0..1);
+                        drop(pass);
+
+                        // UI Pass
+                        ui.update_cursor(&self.window);
+                        let ui_frame = ui.context.frame();
+                        gen_interface(ui_frame);
+                        ui.render(
+                            &self.device,
+                            &self.queue,
+                            &mut encoder,
+                            &surface_view,
+                            &scene,
+                        );
+
+                        self.queue.submit([encoder.finish()]);
+                        surface.present();
+                    }
+
+                    WindowEvent::Resized(size) => {
+                        // Update Config
+                        self.config = wgpu::SurfaceConfiguration {
+                            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                            format: FORMAT,
+                            width: size.width,
+                            height: size.height,
+                            present_mode: wgpu::PresentMode::Fifo,
+                            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+                            view_formats: vec![],
+                        };
+                        self.surface.configure(&self.device, &self.config);
+
+                        //Update FOV
+                        scene.camera.update_fov(&self.window);
+                        scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
+                        self.queue.write_buffer(
+                            &standard_pipeline.scene_buf,
+                            0,
+                            cast_slice(&[scene.consts]),
+                        );
+                        standard_pipeline.depth_view =
+                            StandardPipeline::new_depth_view(&self.window, &self.device);
+                    }
+                    _ => {}
+                }
+            }
             _ => {}
         })?;
         Ok(())

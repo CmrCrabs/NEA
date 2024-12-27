@@ -1,45 +1,17 @@
-below are todos, approximately in order, I aim to complete them as soon as possible, but have not assigned dates to this.
+- [ ] diff file
+- [ ] create texture impl
+- [ ] finish ui render
+- [ ] ui shader
+- [ ] stuff under ui gone
+- [ ] render to framebuffer
 
-- [X] refactor into different files
-  - [X] renderer
-    - [ ] event loop
-      - [X] resize
-      - [X] redraw
-  - [X] scene
-    - [X] zoom
-    - [X] pan
-    - [X] redraw
-    - [X] resize
-  - [x] renderpass
-    - [X] depth buffer
-    - [X] scene buf
-    - [x] vertex buf
-    - [X] shader
-    - [X] pipeline
-    - [X] buffers
-  - [X] main
-    - [X] calls
-  - [ ] ui
+- [ ] switch to scene handle_events
+- [ ] move mesh to impl
+- [ ] credit imgui-wgpu-rs, imgui-winit-support
+- [ ] update scene layout to be part of scene
+- [ ] scene function to get bind group
 
-- [ ] write objectives
-- [ ] create bufs
-  - [ ] scene
-  - [ ] sim
-  - [ ] shader
+- [ ] all the consts into imgui
+- [ ] uniform impl?
 
-- [ ] UI
-    - [ ] pipeline
-    - [ ] pass
-    - [ ] structure
-    - [ ] winit
-    - [ ] scaffolding
-
-- [ ] implement pbr renderer
-    - [ ] create renderpass
-    - [ ] vector generation
-    - [ ] blinn-phong
-    - [ ] brdf
-    - [ ] fresnel
-    - [ ] attenuation
-    - [ ] subsurface
-
+- [ ] lighting

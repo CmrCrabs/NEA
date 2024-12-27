@@ -1,16 +1,18 @@
-use std::{f32::consts::PI, time::Instant};
 use crate::cast_slice;
-use std::io::BufReader;
-use std::fs::File;
+use glam::{Mat4, Vec3};
 use obj::Obj;
-use glam::{Vec3, Mat4};
-use wgpu::{Buffer, util::DeviceExt};
-use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 use shared::SceneConstants;
+use std::fs::File;
+use std::io::BufReader;
+use std::{f32::consts::PI, time::Instant};
+use wgpu::BindGroupLayout;
+use wgpu::{util::DeviceExt, Buffer};
+use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 
 pub struct Scene {
     start_time: Instant,
     pub consts: SceneConstants,
+    pub scene_layout: BindGroupLayout,
     pub camera: Camera,
     pub mesh: Mesh,
 }
@@ -58,11 +60,26 @@ impl Scene {
         let mesh = Scene::get_mesh(device);
         let start_time = Instant::now();
 
-        Self { 
+        let scene_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+            label: None,
+        });
+
+        Self {
             start_time,
             consts,
             camera,
             mesh,
+            scene_layout,
         }
     }
 
@@ -160,7 +177,6 @@ impl Camera {
             self.zoom * self.yaw.cos() * self.pitch.cos(),
         );
         self.view = Mat4::look_at_rh(self.eye, self.target, self.up);
-
     }
 
     pub fn pan(&mut self, position: PhysicalPosition<f64>, window: &Window) {
@@ -182,11 +198,7 @@ impl Camera {
 
     pub fn update_fov(&mut self, window: &Window) {
         self.aspect = window.inner_size().width as f32 / window.inner_size().height as f32;
-        self.proj = Mat4::perspective_rh(
-            self.fovy.to_radians(),
-            self.aspect,
-            self.znear,
-            self.zfar,
-        );
+        self.proj =
+            Mat4::perspective_rh(self.fovy.to_radians(), self.aspect, self.znear, self.zfar);
     }
-} 
+}
