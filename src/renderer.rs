@@ -1,10 +1,9 @@
 use crate::ui::gen_interface;
 use crate::{cast_slice, renderpass::StandardPipeline, scene::Scene, ui::UI, Result};
 use std::time::Instant;
-use wgpu::ShaderModule;
 use winit::keyboard::KeyCode;
 use winit::{
-    event::{Event, MouseButton, WindowEvent},
+    event::{Event, WindowEvent},
     event_loop::EventLoop,
     keyboard::PhysicalKey,
 };
@@ -15,8 +14,9 @@ pub struct Renderer {
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub window: winit::window::Window,
-    pub shader: ShaderModule,
+    pub shader: wgpu::ShaderModule,
     pub tex_layout: wgpu::BindGroupLayout,
+    pub depth_view: wgpu::TextureView,
 }
 
 pub const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
@@ -76,6 +76,22 @@ impl Renderer {
             label: None,
         });
 
+        let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: window.inner_size().width,
+                height: window.inner_size().height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEPTH_FORMAT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
         Self {
             surface,
             device,
@@ -84,14 +100,13 @@ impl Renderer {
             config,
             shader,
             tex_layout,
+            depth_view,
         }
     }
 
     pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI) -> Result {
         let mut last_frame = Instant::now();
-        let mut standard_pipeline =
-            StandardPipeline::new(&self.device, &self.window, &self.shader, &scene);
-
+        let standard_pipeline = StandardPipeline::new(&self.device, &self.shader, &scene);
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
             Event::NewEvents(_) => {
@@ -101,62 +116,26 @@ impl Renderer {
             }
             Event::WindowEvent { event, .. } => {
                 scene.handle_events(&event, &self.window);
-                ui.handle_events(&event, &self.window, &self.queue);
+                ui.handle_events(&event, &self.window);
                 match event {
-                    WindowEvent::CloseRequested => elwt.exit(),
-
-                    WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
-                        PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
-                        _ => (),
-                    },
-
-                    WindowEvent::MouseInput { state, button, .. } => match button {
-                        MouseButton::Left => cursor_down = state.is_pressed(),
-                        _ => (),
-                    },
-
-                    // move to scene handle_events
-                    WindowEvent::MouseWheel { delta, .. } => {
-                        scene.camera.zoom(delta);
-                        scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                        self.queue.write_buffer(
-                            &standard_pipeline.scene_buf,
-                            0,
-                            cast_slice(&[scene.consts]),
-                        );
-                    }
-
-                    WindowEvent::CursorMoved { position, .. } => {
-                        if cursor_down {
-                            scene.camera.pan(position, &self.window);
-                            scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                            self.queue.write_buffer(
-                                &standard_pipeline.scene_buf,
-                                0,
-                                cast_slice(&[scene.consts]),
-                            );
-                        }
-                    }
 
                     WindowEvent::RedrawRequested => {
                         scene.redraw(&self.window);
-                        self.queue.write_buffer(
-                            &standard_pipeline.scene_buf,
-                            0,
-                            cast_slice(&[scene.consts]),
-                        );
-
                         let surface = self.surface.get_current_texture().unwrap();
                         let surface_view = surface
                             .texture
                             .create_view(&wgpu::TextureViewDescriptor::default());
-
-                        // Standard Pass
                         let mut encoder = self
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
-                        let mut pass = standard_pipeline.render(&mut encoder, &surface_view);
 
+                        // Standard Pass
+                        self.queue.write_buffer(
+                            &standard_pipeline.scene_buf,
+                            0,
+                            cast_slice(&[scene.consts]),
+                        );
+                        let mut pass = standard_pipeline.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pipeline.pipeline);
                         pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
@@ -182,7 +161,6 @@ impl Renderer {
                         self.queue.submit([encoder.finish()]);
                         surface.present();
                     }
-
                     WindowEvent::Resized(size) => {
                         // Update Config
                         self.config = wgpu::SurfaceConfiguration {
@@ -195,23 +173,36 @@ impl Renderer {
                             view_formats: vec![],
                         };
                         self.surface.configure(&self.device, &self.config);
-
-                        //Update FOV
-                        scene.camera.update_fov(&self.window);
-                        scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
-                        self.queue.write_buffer(
-                            &standard_pipeline.scene_buf,
-                            0,
-                            cast_slice(&[scene.consts]),
-                        );
-                        standard_pipeline.depth_view =
-                            StandardPipeline::new_depth_view(&self.window, &self.device);
+                        self.new_depth_view();
                     }
+                    WindowEvent::CloseRequested => elwt.exit(),
+                    WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
+                        PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
+                        _ => {},
+                    },
                     _ => {}
                 }
             }
             _ => {}
         })?;
         Ok(())
+    }
+
+    pub fn new_depth_view(&mut self) {
+        let depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: None,
+            size: wgpu::Extent3d {
+                width: self.window.inner_size().width,
+                height: self.window.inner_size().height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: DEPTH_FORMAT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        self.depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 }

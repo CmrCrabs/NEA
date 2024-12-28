@@ -2,15 +2,15 @@
 
 use spirv_std::glam::{Vec3, Vec4,Vec2};
 use spirv_std::{spirv, image::Image2d, Sampler};
-use shared::SceneConstants;
+use shared::Constants;
 
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec3,
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] scene_consts: &SceneConstants,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(position)] out_pos: &mut Vec4,
 ) {
-    *out_pos = scene_consts.camera_proj * pos.extend(1.0);
+    *out_pos = consts.camera_proj * pos.extend(1.0);
 }
 
 #[spirv(fragment)]
@@ -25,14 +25,14 @@ pub fn ui_vs(
     pos: Vec2,
     uv: Vec2,
     col: Vec4,
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] scene_consts: &SceneConstants,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(position)] out_pos: &mut Vec4,
     out_uv: &mut Vec2,
     out_col: &mut Vec4,
 ) {
     *out_pos = Vec4::new(
-        2.0 * pos.x / scene_consts.width - 1.0,
-        1.0 - 2.0 * pos.y / scene_consts.height,
+        2.0 * pos.x / consts.width - 1.0,
+        1.0 - 2.0 * pos.y / consts.height,
         0.0,
         1.0,
     );

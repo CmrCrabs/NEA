@@ -2,7 +2,7 @@
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-pub struct SceneConstants {
+pub struct Constants {
     pub time: f32,
     pub frametime: f32,
 

@@ -1,7 +1,7 @@
 use crate::cast_slice;
 use glam::{Mat4, Vec3};
 use obj::Obj;
-use shared::SceneConstants;
+use shared::Constants;
 use winit::event::WindowEvent;
 use std::fs::File;
 use std::io::BufReader;
@@ -13,7 +13,7 @@ use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 pub struct Scene {
     start_time: Instant,
     cursor_down: bool,
-    pub consts: SceneConstants,
+    pub consts: Constants,
     pub scene_layout: BindGroupLayout,
     pub camera: Camera,
     pub mesh: Mesh,
@@ -51,7 +51,7 @@ impl Scene {
     pub fn new(window: &Window, device: &wgpu::Device) -> Self {
         let cursor_down = false;
         let camera = Camera::new(window);
-        let consts = SceneConstants {
+        let consts = Constants {
             time: 0.0,
             frametime: 0.0,
             width: 0.0,
@@ -97,7 +97,23 @@ impl Scene {
 
     pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
         match event {
-
+            WindowEvent::Resized(_) => {
+                self.camera.update_fov(window);
+                self.consts.camera_proj = self.camera.proj * self.camera.view;
+            }
+            WindowEvent::MouseInput { state, button, .. } => match button {
+                winit::event::MouseButton::Left => self.cursor_down = state.is_pressed(),
+                _ => {},
+            }
+            WindowEvent::MouseWheel { delta, .. } => {
+                self.camera.zoom(*delta);
+                self.consts.camera_proj = self.camera.proj * self.camera.view;
+            }
+            WindowEvent::CursorMoved { position, .. } => if self.cursor_down {
+                self.camera.pan(*position, window);
+                self.consts.camera_proj = self.camera.proj * self.camera.view;
+            }
+            _ => {},
         }
     }
 }

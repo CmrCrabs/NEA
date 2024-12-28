@@ -1,7 +1,7 @@
 use std::mem;
 
 use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, Ui};
-use shared::SceneConstants;
+use shared::Constants;
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
@@ -25,12 +25,6 @@ pub struct UI {
     texture: Texture,
     pub context: imgui::Context,
 }
-
-// RENDERER
-// get vtx/idx bufs
-// handle dpi factor
-// handle scissor rect?
-// texture management (sample texture)
 
 impl UI {
     pub fn new(renderer: &Renderer, scene: &Scene) -> Self {
@@ -115,7 +109,7 @@ impl UI {
         });
 
         let scene_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem::size_of::<SceneConstants>() as u64,
+            size: mem::size_of::<Constants>() as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
@@ -241,7 +235,7 @@ impl UI {
         }
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window, queue: &Queue) {
+    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {
