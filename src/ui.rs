@@ -155,12 +155,7 @@ impl UI {
                 view: &surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 0.0,
-                    }),
+                    load: wgpu::LoadOp::Load,
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -246,7 +241,7 @@ impl UI {
         }
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
+    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window, queue: &Queue) {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {

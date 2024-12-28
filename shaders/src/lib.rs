@@ -49,5 +49,5 @@ pub fn ui_fs(
     out_col: &mut Vec4,
 
 ) {    
-    *out_col = tex.sample(*sampler, uv) * col;
+    *out_col = tex.sample(*sampler, uv) * col.powf(1.2);
 }

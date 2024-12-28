@@ -88,22 +88,20 @@ impl Renderer {
     }
 
     pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI) -> Result {
-        let mut cursor_down: bool = false;
         let mut last_frame = Instant::now();
-
         let mut standard_pipeline =
             StandardPipeline::new(&self.device, &self.window, &self.shader, &scene);
 
         event_loop.run(move |event, elwt| match event {
+            Event::AboutToWait => self.window.request_redraw(),
             Event::NewEvents(_) => {
                 let now = Instant::now();
                 ui.context.io_mut().update_delta_time(now - last_frame);
                 last_frame = now;
             }
-            Event::AboutToWait => self.window.request_redraw(),
-
             Event::WindowEvent { event, .. } => {
-                ui.handle_events(&event, &self.window);
+                scene.handle_events(&event, &self.window);
+                ui.handle_events(&event, &self.window, &self.queue);
                 match event {
                     WindowEvent::CloseRequested => elwt.exit(),
 

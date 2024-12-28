@@ -2,6 +2,7 @@ use crate::cast_slice;
 use glam::{Mat4, Vec3};
 use obj::Obj;
 use shared::SceneConstants;
+use winit::event::WindowEvent;
 use std::fs::File;
 use std::io::BufReader;
 use std::{f32::consts::PI, time::Instant};
@@ -11,6 +12,7 @@ use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 
 pub struct Scene {
     start_time: Instant,
+    cursor_down: bool,
     pub consts: SceneConstants,
     pub scene_layout: BindGroupLayout,
     pub camera: Camera,
@@ -47,8 +49,8 @@ pub struct Vertex {
 
 impl Scene {
     pub fn new(window: &Window, device: &wgpu::Device) -> Self {
+        let cursor_down = false;
         let camera = Camera::new(window);
-
         let consts = SceneConstants {
             time: 0.0,
             frametime: 0.0,
@@ -56,8 +58,7 @@ impl Scene {
             height: 0.0,
             camera_proj: camera.proj * camera.view,
         };
-
-        let mesh = Scene::get_mesh(device);
+        let mesh = Mesh::new(device);
         let start_time = Instant::now();
 
         let scene_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -75,6 +76,7 @@ impl Scene {
         });
 
         Self {
+            cursor_down,
             start_time,
             consts,
             camera,
@@ -83,7 +85,25 @@ impl Scene {
         }
     }
 
-    fn get_mesh(device: &wgpu::Device) -> Mesh {
+    pub fn redraw(&mut self, window: &Window) {
+        let duration = self.start_time.elapsed().as_secs_f32();
+        self.consts.frametime = duration - self.consts.time;
+        self.consts.time = duration;
+
+        let dimensions = window.inner_size();
+        self.consts.width = dimensions.width as f32;
+        self.consts.height = dimensions.height as f32;
+    }
+
+    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
+        match event {
+
+        }
+    }
+}
+
+impl Mesh {
+    pub fn new(device: &wgpu::Device) -> Self {
         let input = BufReader::new(File::open("assets/sphere.obj").unwrap());
         let obj: Obj<obj::TexturedVertex, u32> = obj::load_obj(input).unwrap();
         let vertices = obj
@@ -108,22 +128,12 @@ impl Scene {
         });
         let length = obj.indices.len();
 
-        Mesh {
+        Self {
             vertices,
             vtx_buf,
             idx_buf,
             length,
         }
-    }
-
-    pub fn redraw(&mut self, window: &Window) {
-        let duration = self.start_time.elapsed().as_secs_f32();
-        self.consts.frametime = duration - self.consts.time;
-        self.consts.time = duration;
-
-        let dimensions = window.inner_size();
-        self.consts.width = dimensions.width as f32;
-        self.consts.height = dimensions.height as f32;
     }
 }
 
