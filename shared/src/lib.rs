@@ -33,12 +33,16 @@ impl Default for ShaderConstants {
 pub struct SimConstants {
     pub lengthscale: f32,
     pub mesh_step: f32,
+    pub standard_deviation: f32,
+    pub mean: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
         Self {
             lengthscale: 4.0,
             mesh_step: 1.0,
+            standard_deviation: 1.0,
+            mean: 0.0,
         }
     }
 }

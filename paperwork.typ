@@ -261,7 +261,7 @@ This function defines the amplitude of the wave at a given point in space at a g
 where
   - $hat(h)$ evolves $hat(h)_0$ through time using eulers formula. by combining a positive and negative version of the wave number you ensure the functions output is real @JTessendorf
   - $hat(h)_0$ is the initial wave state as determined by the energy spectra & gaussian distribution. This is only computed on parameter change / startup and then stored into a texture
-  - $epsilon$ are gaussian random numbers defined below
+  - $xi$ are gaussian random numbers defined below
   - $S_"TMA" (arrow(k))$ is the spectrum function defined above
 
 === Gaussian Random Numbers @Gaussian @Empirical-Spectra

@@ -127,10 +127,10 @@ impl Mesh {
         for z in 0..scale {
             for x in 0..scale {
                 vertices.push(Vec4::new(
-                    x as f32 * step -0.5 * scale as f32 * step,
-                    0.0, 
-                    z as f32 * step -0.5 * scale as f32 * step,
-                    1.0
+                    x as f32 * step - 0.5 * scale as f32 * step,
+                    0.0,
+                    z as f32 * step - 0.5 * scale as f32 * step,
+                    1.0,
                 ));
             }
         }
