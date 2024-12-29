@@ -1,12 +1,7 @@
 use crate::cast_slice;
-use std::mem;
-use glam::{Mat4, Vec3};
-use obj::Obj;
+use glam::{Mat4, Vec3, Vec4};
 use shared::{Constants, ShaderConstants, SimConstants};
-use std::fs::File;
-use std::io::BufReader;
-use std::{f32::consts::PI, time::Instant};
-use wgpu::BindGroupLayout;
+use std::{f32::consts::PI, mem, time::Instant};
 use wgpu::{util::DeviceExt, Buffer};
 use winit::event::WindowEvent;
 use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
@@ -15,7 +10,7 @@ pub struct Scene {
     start_time: Instant,
     cursor_down: bool,
     pub consts: Constants,
-    pub scene_layout: BindGroupLayout,
+    pub scene_layout: wgpu::BindGroupLayout,
     pub camera: Camera,
     pub mesh: Mesh,
     pub mem_size: u64,
@@ -37,15 +32,10 @@ pub struct Camera {
 }
 
 pub struct Mesh {
-    pub vertices: Vec<Vertex>,
+    pub vertices: Vec<Vec4>,
     pub idx_buf: Buffer,
     pub vtx_buf: Buffer,
     pub length: usize,
-}
-#[repr(C, align(16))]
-pub struct Vertex {
-    position: Vec3,
-    normal: Vec3,
 }
 
 impl Scene {
@@ -58,11 +48,11 @@ impl Scene {
             width: 0.0,
             height: 0.0,
             camera_proj: camera.proj * camera.view,
-            //view: camera.eye,
+            view: camera.eye.extend(1.0),
             shader: ShaderConstants::default(),
             sim: SimConstants::default(),
         };
-        let mesh = Mesh::new(device);
+        let mesh = Mesh::new(device, &consts);
         let start_time = Instant::now();
 
         let scene_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -130,30 +120,44 @@ impl Scene {
 }
 
 impl Mesh {
-    pub fn new(device: &wgpu::Device) -> Self {
-        let input = BufReader::new(File::open("assets/sphere.obj").unwrap());
-        let obj: Obj<obj::TexturedVertex, u32> = obj::load_obj(input).unwrap();
-        let vertices = obj
-            .vertices
-            .iter()
-            .map(|v| Vertex {
-                position: v.position.into(),
-                normal: v.normal.into(),
-            })
-            .collect::<Vec<_>>();
-
+    pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
+        let scale = consts.sim.lengthscale as u32;
+        let step = consts.sim.mesh_step;
+        let mut vertices: Vec<Vec4> = vec![];
+        for z in 0..scale {
+            for x in 0..scale {
+                vertices.push(Vec4::new(
+                    x as f32 * step -0.5 * scale as f32 * step,
+                    0.0, 
+                    z as f32 * step -0.5 * scale as f32 * step,
+                    1.0
+                ));
+            }
+        }
         let vtx_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             contents: cast_slice(&vertices),
             usage: wgpu::BufferUsages::VERTEX,
             label: None,
         });
 
+        let mut indices: Vec<u32> = vec![];
+        for y in 0..scale - 1 {
+            for x in 0..scale - 1 {
+                indices.push(x + y * scale);
+                indices.push((x + 1) + (y + 1) * scale);
+                indices.push(x + (y + 1) * scale);
+                indices.push(x + y * scale);
+                indices.push((x + 1) + y * scale);
+                indices.push((x + 1) + (y + 1) * scale);
+            }
+        }
+
         let idx_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            contents: cast_slice(&obj.indices),
+            contents: cast_slice(&indices),
             usage: wgpu::BufferUsages::INDEX,
             label: None,
         });
-        let length = obj.indices.len();
+        let length = indices.len();
 
         Self {
             vertices,

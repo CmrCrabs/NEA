@@ -1,7 +1,7 @@
 use crate::{
     cast_slice,
-    renderpass::StandardPipeline,
     scene::Scene,
+    standardpass::StandardPipeline,
     ui::{build, UI},
     Result,
 };
@@ -120,9 +120,8 @@ impl Renderer {
                 last_frame = now;
             }
             Event::WindowEvent { event, .. } => {
-                if !ui.handle_events(&event, &self.window) {
-                    scene.handle_events(&event, &self.window);
-                }
+                ui.handle_events(&event, &self.window);
+                scene.handle_events(&event, &self.window);
                 match event {
                     WindowEvent::RedrawRequested => {
                         scene.redraw(&self.window);

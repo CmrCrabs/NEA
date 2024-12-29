@@ -234,7 +234,7 @@ impl UI {
         }
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) -> bool {
+    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {
@@ -283,22 +283,19 @@ impl UI {
                 io.key_ctrl = modifiers.state().control_key();
                 io.key_super = modifiers.state().super_key();
             }
-            _ => return false
+            _ => {}
         }
-        return true
     }
 }
 
 pub fn build(ui: &Ui, consts: &mut Constants) {
-    ui.window("NEA")
-        .always_auto_resize(true)
-        .build(|| {
-            ui.text("Ocean Simulation");
-            ui.separator();
-            ui.text("Info");
-            ui.text(format!( "{:.1$} fps", 1.0 / consts.frametime, 0));
-            ui.color_picker3("Base Color", consts.shader.base_color.as_mut());
-        });
+    ui.window("NEA").always_auto_resize(true).build(|| {
+        ui.text("Ocean Simulation");
+        ui.separator();
+        ui.text("Info");
+        ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
+        ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+    });
 }
 
 fn to_winit_cursor(cursor: MouseCursor) -> CursorIcon {

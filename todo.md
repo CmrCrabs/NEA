@@ -1,4 +1,6 @@
 - [ ] base mesh
+    - [ ] vertices
+    - [ ] indices
 - [ ] compute shaders and store in texture
 - [ ] skybox
 - [ ] lighting

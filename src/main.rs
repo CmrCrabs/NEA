@@ -6,8 +6,8 @@ use ui::UI;
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
 mod renderer;
-mod renderpass;
 mod scene;
+mod standardpass;
 mod ui;
 mod util;
 

@@ -1,6 +1,6 @@
 #![no_std]
 
-use glam::Vec3;
+use glam::Vec4;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -10,21 +10,21 @@ pub struct Constants {
     pub width: f32,
     pub height: f32,
     pub camera_proj: glam::Mat4,
-    //pub view: Vec3,
+    pub view: Vec4,
     pub shader: ShaderConstants,
     pub sim: SimConstants,
 }
 
 #[derive(Clone, Copy)]
 pub struct ShaderConstants {
-    pub light: Vec3,
-    pub base_color: Vec3,
+    pub light: Vec4,
+    pub base_color: Vec4,
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
-            light: Vec3::new(0.0,1.0,1.0),
-            base_color: Vec3::new(1.0,1.0,1.0),
+            light: Vec4::new(0.0,1.0,1.0,1.0),
+            base_color: Vec4::new(1.0,1.0,1.0,1.0),
         }
     }
 }
@@ -32,11 +32,13 @@ impl Default for ShaderConstants {
 #[derive(Clone, Copy)]
 pub struct SimConstants {
     pub lengthscale: f32,
+    pub mesh_step: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
         Self {
-            lengthscale: 64.0,
+            lengthscale: 4.0,
+            mesh_step: 1.0,
         }
     }
 }
