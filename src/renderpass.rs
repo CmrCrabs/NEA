@@ -1,6 +1,5 @@
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{Scene, Vertex};
-use shared::Constants;
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
 
@@ -11,13 +10,9 @@ pub struct StandardPipeline {
 }
 
 impl StandardPipeline {
-    pub fn new(
-        device: &Device,
-        shader: &ShaderModule,
-        scene: &Scene,
-    ) -> StandardPipeline {
+    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene) -> StandardPipeline {
         let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem::size_of::<Constants>() as u64,
+            size: scene.mem_size as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,

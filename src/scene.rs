@@ -1,13 +1,14 @@
 use crate::cast_slice;
+use std::mem;
 use glam::{Mat4, Vec3};
 use obj::Obj;
-use shared::Constants;
-use winit::event::WindowEvent;
+use shared::{Constants, ShaderConstants, SimConstants};
 use std::fs::File;
 use std::io::BufReader;
 use std::{f32::consts::PI, time::Instant};
 use wgpu::BindGroupLayout;
 use wgpu::{util::DeviceExt, Buffer};
+use winit::event::WindowEvent;
 use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 
 pub struct Scene {
@@ -17,13 +18,7 @@ pub struct Scene {
     pub scene_layout: BindGroupLayout,
     pub camera: Camera,
     pub mesh: Mesh,
-}
-
-pub struct Mesh {
-    pub vertices: Vec<Vertex>,
-    pub idx_buf: Buffer,
-    pub vtx_buf: Buffer,
-    pub length: usize,
+    pub mem_size: u64,
 }
 
 pub struct Camera {
@@ -41,6 +36,12 @@ pub struct Camera {
     zfar: f32,
 }
 
+pub struct Mesh {
+    pub vertices: Vec<Vertex>,
+    pub idx_buf: Buffer,
+    pub vtx_buf: Buffer,
+    pub length: usize,
+}
 #[repr(C, align(16))]
 pub struct Vertex {
     position: Vec3,
@@ -57,6 +58,9 @@ impl Scene {
             width: 0.0,
             height: 0.0,
             camera_proj: camera.proj * camera.view,
+            //view: camera.eye,
+            shader: ShaderConstants::default(),
+            sim: SimConstants::default(),
         };
         let mesh = Mesh::new(device);
         let start_time = Instant::now();
@@ -75,6 +79,10 @@ impl Scene {
             label: None,
         });
 
+        let mem_size = (mem::size_of::<Constants>()
+            + mem::size_of::<SimConstants>()
+            + mem::size_of::<ShaderConstants>()) as u64;
+
         Self {
             cursor_down,
             start_time,
@@ -82,6 +90,7 @@ impl Scene {
             camera,
             mesh,
             scene_layout,
+            mem_size,
         }
     }
 
@@ -103,17 +112,19 @@ impl Scene {
             }
             WindowEvent::MouseInput { state, button, .. } => match button {
                 winit::event::MouseButton::Left => self.cursor_down = state.is_pressed(),
-                _ => {},
-            }
+                _ => {}
+            },
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera.zoom(*delta);
                 self.consts.camera_proj = self.camera.proj * self.camera.view;
             }
-            WindowEvent::CursorMoved { position, .. } => if self.cursor_down {
-                self.camera.pan(*position, window);
-                self.consts.camera_proj = self.camera.proj * self.camera.view;
+            WindowEvent::CursorMoved { position, .. } => {
+                if self.cursor_down {
+                    self.camera.pan(*position, window);
+                    self.consts.camera_proj = self.camera.proj * self.camera.view;
+                }
             }
-            _ => {},
+            _ => {}
         }
     }
 }

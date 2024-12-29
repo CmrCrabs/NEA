@@ -7,17 +7,22 @@ use shared::Constants;
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec3,
+    normal: Vec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(position)] out_pos: &mut Vec4,
+    out_normal: &mut Vec3,
 ) {
     *out_pos = consts.camera_proj * pos.extend(1.0);
+    *out_normal = normal;
 }
 
 #[spirv(fragment)]
 pub fn main_fs(
+    normal: Vec3,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     output: &mut Vec4,
 ) {    
-    *output = Vec4::new(1.0,1.0,1.0,1.0);
+    *output = consts.shader.base_color.extend(1.0);
 }
 
 #[spirv(vertex)]

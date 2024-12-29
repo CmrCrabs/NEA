@@ -1,5 +1,10 @@
-use crate::ui::gen_interface;
-use crate::{cast_slice, renderpass::StandardPipeline, scene::Scene, ui::UI, Result};
+use crate::{
+    cast_slice,
+    renderpass::StandardPipeline,
+    scene::Scene,
+    ui::{build, UI},
+    Result,
+};
 use std::time::Instant;
 use winit::keyboard::KeyCode;
 use winit::{
@@ -49,7 +54,7 @@ impl Renderer {
             format: FORMAT,
             width: window.inner_size().width,
             height: window.inner_size().height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Opaque,
             view_formats: vec![],
         };
@@ -115,10 +120,10 @@ impl Renderer {
                 last_frame = now;
             }
             Event::WindowEvent { event, .. } => {
-                scene.handle_events(&event, &self.window);
-                ui.handle_events(&event, &self.window);
+                if !ui.handle_events(&event, &self.window) {
+                    scene.handle_events(&event, &self.window);
+                }
                 match event {
-
                     WindowEvent::RedrawRequested => {
                         scene.redraw(&self.window);
                         let surface = self.surface.get_current_texture().unwrap();
@@ -135,7 +140,8 @@ impl Renderer {
                             0,
                             cast_slice(&[scene.consts]),
                         );
-                        let mut pass = standard_pipeline.render(&mut encoder, &surface_view, &self.depth_view);
+                        let mut pass =
+                            standard_pipeline.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pipeline.pipeline);
                         pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
@@ -149,7 +155,7 @@ impl Renderer {
                         // UI Pass
                         ui.update_cursor(&self.window);
                         let ui_frame = ui.context.frame();
-                        gen_interface(ui_frame);
+                        build(ui_frame, &mut scene.consts);
                         ui.render(
                             &self.device,
                             &self.queue,
@@ -168,7 +174,7 @@ impl Renderer {
                             format: FORMAT,
                             width: size.width,
                             height: size.height,
-                            present_mode: wgpu::PresentMode::Fifo,
+                            present_mode: wgpu::PresentMode::AutoNoVsync,
                             alpha_mode: wgpu::CompositeAlphaMode::Opaque,
                             view_formats: vec![],
                         };
@@ -178,7 +184,7 @@ impl Renderer {
                     WindowEvent::CloseRequested => elwt.exit(),
                     WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
                         PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
-                        _ => {},
+                        _ => {}
                     },
                     _ => {}
                 }

@@ -1,5 +1,11 @@
 use std::mem;
 
+use crate::{
+    cast_slice,
+    renderer::{Renderer, FORMAT},
+    scene::Scene,
+    util::Texture,
+};
 use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, Ui};
 use shared::Constants;
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
@@ -7,13 +13,6 @@ use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
     window::{CursorIcon, Window},
-};
-
-use crate::{
-    cast_slice,
-    renderer::{Renderer, FORMAT},
-    scene::Scene,
-    util::Texture,
 };
 
 pub struct UI {
@@ -109,7 +108,7 @@ impl UI {
         });
 
         let scene_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem::size_of::<Constants>() as u64,
+            size: scene.mem_size as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
@@ -235,7 +234,7 @@ impl UI {
         }
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
+    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) -> bool {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {
@@ -244,14 +243,16 @@ impl UI {
                 io.display_size = [logical_size.width as _, logical_size.height as _];
             }
             WindowEvent::KeyboardInput { event, .. } => {
-                if let Some(txt) = &event.text {
-                    for ch in txt.chars() {
-                        io.add_input_character(ch);
-                    }
-                }
                 if let PhysicalKey::Code(key) = event.physical_key {
                     for k in to_imgui_keys(key) {
                         io.add_key_event(*k, event.state.is_pressed());
+                    }
+                }
+                if event.state.is_pressed() {
+                    if let Some(txt) = &event.text {
+                        for ch in txt.chars() {
+                            io.add_input_character(ch);
+                        }
                     }
                 }
             }
@@ -282,24 +283,21 @@ impl UI {
                 io.key_ctrl = modifiers.state().control_key();
                 io.key_super = modifiers.state().super_key();
             }
-            _ => {}
+            _ => return false
         }
+        return true
     }
 }
 
-pub fn gen_interface(ui: &Ui) {
-    ui.window("Hello world")
-        .size([300.0, 100.0], imgui::Condition::FirstUseEver)
+pub fn build(ui: &Ui, consts: &mut Constants) {
+    ui.window("NEA")
+        .always_auto_resize(true)
         .build(|| {
-            ui.text("Hello world!");
-            ui.text("こんにちは世界！");
-            ui.text("This...is...imgui-rs!");
+            ui.text("Ocean Simulation");
             ui.separator();
-            let mouse_pos = ui.io().mouse_pos;
-            ui.text(format!(
-                "Mouse Position: ({:.1},{:.1})",
-                mouse_pos[0], mouse_pos[1]
-            ));
+            ui.text("Info");
+            ui.text(format!( "{:.1$} fps", 1.0 / consts.frametime, 0));
+            ui.color_picker3("Base Color", consts.shader.base_color.as_mut());
         });
 }
 
