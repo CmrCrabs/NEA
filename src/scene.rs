@@ -32,10 +32,19 @@ pub struct Camera {
 }
 
 pub struct Mesh {
-    pub vertices: Vec<Vec4>,
+    pub vertices: Vec<OceanVertex>,
     pub idx_buf: Buffer,
     pub vtx_buf: Buffer,
     pub length: usize,
+}
+
+#[repr(C, align(16))]
+pub struct OceanVertex {
+    pos: Vec4,
+    normal: Vec4,
+    //h0: Vec4,
+    //h0c: Vec4,
+    //original_pos: Vec4,
 }
 
 impl Scene {
@@ -121,17 +130,24 @@ impl Scene {
 
 impl Mesh {
     pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
-        let scale = consts.sim.lengthscale as u32;
+        let scale = consts.sim.lengthscale;
         let step = consts.sim.mesh_step;
-        let mut vertices: Vec<Vec4> = vec![];
+        let mut vertices: Vec<OceanVertex> = vec![];
         for z in 0..scale {
             for x in 0..scale {
-                vertices.push(Vec4::new(
-                    x as f32 * step - 0.5 * scale as f32 * step,
-                    0.0,
-                    z as f32 * step - 0.5 * scale as f32 * step,
-                    1.0,
-                ));
+                let pos = Vec4::new(
+                        x as f32 * step - 0.5 * scale as f32 * step,
+                        0.0,
+                        z as f32 * step - 0.5 * scale as f32 * step,
+                        1.0,
+                );
+                vertices.push(OceanVertex {
+                    pos,
+                    //original_pos: pos,
+                    //h0: Vec4::ZERO,
+                    //h0c: Vec4::ZERO,
+                    normal: Vec4::ZERO,
+                });
             }
         }
         let vtx_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

@@ -219,7 +219,7 @@ where
 
 
 === Directional Spectrum Function @Empirical-Spectra
-The TMA spectrum below is an undirectional spectrum that considers depth, combining the above functions. 
+The TMA spectrum below is an undirectional spectrum that considers depth.
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
 This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following 'transformation'. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
 $ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $

@@ -56,7 +56,7 @@ impl UI {
             wgpu::TextureFormat::Rgba8UnormSrgb,
             &renderer,
         );
-        texture.write(&renderer.queue, font_texture.data);
+        texture.write(&renderer.queue, font_texture.data, 4);
 
         let pipeline_layout =
             renderer
@@ -293,7 +293,9 @@ pub fn build(ui: &Ui, consts: &mut Constants) {
         ui.text("Ocean Simulation");
         ui.separator();
         ui.text("Info");
+        ui.text(format!("{:.1$} Elapsed", consts.time, 2));
         ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
+        ui.separator();
         ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
     });
 }

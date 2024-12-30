@@ -1,5 +1,5 @@
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
-use crate::scene::Scene;
+use crate::scene::{Scene, OceanVertex};
 use glam::Vec4;
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
@@ -39,9 +39,9 @@ impl StandardPipeline {
                 module: shader,
                 entry_point: "main_vs",
                 buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: mem::size_of::<Vec4>() as _,
+                    array_stride: mem::size_of::<OceanVertex>() as _,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x4],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Float32x4],
                 }],
             },
             fragment: Some(wgpu::FragmentState {

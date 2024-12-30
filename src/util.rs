@@ -1,5 +1,4 @@
 use crate::renderer::Renderer;
-use std::f32::consts::{E, PI};
 use wgpu::Queue;
 
 pub struct Texture {
@@ -55,7 +54,7 @@ impl Texture {
         }
     }
 
-    pub fn write(&self, queue: &Queue, data: &[u8]) {
+    pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
         queue.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &self.texture,
@@ -66,7 +65,7 @@ impl Texture {
             data,
             wgpu::ImageDataLayout {
                 offset: 0,
-                bytes_per_row: Some(4 * self.texture.width()),
+                bytes_per_row: Some(size * self.texture.width()),
                 rows_per_image: Some(self.texture.height()),
             },
             self.texture.size(),
@@ -74,19 +73,4 @@ impl Texture {
     }
 }
 
-pub fn gaussian_texture(renderer: &Renderer, consts: &shared::Constants) {
-    let texture = Texture::new(
-        consts.sim.lengthscale as u32,
-        consts.sim.lengthscale as u32,
-        wgpu::TextureFormat::Rg16Snorm,
-        &renderer,
-    );
-}
 
-fn gaussian_number(x: f32, consts: &shared::Constants) -> f32 {
-    1.0 / (2.0 * PI * consts.sim.standard_deviation * consts.sim.standard_deviation)
-        * E.powf(
-            -1.0 * (x - consts.sim.mean * consts.sim.mean)
-                / (2.0 * consts.sim.standard_deviation * consts.sim.standard_deviation),
-        )
-}

@@ -40,7 +40,7 @@ impl Renderer {
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                features: wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                features: wgpu::Features::VERTEX_WRITABLE_STORAGE | wgpu::Features::TEXTURE_FORMAT_16BIT_NORM,
                 limits: wgpu::Limits::default(),
                 label: None,
             },
@@ -58,6 +58,7 @@ impl Renderer {
             alpha_mode: wgpu::CompositeAlphaMode::Opaque,
             view_formats: vec![],
         };
+        surface.configure(&device, &config);
 
         let tex_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
