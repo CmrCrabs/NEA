@@ -23,6 +23,7 @@ pub struct UI {
     pub scene_buf: Buffer,
     texture: Texture,
     pub context: imgui::Context,
+    pub focused: bool,
 }
 
 impl UI {
@@ -38,6 +39,7 @@ impl UI {
         io.backend_flags.insert(BackendFlags::HAS_SET_MOUSE_POS);
         io.backend_flags
             .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
+        //io.display_size = [(dimensions.width as f64 / hidpi_factor) as f32, (dimensions.height as f64 / hidpi_factor) as f32];
         io.display_size = [dimensions.width as _, dimensions.height as _];
         io.display_framebuffer_scale = [hidpi_factor as f32, hidpi_factor as f32];
 
@@ -123,6 +125,7 @@ impl UI {
                 }],
                 label: None,
             });
+        let focused = true;
 
         Self {
             pipeline,
@@ -132,6 +135,7 @@ impl UI {
             scene_bind_group,
             scene_buf,
             texture,
+            focused,
         }
     }
 
@@ -238,9 +242,7 @@ impl UI {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {
-                let logical_size: winit::dpi::LogicalSize<f32> =
-                    size.to_logical(window.scale_factor());
-                io.display_size = [logical_size.width as _, logical_size.height as _];
+                io.display_size = [size.width as _, size.height as _];
             }
             WindowEvent::KeyboardInput { event, .. } => {
                 if let PhysicalKey::Code(key) = event.physical_key {
@@ -288,7 +290,8 @@ impl UI {
     }
 }
 
-pub fn build(ui: &Ui, consts: &mut Constants) {
+pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
+    let mut focused = false;
     ui.window("NEA").always_auto_resize(true).build(|| {
         ui.text("Ocean Simulation");
         ui.separator();
@@ -297,7 +300,9 @@ pub fn build(ui: &Ui, consts: &mut Constants) {
         ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
         ui.separator();
         ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+        focused = ui.is_window_focused();
     });
+    focused
 }
 
 fn to_winit_cursor(cursor: MouseCursor) -> CursorIcon {

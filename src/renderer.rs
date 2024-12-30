@@ -122,7 +122,9 @@ impl Renderer {
             }
             Event::WindowEvent { event, .. } => {
                 ui.handle_events(&event, &self.window);
-                scene.handle_events(&event, &self.window);
+                if !ui.focused {
+                    scene.update_camera(&event, &self.window);
+                }
                 match event {
                     WindowEvent::RedrawRequested => {
                         scene.redraw(&self.window);
@@ -155,7 +157,7 @@ impl Renderer {
                         // UI Pass
                         ui.update_cursor(&self.window);
                         let ui_frame = ui.context.frame();
-                        build(ui_frame, &mut scene.consts);
+                        ui.focused = build(ui_frame, &mut scene.consts);
                         ui.render(
                             &self.device,
                             &self.queue,
@@ -180,6 +182,9 @@ impl Renderer {
                         };
                         self.surface.configure(&self.device, &self.config);
                         self.new_depth_view();
+
+                        scene.camera.update_fov(&self.window);
+                        scene.consts.camera_proj = scene.camera.proj * scene.camera.view;
                     }
                     WindowEvent::CloseRequested => elwt.exit(),
                     WindowEvent::KeyboardInput { event, .. } => match event.physical_key {

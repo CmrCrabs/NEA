@@ -103,12 +103,8 @@ impl Scene {
         self.consts.height = dimensions.height as f32;
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
+    pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {
         match event {
-            WindowEvent::Resized(_) => {
-                self.camera.update_fov(window);
-                self.consts.camera_proj = self.camera.proj * self.camera.view;
-            }
             WindowEvent::MouseInput { state, button, .. } => match button {
                 winit::event::MouseButton::Left => self.cursor_down = state.is_pressed(),
                 _ => {}
@@ -187,8 +183,8 @@ impl Mesh {
 impl Camera {
     pub fn new(window: &Window) -> Camera {
         let pitch: f32 = 0.0;
-        let yaw: f32 = 0.0;
-        let zoom: f32 = 5.0;
+        let yaw: f32 = -10.0;
+        let zoom: f32 = 20.0;
 
         let mut camera = Camera {
             pitch,
