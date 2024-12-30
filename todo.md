@@ -1,6 +1,7 @@
 - [ ] update wgpu
 - [ ] make hook for param change
 - [ ] create initial specturm pass
+- [ ] move renderer to /gfx/
 
 
 - [ ] skybox

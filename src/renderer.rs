@@ -13,12 +13,12 @@ use winit::{
     keyboard::PhysicalKey,
 };
 
-pub struct Renderer {
-    pub surface: wgpu::Surface,
+pub struct Renderer<'a> {
+    pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
-    pub window: winit::window::Window,
+    pub window: &'a winit::window::Window,
     pub shader: wgpu::ShaderModule,
     pub tex_layout: wgpu::BindGroupLayout,
     pub depth_view: wgpu::TextureView,
@@ -27,10 +27,10 @@ pub struct Renderer {
 pub const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Bgra8UnormSrgb;
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
-impl Renderer {
-    pub fn new(window: winit::window::Window) -> Renderer {
+impl<'a> Renderer<'a> {
+    pub fn new(window: &'a winit::window::Window) -> Renderer<'a> {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
-        let surface = unsafe { instance.create_surface(&window).unwrap() };
+        let surface = instance.create_surface(window).unwrap();
         let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
             force_fallback_adapter: false,
@@ -40,8 +40,9 @@ impl Renderer {
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                features: wgpu::Features::VERTEX_WRITABLE_STORAGE | wgpu::Features::TEXTURE_FORMAT_16BIT_NORM,
-                limits: wgpu::Limits::default(),
+                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE | wgpu::Features::TEXTURE_FORMAT_16BIT_NORM,
+                required_limits: wgpu::Limits::default(),
+                memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
             },
             None,
@@ -57,6 +58,7 @@ impl Renderer {
             present_mode: wgpu::PresentMode::AutoNoVsync,
             alpha_mode: wgpu::CompositeAlphaMode::Opaque,
             view_formats: vec![],
+            desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &config);
 
@@ -102,7 +104,7 @@ impl Renderer {
             surface,
             device,
             queue,
-            window,
+            window: &window,
             config,
             shader,
             tex_layout,
@@ -121,7 +123,7 @@ impl Renderer {
                 last_frame = now;
             }
             Event::WindowEvent { event, .. } => {
-                ui.handle_events(&event, &self.window);
+                ui.handle_events(&event);
                 if !ui.focused {
                     scene.update_camera(&event, &self.window);
                 }
@@ -179,6 +181,7 @@ impl Renderer {
                             present_mode: wgpu::PresentMode::AutoNoVsync,
                             alpha_mode: wgpu::CompositeAlphaMode::Opaque,
                             view_formats: vec![],
+                            desired_maximum_frame_latency: 2,
                         };
                         self.surface.configure(&self.device, &self.config);
                         self.new_depth_view();

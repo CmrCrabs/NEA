@@ -5,7 +5,7 @@ pub struct InitialSpectraPass {
 }
 
 impl InitialSpectraPass {
-   pub fn new(device: &wgpu::Device, shader: &wgpu::ShaderModule, ocean: &super::Ocean) -> Self {
+   pub fn new(device: &wgpu::Device, shader: &wgpu::ShaderModule) -> Self {
         let buf = device.create_buffer(&wgpu::BufferDescriptor {
             size: std::mem::size_of::<shared::SimConstants>() as u64,
             mapped_at_creation: false,
@@ -39,9 +39,11 @@ impl InitialSpectraPass {
             label: None,
         });
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            entry_point: "initial_spectrum",
+            entry_point: Some("initial_spectrum"),
             layout: Some(&pipeline_layout),
             module: shader,
+            compilation_options: Default::default(),
+            cache: None,
             label: None,
         });
 

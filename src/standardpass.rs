@@ -1,6 +1,5 @@
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{Scene, OceanVertex};
-use glam::Vec4;
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
 
@@ -37,21 +36,23 @@ impl StandardPipeline {
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
                 module: shader,
-                entry_point: "main_vs",
+                entry_point: Some("main_vs"),
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: mem::size_of::<OceanVertex>() as _,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Float32x4],
                 }],
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: shader,
-                entry_point: "main_fs",
+                entry_point: Some("main_fs"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: FORMAT,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState::default(),
             depth_stencil: Some(wgpu::DepthStencilState {
@@ -64,6 +65,7 @@ impl StandardPipeline {
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             label: None,
+            cache: None,
         });
 
         StandardPipeline {
@@ -78,7 +80,7 @@ impl StandardPipeline {
         encoder: &'a mut wgpu::CommandEncoder,
         surface_view: &'a TextureView,
         depth_view: &'a TextureView,
-    ) -> wgpu::RenderPass {
+    ) -> wgpu::RenderPass<'a> {
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: surface_view,

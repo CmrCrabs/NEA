@@ -20,10 +20,10 @@ fn main() -> Result {
     let event_loop = EventLoop::new()?;
     let window = WindowBuilder::new().with_title("NEA").build(&event_loop)?;
 
-    let mut renderer = Renderer::new(window);
+    let mut renderer = Renderer::new(&window);
     let scene = Scene::new(&renderer.window, &renderer.device);
     let ui = UI::new(&renderer, &scene);
-    let ocean = sim::Ocean::new(&renderer, &scene.consts);
+    let _ocean = sim::Ocean::new(&renderer, &scene.consts);
 
     renderer.run(event_loop, scene, ui)?;
 

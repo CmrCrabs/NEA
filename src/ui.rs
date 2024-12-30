@@ -74,26 +74,29 @@ impl UI {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &renderer.shader,
-                    entry_point: "ui_vs",
+                    entry_point: Some("ui_vs"),
                     buffers: &[wgpu::VertexBufferLayout {
                         array_stride: mem::size_of::<DrawVert>() as _,
                         step_mode: wgpu::VertexStepMode::Vertex,
                         attributes: &wgpu::vertex_attr_array![0 => Float32x2, 1 => Float32x2, 2 => Unorm8x4],
                     }],
+                    compilation_options: Default::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &renderer.shader,
-                    entry_point: "ui_fs",
+                    entry_point: Some("ui_fs"),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: FORMAT,
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                         write_mask: wgpu::ColorWrites::ALL,
                     })],
+                    compilation_options: Default::default(),
                 }),
                 primitive: wgpu::PrimitiveState::default(),
                 depth_stencil: None,
                 multisample: wgpu::MultisampleState::default(),
                 multiview: None,
+                cache: None,
                 label: None,
             });
         let vtx_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
@@ -238,7 +241,7 @@ impl UI {
         }
     }
 
-    pub fn handle_events(&mut self, event: &WindowEvent, window: &Window) {
+    pub fn handle_events(&mut self, event: &WindowEvent) {
         let io = self.context.io_mut();
         match event {
             WindowEvent::Resized(size) => {

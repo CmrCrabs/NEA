@@ -1,6 +1,7 @@
 #![no_std]
+#![deny(warnings)]
 
-use spirv_std::glam::{Vec3, Vec4,Vec2};
+use spirv_std::glam::{Vec4,Vec2};
 use spirv_std::{spirv, image::Image2d, Sampler};
 use shared::Constants;
 

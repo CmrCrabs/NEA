@@ -1,9 +1,8 @@
-use spirv_builder::{SpirvBuilder, SpirvMetadata};
+use spirv_builder::{MetadataPrintout, SpirvBuilder};
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     SpirvBuilder::new("shaders", "spirv-unknown-spv1.5")
-        .preserve_bindings(true)
-        .spirv_metadata(SpirvMetadata::Full)
-        .build()
-        .unwrap();
+        .print_metadata(MetadataPrintout::Full)
+        .build()?;
+    Ok(())
 }

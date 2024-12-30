@@ -1,5 +1,5 @@
 use shared::Constants;
-use glam::{Vec4, Vec2};
+use glam::Vec4;
 use rand::prelude::*;
 use crate::{util::Texture, renderer::Renderer};
 use std::f32::consts::{E, PI};
