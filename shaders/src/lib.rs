@@ -14,6 +14,7 @@ pub fn main_vs(
     *out_pos = consts.camera_proj * pos;
 }
 
+#[inline(never)]
 #[spirv(fragment)]
 pub fn main_fs(
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,

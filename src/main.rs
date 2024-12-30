@@ -30,6 +30,6 @@ fn main() -> Result {
     Ok(())
 }
 
-pub fn cast_slice<T>(fake: &[T]) -> &[u8] {
-    unsafe { slice::from_raw_parts(fake.as_ptr() as _, mem::size_of_val(fake)) }
+pub fn cast_slice<T>(x: &[T]) -> &[u8] {
+    unsafe { slice::from_raw_parts(x.as_ptr() as _, mem::size_of_val(x)) }
 }

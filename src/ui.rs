@@ -166,7 +166,7 @@ impl UI {
         });
 
         let draw_data = self.context.render();
-
+        if draw_data.total_idx_count == 0 { return }
         let mut vertices = Vec::with_capacity(draw_data.total_vtx_count as _);
         let mut indices = Vec::with_capacity(draw_data.total_idx_count as _);
         for draw_list in draw_data.draw_lists() {
