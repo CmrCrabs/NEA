@@ -1,32 +1,45 @@
-use shared::Constants;
+use crate::{renderer::Renderer, util::StorageTexture};
 use glam::Vec4;
 use rand::prelude::*;
-use crate::{util::Texture, renderer::Renderer};
+use shared::Constants;
 use std::f32::consts::{E, PI};
 
-mod compute;
+pub mod compute;
 
 pub struct Ocean {
-    gaussian_texture: Texture,
+    gaussian_texture: StorageTexture,
     gaussian_noise: Vec<Vec4>,
-
-    //wave_texture: Texture,
-    //spectrum_texture: Texture,
+    wave_texture: StorageTexture,
+    spectrum_texture: StorageTexture,
 }
 
 impl Ocean {
     pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
-        let gaussian_texture = Texture::new(
-                consts.sim.lengthscale,
-                consts.sim.lengthscale,
-                wgpu::TextureFormat::Rg16Snorm,
-                &renderer,
+        let gaussian_texture = StorageTexture::new(
+            consts.sim.lengthscale,
+            consts.sim.lengthscale,
+            wgpu::TextureFormat::Rg16Float,
+            &renderer,
         );
         let gaussian_noise = Ocean::guassian_noise(consts);
 
+        let wave_texture = StorageTexture::new(
+            consts.sim.lengthscale,
+            consts.sim.lengthscale,
+            wgpu::TextureFormat::Rgba16Float,
+            &renderer,
+        );
+        let spectrum_texture = StorageTexture::new(
+            consts.sim.lengthscale,
+            consts.sim.lengthscale,
+            wgpu::TextureFormat::Rg16Float,
+            &renderer,
+        );
         Self {
             gaussian_texture,
             gaussian_noise,
+            wave_texture,
+            spectrum_texture,
         }
     }
 
@@ -39,7 +52,7 @@ impl Ocean {
                 Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
                 Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
                 0.0,
-                0.0
+                0.0,
             ));
         }
         data
@@ -52,4 +65,3 @@ impl Ocean {
             )
     }
 }
-

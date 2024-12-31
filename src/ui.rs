@@ -6,7 +6,7 @@ use crate::{
     scene::Scene,
     util::Texture,
 };
-use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, Ui};
+use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
 use shared::Constants;
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
@@ -39,7 +39,6 @@ impl UI {
         io.backend_flags.insert(BackendFlags::HAS_SET_MOUSE_POS);
         io.backend_flags
             .insert(BackendFlags::RENDERER_HAS_VTX_OFFSET);
-        //io.display_size = [(dimensions.width as f64 / hidpi_factor) as f32, (dimensions.height as f64 / hidpi_factor) as f32];
         io.display_size = [dimensions.width as _, dimensions.height as _];
         io.display_framebuffer_scale = [hidpi_factor as f32, hidpi_factor as f32];
 
@@ -166,7 +165,9 @@ impl UI {
         });
 
         let draw_data = self.context.render();
-        if draw_data.total_idx_count == 0 { return }
+        if draw_data.total_idx_count == 0 {
+            return;
+        }
         let mut vertices = Vec::with_capacity(draw_data.total_vtx_count as _);
         let mut indices = Vec::with_capacity(draw_data.total_idx_count as _);
         for draw_list in draw_data.draw_lists() {
@@ -295,13 +296,14 @@ impl UI {
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     let mut focused = false;
-    ui.window("NEA").always_auto_resize(true).build(|| {
-        ui.text("Ocean Simulation");
-        ui.separator();
+    ui.window("NEA Ocean Simulation").always_auto_resize(true).build(|| {
         ui.text("Info");
         ui.text(format!("{:.1$} Elapsed", consts.time, 2));
         ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
         ui.separator();
+        ui.text("Simulation Parameters");
+        ui.separator();
+        ui.text("Shader Parameters");
         ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
         focused = ui.is_window_focused();
     });

@@ -1,5 +1,5 @@
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
-use crate::scene::{Scene, OceanVertex};
+use crate::scene::{OceanVertex, Scene};
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
 

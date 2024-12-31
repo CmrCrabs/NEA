@@ -3,9 +3,9 @@ use wgpu::Queue;
 
 pub struct Texture {
     pub texture: wgpu::Texture,
-    pub sampler: wgpu::Sampler,
-    pub view: wgpu::TextureView,
     pub bind_group: wgpu::BindGroup,
+    _sampler: wgpu::Sampler,
+    _view: wgpu::TextureView,
 }
 
 impl Texture {
@@ -48,8 +48,8 @@ impl Texture {
 
         Self {
             texture,
-            sampler,
-            view,
+            _sampler: sampler,
+            _view: view,
             bind_group,
         }
     }
@@ -73,4 +73,62 @@ impl Texture {
     }
 }
 
+pub struct StorageTexture {
+    pub texture: wgpu::Texture,
+    pub view: wgpu::TextureView,
+    pub bind_group: wgpu::BindGroup,
+    pub layout: wgpu::BindGroupLayout,
+}
 
+impl StorageTexture {
+    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer) -> Self {
+        let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+            label: None,
+        });
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::StorageTexture {
+                        access: wgpu::StorageTextureAccess::ReadWrite,
+                        format,
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                    },
+                    count: None,
+                }],
+                label: None,
+            });
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                }],
+                label: None,
+            });
+
+        Self {
+            texture,
+            view,
+            bind_group,
+            layout,
+        }
+    }
+}

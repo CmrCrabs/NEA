@@ -14,6 +14,7 @@ pub struct Scene {
     pub camera: Camera,
     pub mesh: Mesh,
     pub mem_size: u64,
+    pub consts_changed: bool,
 }
 
 pub struct Camera {
@@ -32,7 +33,7 @@ pub struct Camera {
 }
 
 pub struct Mesh {
-    pub vertices: Vec<OceanVertex>,
+    pub _vertices: Vec<OceanVertex>,
     pub idx_buf: Buffer,
     pub vtx_buf: Buffer,
     pub length: usize,
@@ -82,6 +83,8 @@ impl Scene {
             + mem::size_of::<SimConstants>()
             + mem::size_of::<ShaderConstants>()) as u64;
 
+        let consts_changed = true;
+
         Self {
             cursor_down,
             start_time,
@@ -90,6 +93,7 @@ impl Scene {
             mesh,
             scene_layout,
             mem_size,
+            consts_changed,
         }
     }
 
@@ -132,10 +136,10 @@ impl Mesh {
         for z in 0..scale {
             for x in 0..scale {
                 let pos = Vec4::new(
-                        x as f32 * step - 0.5 * scale as f32 * step,
-                        0.0,
-                        z as f32 * step - 0.5 * scale as f32 * step,
-                        1.0,
+                    x as f32 * step - 0.5 * scale as f32 * step,
+                    0.0,
+                    z as f32 * step - 0.5 * scale as f32 * step,
+                    1.0,
                 );
                 vertices.push(OceanVertex {
                     pos,
@@ -172,7 +176,7 @@ impl Mesh {
         let length = indices.len();
 
         Self {
-            vertices,
+            _vertices: vertices,
             vtx_buf,
             idx_buf,
             length,

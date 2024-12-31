@@ -1,9 +1,5 @@
 use crate::{
-    cast_slice,
-    scene::Scene,
-    standardpass::StandardPipeline,
-    ui::{build, UI},
-    Result,
+    cast_slice, scene::Scene, sim::{compute::InitialSpectraPass, Ocean}, standardpass::StandardPipeline, ui::{build, UI}, Result
 };
 use std::time::Instant;
 use winit::keyboard::KeyCode;
@@ -40,7 +36,8 @@ impl<'a> Renderer<'a> {
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE | wgpu::Features::TEXTURE_FORMAT_16BIT_NORM,
+                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE
+                    | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
                 required_limits: wgpu::Limits::default(),
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
@@ -112,9 +109,11 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI) -> Result {
+    pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI, mut ocean: Ocean) -> Result {
         let mut last_frame = Instant::now();
-        let standard_pipeline = StandardPipeline::new(&self.device, &self.shader, &scene);
+        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene);
+        let initial_spectra_pass = InitialSpectraPass::new(&self.device, &self.shader, &ocean);
+
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
             Event::NewEvents(_) => {
@@ -138,16 +137,22 @@ impl<'a> Renderer<'a> {
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
+                        // Initial Spectra Pass
+                        if scene.consts_changed {
+                            let mut pass = initial_spectra_pass.render(&mut encoder);
+                            
+                        }
+
                         // Standard Pass
                         self.queue.write_buffer(
-                            &standard_pipeline.scene_buf,
+                            &standard_pass.scene_buf,
                             0,
                             cast_slice(&[scene.consts]),
                         );
                         let mut pass =
-                            standard_pipeline.render(&mut encoder, &surface_view, &self.depth_view);
-                        pass.set_pipeline(&standard_pipeline.pipeline);
-                        pass.set_bind_group(0, &standard_pipeline.scene_bind_group, &[]);
+                            standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
+                        pass.set_pipeline(&standard_pass.pipeline);
+                        pass.set_bind_group(0, &standard_pass.scene_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),
@@ -157,6 +162,7 @@ impl<'a> Renderer<'a> {
                         drop(pass);
 
                         // UI Pass
+                        let consts_copy = scene.consts.clone();
                         ui.update_cursor(&self.window);
                         let ui_frame = ui.context.frame();
                         ui.focused = build(ui_frame, &mut scene.consts);
@@ -167,6 +173,11 @@ impl<'a> Renderer<'a> {
                             &surface_view,
                             &scene,
                         );
+                        if consts_copy != scene.consts {
+                            scene.consts_changed = true; 
+                        } else {
+                            scene.consts_changed = false;
+                        }
 
                         self.queue.submit([encoder.finish()]);
                         surface.present();

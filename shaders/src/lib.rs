@@ -5,6 +5,8 @@ use spirv_std::glam::{Vec4,Vec2};
 use spirv_std::{spirv, image::Image2d, Sampler};
 use shared::Constants;
 
+mod initial_spectra;
+
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec4,

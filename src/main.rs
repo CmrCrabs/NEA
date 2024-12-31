@@ -7,10 +7,10 @@ use winit::{event_loop::EventLoop, window::WindowBuilder};
 
 mod renderer;
 mod scene;
+mod sim;
 mod standardpass;
 mod ui;
 mod util;
-mod sim;
 
 pub type Result<T = (), E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 
@@ -23,9 +23,9 @@ fn main() -> Result {
     let mut renderer = Renderer::new(&window);
     let scene = Scene::new(&renderer.window, &renderer.device);
     let ui = UI::new(&renderer, &scene);
-    let _ocean = sim::Ocean::new(&renderer, &scene.consts);
+    let ocean = sim::Ocean::new(&renderer, &scene.consts);
 
-    renderer.run(event_loop, scene, ui)?;
+    renderer.run(event_loop, scene, ui, ocean)?;
 
     Ok(())
 }
