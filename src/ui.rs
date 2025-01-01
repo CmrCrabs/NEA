@@ -296,17 +296,19 @@ impl UI {
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     let mut focused = false;
-    ui.window("NEA Ocean Simulation").always_auto_resize(true).build(|| {
-        ui.text("Info");
-        ui.text(format!("{:.1$} Elapsed", consts.time, 2));
-        ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
-        ui.separator();
-        ui.text("Simulation Parameters");
-        ui.separator();
-        ui.text("Shader Parameters");
-        ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
-        focused = ui.is_window_focused();
-    });
+    ui.window("NEA Ocean Simulation")
+        .always_auto_resize(true)
+        .build(|| {
+            ui.text("Info");
+            ui.text(format!("{:.1$} Elapsed", consts.time, 2));
+            ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
+            ui.separator();
+            ui.text("Simulation Parameters");
+            ui.separator();
+            ui.text("Shader Parameters");
+            ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+            focused = ui.is_window_focused();
+        });
     focused
 }
 

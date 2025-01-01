@@ -1,3 +1,6 @@
+use shared::Constants;
+use crate::cast_slice;
+
 pub struct InitialSpectraPass {
     pipeline: wgpu::ComputePipeline,
     consts_buf: wgpu::Buffer,
@@ -21,7 +24,7 @@ impl InitialSpectraPass {
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
-                count: None
+                count: None,
             }],
             label: None,
         });
@@ -44,7 +47,7 @@ impl InitialSpectraPass {
             label: None,
         });
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            entry_point: Some("initial_spectrum"),
+            entry_point: Some("initial_spectra::main"),
             layout: Some(&pipeline_layout),
             module: shader,
             compilation_options: Default::default(),
@@ -59,5 +62,15 @@ impl InitialSpectraPass {
         }
     }
 
-    pub fn render<'a>(&'a self, encoder: &'a mut wgpu::CommandEncoder) {}
+    pub fn render<'a>(&'a self, encoder: &'a mut wgpu::CommandEncoder, queue: &wgpu::Queue, consts: &Constants, ocean: &super::Ocean) {
+        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            timestamp_writes: None,
+            label: None,
+        });
+        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[consts]));
+        pass.set_pipeline(&self.pipeline);
+        pass.set_bind_group(0, &self.consts_bind_group, &[]);
+        pass.set_bind_group(1, &ocean.wave_texture.bind_group, &[]);
+        pass.set_bind_group(2, &ocean.spectrum_texture.bind_group, &[]);
+    }
 }

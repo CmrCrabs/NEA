@@ -18,7 +18,7 @@ impl Ocean {
         let gaussian_texture = StorageTexture::new(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
-            wgpu::TextureFormat::Rg16Float,
+            wgpu::TextureFormat::Rg32Float,
             &renderer,
         );
         let gaussian_noise = Ocean::guassian_noise(consts);
@@ -26,13 +26,13 @@ impl Ocean {
         let wave_texture = StorageTexture::new(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
-            wgpu::TextureFormat::Rgba16Float,
+            wgpu::TextureFormat::Rgba32Float,
             &renderer,
         );
         let spectrum_texture = StorageTexture::new(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
-            wgpu::TextureFormat::Rg16Float,
+            wgpu::TextureFormat::Rg32Float,
             &renderer,
         );
         Self {

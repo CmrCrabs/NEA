@@ -2,12 +2,15 @@
 - [ ] create initial specturm pas;
     - [X] pipelin;
     - [X] textures buf (storage_texture), do in utils
-    - [ ] make hook for param change
-    - [ ] computepass
+    - [X] make hook for param change
+    - [X] computepass
     - [ ] calls
-    - [ ] shader
-
-- [ ] move renderer to /gfx/
+    - [ ] shader setup (Image!(StorageImage), .write() .read())
+    - [ ] shader writing
+    - [ ]  shader
+//how to map id to correct thing
+// how many threads
+- [ ] move renderer to /gfx/ (?)
 
 
 - [ ] skybox

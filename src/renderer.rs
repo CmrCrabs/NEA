@@ -1,5 +1,10 @@
 use crate::{
-    cast_slice, scene::Scene, sim::{compute::InitialSpectraPass, Ocean}, standardpass::StandardPipeline, ui::{build, UI}, Result
+    cast_slice,
+    scene::Scene,
+    sim::{compute::InitialSpectraPass, Ocean},
+    standardpass::StandardPipeline,
+    ui::{build, UI},
+    Result,
 };
 use std::time::Instant;
 use winit::keyboard::KeyCode;
@@ -36,8 +41,7 @@ impl<'a> Renderer<'a> {
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::VERTEX_WRITABLE_STORAGE
-                    | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+                required_features:wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
                 required_limits: wgpu::Limits::default(),
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
@@ -109,7 +113,13 @@ impl<'a> Renderer<'a> {
         }
     }
 
-    pub fn run(&mut self, event_loop: EventLoop<()>, mut scene: Scene, mut ui: UI, mut ocean: Ocean) -> Result {
+    pub fn run(
+        &mut self,
+        event_loop: EventLoop<()>,
+        mut scene: Scene,
+        mut ui: UI,
+        mut ocean: Ocean,
+    ) -> Result {
         let mut last_frame = Instant::now();
         let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene);
         let initial_spectra_pass = InitialSpectraPass::new(&self.device, &self.shader, &ocean);
@@ -139,8 +149,7 @@ impl<'a> Renderer<'a> {
 
                         // Initial Spectra Pass
                         if scene.consts_changed {
-                            let mut pass = initial_spectra_pass.render(&mut encoder);
-                            
+                            initial_spectra_pass.render(&mut encoder, &self.queue, &scene.consts, &ocean);
                         }
 
                         // Standard Pass
@@ -174,7 +183,7 @@ impl<'a> Renderer<'a> {
                             &scene,
                         );
                         if consts_copy != scene.consts {
-                            scene.consts_changed = true; 
+                            scene.consts_changed = true;
                         } else {
                             scene.consts_changed = false;
                         }
