@@ -1,4 +1,4 @@
-use crate::{renderer::Renderer, util::StorageTexture};
+use crate::{renderer::Renderer, util::{StorageTexture, Texture}};
 use glam::Vec4;
 use rand::prelude::*;
 use shared::Constants;
@@ -6,22 +6,22 @@ use std::f32::consts::{E, PI};
 
 pub mod compute;
 
-pub struct Ocean {
-    gaussian_texture: StorageTexture,
+pub struct Cascade {
+    gaussian_texture: Texture,
     gaussian_noise: Vec<Vec4>,
     wave_texture: StorageTexture,
     spectrum_texture: StorageTexture,
 }
 
-impl Ocean {
+impl Cascade {
     pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
-        let gaussian_texture = StorageTexture::new(
+        let gaussian_texture = Texture::new(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rg32Float,
             &renderer,
         );
-        let gaussian_noise = Ocean::guassian_noise(consts);
+        let gaussian_noise = Cascade::guassian_noise(consts);
 
         let wave_texture = StorageTexture::new(
             consts.sim.lengthscale,

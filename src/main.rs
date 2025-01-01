@@ -23,9 +23,9 @@ fn main() -> Result {
     let mut renderer = Renderer::new(&window);
     let scene = Scene::new(&renderer.window, &renderer.device);
     let ui = UI::new(&renderer, &scene);
-    let ocean = sim::Ocean::new(&renderer, &scene.consts);
+    let cascade = sim::Cascade::new(&renderer, &scene.consts);
 
-    renderer.run(event_loop, scene, ui, ocean)?;
+    renderer.run(event_loop, scene, ui, cascade)?;
 
     Ok(())
 }

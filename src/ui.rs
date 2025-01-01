@@ -6,7 +6,7 @@ use crate::{
     scene::Scene,
     util::Texture,
 };
-use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
+use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, Ui};
 use shared::Constants;
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{

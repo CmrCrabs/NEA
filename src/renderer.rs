@@ -1,7 +1,7 @@
 use crate::{
     cast_slice,
     scene::Scene,
-    sim::{compute::InitialSpectraPass, Ocean},
+    sim::{compute::InitialSpectraPass, Cascade},
     standardpass::StandardPipeline,
     ui::{build, UI},
     Result,
@@ -118,11 +118,11 @@ impl<'a> Renderer<'a> {
         event_loop: EventLoop<()>,
         mut scene: Scene,
         mut ui: UI,
-        mut ocean: Ocean,
+        mut cascade: Cascade,
     ) -> Result {
         let mut last_frame = Instant::now();
         let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene);
-        let initial_spectra_pass = InitialSpectraPass::new(&self.device, &self.shader, &ocean);
+        let initial_spectra_pass = InitialSpectraPass::new(&self, &cascade);
 
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
@@ -149,7 +149,7 @@ impl<'a> Renderer<'a> {
 
                         // Initial Spectra Pass
                         if scene.consts_changed {
-                            initial_spectra_pass.render(&mut encoder, &self.queue, &scene.consts, &ocean);
+                            initial_spectra_pass.render(&mut encoder, &self.queue, &scene.consts, &cascade);
                         }
 
                         // Standard Pass

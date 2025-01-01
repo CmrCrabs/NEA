@@ -4,8 +4,9 @@
     - [X] textures buf (storage_texture), do in utils
     - [X] make hook for param change
     - [X] computepass
-    - [ ] calls
+    - [X] calls
     - [ ] shader setup (Image!(StorageImage), .write() .read())
+        - [ ] input gaussian texture
     - [ ] shader writing
     - [ ]  shader
 //how to map id to correct thing
@@ -18,6 +19,7 @@
 
 
 - [ ] write up summation
+- [ ] platform check so it wokrs on windows
 - [ ] credit 
     - [ ] imgui-wgpu-rs
     - [ ] imgui-winit-support

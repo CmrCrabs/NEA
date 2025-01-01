@@ -131,4 +131,21 @@ impl StorageTexture {
             layout,
         }
     }
+    pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
+        queue.write_texture(
+            wgpu::ImageCopyTexture {
+                texture: &self.texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            data,
+            wgpu::ImageDataLayout {
+                offset: 0,
+                bytes_per_row: Some(size * self.texture.width()),
+                rows_per_image: Some(self.texture.height()),
+            },
+            self.texture.size(),
+        );
+    }
 }
