@@ -41,7 +41,7 @@ impl<'a> Renderer<'a> {
 
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features:wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+                required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
                 required_limits: wgpu::Limits::default(),
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
@@ -149,7 +149,12 @@ impl<'a> Renderer<'a> {
 
                         // Initial Spectra Pass
                         if scene.consts_changed {
-                            initial_spectra_pass.render(&mut encoder, &self.queue, &scene.consts, &cascade);
+                            initial_spectra_pass.render(
+                                &mut encoder,
+                                &self.queue,
+                                &scene.consts,
+                                &cascade,
+                            );
                         }
 
                         // Standard Pass

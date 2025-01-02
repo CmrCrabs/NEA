@@ -298,12 +298,8 @@ where
 \/\/ will include frustum culling, gpu instancing & LOD scaling based on distance to camera
 
 #pagebreak()
-== The IFFT (Unfinished)
+== The Fourier Transform (Unfinished)
 Everything in this section is subject to significant change, I am opting not to work on this now so I can begin implementation faster
-=== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
-The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
-  $ "complex, will write up after learning roots of unity & partial derivatives" $
-
 === The Inverse Discrete Fourier Transform (IDFT) (Unfinished) @Jump-Trajectory @Keith-Lantz @JTessendorf @Code-Motion
 The IDFT can be computed using the fast fourier transform if the following conditions are met:
 - $N = M = L_x = L_z$
@@ -319,6 +315,9 @@ where
 
 note that in Tessendorf's paper @JTessendorf, $n$ & $m$ are defined from $-N / 2 <= n < N / 2, -M / 2 <= m < M / 2$, but for ease of implemntation we shift the bounds (and all subsequent values) to begin at 0. I am thus glossing over some redundant information, further details on how / why are seen at @Jump-Trajectory @Keith-Lantz
 
+=== Cooley-Tukey Fast Fourier Transform (FFT) (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
+The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with $M$ (and $N$) in the millions.
+  $ "complex, will write up after learning roots of unity & partial derivatives" $
 
 #pagebreak()
 == Post Processing

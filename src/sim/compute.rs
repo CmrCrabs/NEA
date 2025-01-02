@@ -1,5 +1,5 @@
-use shared::Constants;
 use crate::cast_slice;
+use shared::Constants;
 
 pub struct InitialSpectraPass {
     pipeline: wgpu::ComputePipeline,
@@ -15,46 +15,56 @@ impl InitialSpectraPass {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
         });
-        let consts_layout = renderer.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
-                },
-                count: None,
-            }],
-            label: None,
-        });
-        let consts_bind_group = renderer.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &consts_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: consts_buf.as_entire_binding(),
-            }],
-            label: None,
-        });
+        let consts_layout =
+            renderer
+                .device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    entries: &[wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::COMPUTE,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        count: None,
+                    }],
+                    label: None,
+                });
+        let consts_bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &consts_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: consts_buf.as_entire_binding(),
+                }],
+                label: None,
+            });
 
-        let pipeline_layout = renderer.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[
-                &consts_layout,
-                &renderer.tex_layout,
-                &cascade.wave_texture.layout,
-                &cascade.spectrum_texture.layout,
-            ],
-            push_constant_ranges: &[],
-            label: None,
-        });
-        let pipeline = renderer.device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-            entry_point: Some("initial_spectra::main"),
-            layout: Some(&pipeline_layout),
-            module: &renderer.shader,
-            compilation_options: Default::default(),
-            cache: None,
-            label: None,
-        });
+        let pipeline_layout =
+            renderer
+                .device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    bind_group_layouts: &[
+                        &consts_layout,
+                        &renderer.tex_layout,
+                        &cascade.wave_texture.layout,
+                        &cascade.spectrum_texture.layout,
+                    ],
+                    push_constant_ranges: &[],
+                    label: None,
+                });
+        let pipeline = renderer
+            .device
+            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                entry_point: Some("initial_spectra::main"),
+                layout: Some(&pipeline_layout),
+                module: &renderer.shader,
+                compilation_options: Default::default(),
+                cache: None,
+                label: None,
+            });
 
         Self {
             consts_buf,
@@ -63,13 +73,21 @@ impl InitialSpectraPass {
         }
     }
 
-    pub fn render<'a>(&'a self, encoder: &'a mut wgpu::CommandEncoder, queue: &wgpu::Queue, consts: &Constants, cascade: &super::Cascade) {
+    pub fn render<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        queue: &wgpu::Queue,
+        consts: &Constants,
+        cascade: &super::Cascade,
+    ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
             label: None,
         });
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[consts]));
-        cascade.gaussian_texture.write(queue, cast_slice(&cascade.gaussian_noise.clone()), 8);
+        cascade
+            .gaussian_texture
+            .write(queue, cast_slice(&cascade.gaussian_noise.clone()), 8);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.gaussian_texture.bind_group, &[]);

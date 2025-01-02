@@ -18,7 +18,7 @@
 - [ ] lighting
 
 
-- [ ] write up summation
+- [ ] write up summation, indices etc
 - [ ] platform check so it wokrs on windows
 - [ ] credit 
     - [ ] imgui-wgpu-rs

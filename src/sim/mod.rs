@@ -1,4 +1,7 @@
-use crate::{renderer::Renderer, util::{StorageTexture, Texture}};
+use crate::{
+    renderer::Renderer,
+    util::{StorageTexture, Texture},
+};
 use glam::Vec4;
 use rand::prelude::*;
 use shared::Constants;
