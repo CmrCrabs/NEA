@@ -1,6 +1,6 @@
 use crate::{
     renderer::Renderer,
-    util::{StorageTexture, Texture},
+    util::Texture,
 };
 use glam::Vec4;
 use rand::prelude::*;
@@ -10,15 +10,15 @@ use std::f32::consts::{E, PI};
 pub mod compute;
 
 pub struct Cascade {
-    gaussian_texture: StorageTexture,
+    gaussian_texture: Texture,
     gaussian_noise: Vec<Vec4>,
-    wave_texture: StorageTexture,
-    spectrum_texture: StorageTexture,
+    wave_texture: Texture,
+    spectrum_texture: Texture,
 }
 
 impl Cascade {
     pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
-        let gaussian_texture = StorageTexture::new(
+        let gaussian_texture = Texture::new_storage(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rg32Float,
@@ -26,13 +26,13 @@ impl Cascade {
         );
         let gaussian_noise = Cascade::guassian_noise(consts);
 
-        let wave_texture = StorageTexture::new(
+        let wave_texture = Texture::new_storage(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
         );
-        let spectrum_texture = StorageTexture::new(
+        let spectrum_texture = Texture::new_storage(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rg32Float,

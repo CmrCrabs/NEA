@@ -4,7 +4,7 @@ use wgpu::Queue;
 pub struct Texture {
     pub texture: wgpu::Texture,
     pub bind_group: wgpu::BindGroup,
-    _sampler: wgpu::Sampler,
+    pub layout: wgpu::BindGroupLayout,
     _view: wgpu::TextureView,
 }
 
@@ -24,15 +24,32 @@ impl Texture {
             view_formats: &[],
             label: None,
         });
-        let sampler = renderer
-            .device
-            .create_sampler(&wgpu::SamplerDescriptor::default());
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-
+        let layout = renderer.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+                    count: None,
+                },
+            ],
+            label: None,
+        });
         let bind_group = renderer
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &renderer.tex_layout,
+                layout: &layout,
                 entries: &[
                     wgpu::BindGroupEntry {
                         binding: 0,
@@ -40,7 +57,7 @@ impl Texture {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&sampler),
+                        resource: wgpu::BindingResource::Sampler(&renderer.sampler),
                     },
                 ],
                 label: None,
@@ -48,12 +65,11 @@ impl Texture {
 
         Self {
             texture,
-            _sampler: sampler,
             _view: view,
             bind_group,
+            layout,
         }
     }
-
     pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
         queue.write_texture(
             wgpu::ImageCopyTexture {
@@ -71,17 +87,8 @@ impl Texture {
             self.texture.size(),
         );
     }
-}
 
-pub struct StorageTexture {
-    pub texture: wgpu::Texture,
-    pub view: wgpu::TextureView,
-    pub bind_group: wgpu::BindGroup,
-    pub layout: wgpu::BindGroupLayout,
-}
-
-impl StorageTexture {
-    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer) -> Self {
+    pub fn new_storage(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer) -> Self {
         let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
@@ -126,26 +133,9 @@ impl StorageTexture {
 
         Self {
             texture,
-            view,
+            _view: view,
             bind_group,
             layout,
         }
-    }
-    pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
-        queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            data,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(size * self.texture.width()),
-                rows_per_image: Some(self.texture.height()),
-            },
-            self.texture.size(),
-        );
     }
 }

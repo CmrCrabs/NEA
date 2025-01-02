@@ -64,7 +64,7 @@ impl UI {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: None,
-                    bind_group_layouts: &[&scene.scene_layout, &renderer.tex_layout],
+                    bind_group_layouts: &[&scene.scene_layout, &texture.layout],
                     push_constant_ranges: &[],
                 });
         let pipeline = renderer
@@ -292,6 +292,10 @@ impl UI {
             _ => {}
         }
     }
+}
+
+pub enum TexID {
+
 }
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {

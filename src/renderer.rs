@@ -21,7 +21,7 @@ pub struct Renderer<'a> {
     pub config: wgpu::SurfaceConfiguration,
     pub window: &'a winit::window::Window,
     pub shader: wgpu::ShaderModule,
-    pub tex_layout: wgpu::BindGroupLayout,
+    pub sampler: wgpu::Sampler,
     pub depth_view: wgpu::TextureView,
 }
 
@@ -63,27 +63,7 @@ impl<'a> Renderer<'a> {
         };
         surface.configure(&device, &config);
 
-        let tex_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
-                    count: None,
-                },
-            ],
-            label: None,
-        });
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -108,7 +88,7 @@ impl<'a> Renderer<'a> {
             window: &window,
             config,
             shader,
-            tex_layout,
+            sampler,
             depth_view,
         }
     }
