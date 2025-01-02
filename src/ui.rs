@@ -1,13 +1,13 @@
-use std::mem;
-
 use crate::{
     cast_slice,
     renderer::{Renderer, FORMAT},
     scene::Scene,
     util::Texture,
 };
-use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, Ui};
+use glam::Vec2;
+use imgui::{BackendFlags, DrawVert, FontSource, Image, Key, MouseCursor, TextureId, Ui};
 use shared::Constants;
+use std::mem;
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
@@ -309,6 +309,10 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
             ui.separator();
             ui.text("Textures");
+            Image::new(
+                TextureId::new(20),
+                Vec2::splat(consts.sim.size as f32),
+            ).build(ui);
             focused = ui.is_window_focused();
         });
     focused
