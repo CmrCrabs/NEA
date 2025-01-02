@@ -12,7 +12,7 @@
 //how to map id to correct thing
 // how many threads
 - [ ] move renderer to /gfx/ (?)
-
+- [ ] compute pass impl
 
 - [ ] skybox
 - [ ] lighting

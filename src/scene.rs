@@ -39,6 +39,7 @@ pub struct Mesh {
     pub length: usize,
 }
 
+//TODO: maybe remove if normal sampled directly from texture
 #[repr(C, align(16))]
 pub struct OceanVertex {
     pos: Vec4,
