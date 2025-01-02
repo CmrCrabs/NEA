@@ -10,7 +10,7 @@ use std::f32::consts::{E, PI};
 pub mod compute;
 
 pub struct Cascade {
-    gaussian_texture: Texture,
+    gaussian_texture: StorageTexture,
     gaussian_noise: Vec<Vec4>,
     wave_texture: StorageTexture,
     spectrum_texture: StorageTexture,
@@ -18,7 +18,7 @@ pub struct Cascade {
 
 impl Cascade {
     pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
-        let gaussian_texture = Texture::new(
+        let gaussian_texture = StorageTexture::new(
             consts.sim.lengthscale,
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rg32Float,

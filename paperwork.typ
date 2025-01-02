@@ -147,9 +147,9 @@ every frame:
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using an approximate relationship between surface tension and density @Empirical-Spectra.
 
 //$ phi(k) = omega =  sqrt(g k tanh (k h)) $
-//$ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
-$ omega = phi(k) =  sqrt((g k + sigma / rho k^3) tanh (k h)) $
-$ (d phi(k)) / (d k) = (h(sigma / rho k^3 + g k) sech^2 (h k) +  (g k + sigma / rho k^3) tanh (k h))  / (2 sqrt((g k + sigma / rho k^3) tanh (k h))) $
+//$ (d phi(k)) / (d k) = (h(sigma / rho k^3 + g k) sech^2 (h k) +  (g k + sigma / rho k^3) tanh (k h))  / (2 sqrt((g k + sigma / rho k^3) tanh (k h))) $
+$ omega = phi(k) =  sqrt(g k tanh (k h)) $
+$ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
 
 where
 - $g$ is gravity
@@ -161,7 +161,7 @@ where
 === Non-Directional Spectrum (JONSWAP) @Empirical-Spectra @OW-Spectra @Jump-Trajectory @Acerola-FFT
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
-  $ r = exp [ - (omega -omega_p)^2 / (2w_p ^2 sigma ^2)] $ 
+  $ r = exp [ - (omega -omega_p)^2 / (2omega_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
   $ omega_p = 22( (g^2) / (U_10 F))^(1/3) $
   $ sigma = cases(

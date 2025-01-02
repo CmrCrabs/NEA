@@ -189,7 +189,7 @@ impl Camera {
     pub fn new(window: &Window) -> Camera {
         let pitch: f32 = 0.0;
         let yaw: f32 = -10.0;
-        let zoom: f32 = 20.0;
+        let zoom: f32 = 10.0;
 
         let mut camera = Camera {
             pitch,

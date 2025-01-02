@@ -31,18 +31,33 @@ impl Default for ShaderConstants {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct SimConstants {
+    pub size: u32,
     pub lengthscale: u32,
     pub mesh_step: f32,
     pub standard_deviation: f32,
     pub mean: f32,
+    pub depth: f32,
+    pub gravity: f32,
+    pub beta: f32,
+    pub gamma: f32,
+    pub wind_speed: f32,
+    pub fetch: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
+        let lengthscale = 64;
         Self {
-            lengthscale: 128,
-            mesh_step: 0.1,
+            size: 64,
+            lengthscale,
+            mesh_step: 2.0 * core::f32::consts::PI / lengthscale as f32,
             standard_deviation: 1.0,
             mean: 0.0,
+            depth: 100.0,
+            gravity: 9.81,
+            beta: 5.0 / 4.0,
+            gamma: 3.3,
+            wind_speed: 20.0,
+            fetch: 8000.0,
         }
     }
 }

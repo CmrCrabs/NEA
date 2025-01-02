@@ -307,6 +307,8 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.separator();
             ui.text("Shader Parameters");
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+            ui.separator();
+            ui.text("Textures");
             focused = ui.is_window_focused();
         });
     focused

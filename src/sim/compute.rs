@@ -48,7 +48,7 @@ impl InitialSpectraPass {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts: &[
                         &consts_layout,
-                        &renderer.tex_layout,
+                        &cascade.gaussian_texture.layout,
                         &cascade.wave_texture.layout,
                         &cascade.spectrum_texture.layout,
                     ],
