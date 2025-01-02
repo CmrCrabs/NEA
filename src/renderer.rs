@@ -22,6 +22,8 @@ pub struct Renderer<'a> {
     pub window: &'a winit::window::Window,
     pub shader: wgpu::ShaderModule,
     pub sampler: wgpu::Sampler,
+    pub sampler_bind_group: wgpu::BindGroup, //TEMP MOVE
+    pub sampler_layout: wgpu::BindGroupLayout,
     pub depth_view: wgpu::TextureView,
 }
 
@@ -64,6 +66,28 @@ impl<'a> Renderer<'a> {
         surface.configure(&device, &config);
 
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
+        let sampler_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+                    count: None,
+                },
+            ],
+            label: None,
+        });
+        let sampler_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &sampler_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::Sampler(&sampler),
+                    },
+                ],
+                label: None,
+            });
+
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -89,6 +113,8 @@ impl<'a> Renderer<'a> {
             config,
             shader,
             sampler,
+            sampler_layout,
+            sampler_bind_group,
             depth_view,
         }
     }
@@ -129,7 +155,7 @@ impl<'a> Renderer<'a> {
 
                         // Initial Spectra Pass
                         if scene.consts_changed {
-                            initial_spectra_pass.render(
+                            initial_spectra_pass.compute(
                                 &mut encoder,
                                 &self.queue,
                                 &scene.consts,
@@ -165,7 +191,9 @@ impl<'a> Renderer<'a> {
                             &self.queue,
                             &mut encoder,
                             &surface_view,
+                            &self.sampler_bind_group,
                             &scene,
+                            &cascade,
                         );
                         if consts_copy != scene.consts {
                             scene.consts_changed = true;

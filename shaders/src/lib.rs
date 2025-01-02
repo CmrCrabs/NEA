@@ -50,7 +50,7 @@ pub fn ui_fs(
     uv: Vec2,
     col: Vec4,
     #[spirv(descriptor_set = 1, binding = 0)] tex: &Image2d,
-    #[spirv(descriptor_set = 1, binding = 1)] sampler: &Sampler,
+    #[spirv(descriptor_set = 2, binding = 0)] sampler: &Sampler,
     out_col: &mut Vec4,
 
 ) {    

@@ -1,5 +1,5 @@
 use spirv_std::{
-    image::{Image, Image2d}, spirv, Sampler,
+    image::Image, spirv, Sampler,
     num_traits::Float,
 };
 use core::f32::consts::{self, PI};
@@ -11,9 +11,9 @@ pub fn main(
     //TODO: FIGURE OUT HOW TO SCALE FOR DIFF SIZES
     #[spirv(workgroup_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &Image!(2D, format=rg32f, sampled = false),
+    #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &Image!(2D, format=rgba32f, sampled = false),
     #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &Image!(2D, format = rgba32f, sampled = false),
-    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &Image!(2D, format = rg32f, sampled = false),
+    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &Image!(2D, format = rgba32f, sampled = false),
 ) {
     let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
     let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
@@ -30,9 +30,13 @@ pub fn main(
     let spectrum = 2.0 * tma * donelan_banner(omega, omega_p, theta) * omega_d * (1.0 / k_length) * dk * dk;
     let h_0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
 
+    //unsafe {
+    //    wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, omega_d));
+    //    spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,0.0));
+    //}
     unsafe {
-        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, omega_d));
-        spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,0.0));
+        wave_tex.write(id.xy(), Vec4::new(1.0, 1.0, 1.0, 1.0));
+        spectrum_tex.write(id.xy(), Vec4::new(1.0,1.0,1.0,1.0));
     }
 }
 

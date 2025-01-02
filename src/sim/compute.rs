@@ -73,7 +73,7 @@ impl InitialSpectraPass {
         }
     }
 
-    pub fn render<'a>(
+    pub fn compute<'a>(
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,
         queue: &wgpu::Queue,
@@ -87,7 +87,7 @@ impl InitialSpectraPass {
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[consts]));
         cascade
             .gaussian_texture
-            .write(queue, cast_slice(&cascade.gaussian_noise.clone()), 8);
+            .write(queue, cast_slice(&cascade.gaussian_noise.clone()), 16);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.gaussian_texture.bind_group, &[]);

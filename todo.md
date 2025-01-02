@@ -9,8 +9,11 @@
         - [ ] input gaussian texture
     - [ ] shader writing
     - [ ]  shader
+- [ ] convert storage texture to texture func
+- [ ] convert storage textures to texture
 //how to map id to correct thing
 // how many threads
+// mention deciding against using sampler
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl
 

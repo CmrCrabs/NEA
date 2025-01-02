@@ -5,7 +5,7 @@ pub struct Texture {
     pub texture: wgpu::Texture,
     pub bind_group: wgpu::BindGroup,
     pub layout: wgpu::BindGroupLayout,
-    _view: wgpu::TextureView,
+    pub view: wgpu::TextureView,
 }
 
 impl Texture {
@@ -37,12 +37,6 @@ impl Texture {
                     },
                     count: None,
                 },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
-                    count: None,
-                },
             ],
             label: None,
         });
@@ -55,17 +49,13 @@ impl Texture {
                         binding: 0,
                         resource: wgpu::BindingResource::TextureView(&view),
                     },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Sampler(&renderer.sampler),
-                    },
                 ],
                 label: None,
             });
 
         Self {
             texture,
-            _view: view,
+            view,
             bind_group,
             layout,
         }
@@ -99,7 +89,7 @@ impl Texture {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format,
-            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_DST,
+            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats: &[],
             label: None,
         });
@@ -110,7 +100,7 @@ impl Texture {
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[wgpu::BindGroupLayoutEntry {
                     binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE,
+                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::StorageTexture {
                         access: wgpu::StorageTextureAccess::ReadWrite,
                         format,
@@ -133,7 +123,7 @@ impl Texture {
 
         Self {
             texture,
-            _view: view,
+            view,
             bind_group,
             layout,
         }

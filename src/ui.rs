@@ -1,14 +1,11 @@
 use crate::{
-    cast_slice,
-    renderer::{Renderer, FORMAT},
-    scene::Scene,
-    util::Texture,
+    cast_slice, renderer::{Renderer, FORMAT}, scene::Scene, sim::Cascade, util::Texture
 };
 use glam::Vec2;
 use imgui::{BackendFlags, DrawVert, FontSource, Image, Key, MouseCursor, TextureId, Ui};
 use shared::Constants;
 use std::mem;
-use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
+use wgpu::{util::{DeviceExt, RenderEncoder}, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -21,9 +18,9 @@ pub struct UI {
     pub idx_buf: Buffer,
     pub scene_bind_group: BindGroup,
     pub scene_buf: Buffer,
-    texture: Texture,
     pub context: imgui::Context,
     pub focused: bool,
+    texture: Texture,
 }
 
 impl UI {
@@ -57,14 +54,14 @@ impl UI {
             wgpu::TextureFormat::Rgba8UnormSrgb,
             &renderer,
         );
-        texture.write(&renderer.queue, font_texture.data, 4);
+        texture.write(&renderer.queue, &font_texture.data, 4);
 
         let pipeline_layout =
             renderer
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: None,
-                    bind_group_layouts: &[&scene.scene_layout, &texture.layout],
+                    bind_group_layouts: &[&scene.scene_layout, &texture.layout, &renderer.sampler_layout],
                     push_constant_ranges: &[],
                 });
         let pipeline = renderer
@@ -147,7 +144,9 @@ impl UI {
         queue: &Queue,
         encoder: &'a mut wgpu::CommandEncoder,
         surface_view: &'a wgpu::TextureView,
+        sampler_bind_group: &wgpu::BindGroup,
         scene: &Scene,
+        cascade: &Cascade,
     ) {
         let mut renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -204,7 +203,7 @@ impl UI {
         queue.write_buffer(&self.scene_buf, 0, cast_slice(&[scene.consts]));
         renderpass.set_pipeline(&self.pipeline);
         renderpass.set_bind_group(0, &self.scene_bind_group, &[]);
-        renderpass.set_bind_group(1, &self.texture.bind_group, &[]);
+        renderpass.set_bind_group(2, sampler_bind_group, &[]);
         renderpass.set_vertex_buffer(0, self.vtx_buf.slice(..));
         renderpass.set_index_buffer(self.idx_buf.slice(..), wgpu::IndexFormat::Uint16);
 
@@ -213,6 +212,25 @@ impl UI {
         for draw_list in draw_data.draw_lists() {
             for cmd in draw_list.commands() {
                 if let imgui::DrawCmd::Elements { count, cmd_params } = cmd {
+                    let view = match cmd_params.texture_id.id() {
+                        0 => &self.texture.view,
+                        1 => &cascade.gaussian_texture.view,
+                        2 => &cascade.wave_texture.view,
+                        3 => &cascade.spectrum_texture.view,
+                        _ => &self.texture.view,
+                    };
+                    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                        layout: &self.texture.layout,
+                        entries: &[
+                            wgpu::BindGroupEntry {
+                                binding: 0,
+                                resource: wgpu::BindingResource::TextureView(&view),
+                            },
+                        ],
+                        label: None,
+                    });
+                    renderpass.set_bind_group(1, &bind_group, &[]);
+
                     renderpass.set_scissor_rect(
                         cmd_params.clip_rect[0].floor() as _,
                         cmd_params.clip_rect[1].floor() as _,
@@ -295,7 +313,12 @@ impl UI {
 }
 
 pub enum TexID {
-
+    _Buffer,
+    Gaussian,
+    Wave,
+    Spectrum,
+    _HeightMap,
+    _Derivatives,
 }
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
@@ -313,8 +336,19 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
             ui.separator();
             ui.text("Textures");
+            ui.text("Gaussian Noise");
             Image::new(
-                TextureId::new(20),
+                TextureId::new(TexID::Gaussian as usize),
+                Vec2::splat(consts.sim.size as f32),
+            ).build(ui);
+            ui.text("Wave Texture");
+            Image::new(
+                TextureId::new(TexID::Wave as usize),
+                Vec2::splat(consts.sim.size as f32),
+            ).build(ui);
+            ui.text("Spectrum Texture");
+            Image::new(
+                TextureId::new(TexID::Spectrum as usize),
                 Vec2::splat(consts.sim.size as f32),
             ).build(ui);
             focused = ui.is_window_focused();
