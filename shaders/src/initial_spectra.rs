@@ -29,13 +29,11 @@ pub fn main(
     let spectrum = 2.0 * tma * donelan_banner(omega, omega_p, theta) * omega_d * (1.0 / k_length) * dk * dk;
     let h_0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
 
-    let mut meow = consts.shader.base_color;
-    meow.w = 1.0;
     unsafe {
-        //wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, 1.0));
-        //wave_tex.write(id.xy(), consts.shader.base_color);
-        wave_tex.write(id.xy(), meow);
-        spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,1.0));
+        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, 1.0));
+        wave_tex.write(id.xy(), Vec4::new(h_0.x, h_0.y, 0.0, 1.0));
+        //wave_tex.write(id.xy(), meow);
+        //spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,1.0));
     }
 }
 
