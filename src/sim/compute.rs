@@ -1,5 +1,6 @@
 use crate::cast_slice;
 use shared::Constants;
+use std::mem;
 
 pub struct InitialSpectraPass {
     pipeline: wgpu::ComputePipeline,
@@ -9,8 +10,9 @@ pub struct InitialSpectraPass {
 
 impl InitialSpectraPass {
     pub fn new(renderer: &crate::renderer::Renderer, cascade: &super::Cascade) -> Self {
+        let mem_size = mem::size_of::<shared::Constants>() + mem::size_of::<shared::SimConstants>() + mem::size_of::<shared::ShaderConstants>();
         let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: std::mem::size_of::<shared::Constants>() as u64,
+            size: mem_size as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
