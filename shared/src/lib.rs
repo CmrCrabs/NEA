@@ -45,9 +45,9 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let lengthscale = 64;
+        let lengthscale = 256;
         Self {
-            size: 64,
+            size: 256,
             lengthscale,
             mesh_step: 2.0 * core::f32::consts::PI / lengthscale as f32,
             standard_deviation: 1.0,

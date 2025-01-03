@@ -44,9 +44,6 @@ pub struct Mesh {
 pub struct OceanVertex {
     pos: Vec4,
     normal: Vec4,
-    //h0: Vec4,
-    //h0c: Vec4,
-    //original_pos: Vec4,
 }
 
 impl Scene {
