@@ -88,7 +88,8 @@ impl InitialSpectraPass {
             timestamp_writes: None,
             label: None,
         });
-        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[consts]));
+
+        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
         cascade
             .gaussian_texture
             .write(queue, cast_slice(&cascade.gaussian_noise.clone()), 16);

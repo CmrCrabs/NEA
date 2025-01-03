@@ -3,7 +3,7 @@
 use glam::Vec4;
 
 #[repr(C)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Constants {
     pub time: f32,
     pub frametime: f32,
@@ -15,7 +15,7 @@ pub struct Constants {
     pub sim: SimConstants,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ShaderConstants {
     pub light: Vec4,
     pub base_color: Vec4,
@@ -29,7 +29,7 @@ impl Default for ShaderConstants {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct SimConstants {
     pub size: u32,
     pub lengthscale: u32,
@@ -45,9 +45,9 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let lengthscale = 256;
+        let lengthscale = 64;
         Self {
-            size: 256,
+            size: 64,
             lengthscale,
             mesh_step: 2.0 * core::f32::consts::PI / lengthscale as f32,
             standard_deviation: 1.0,

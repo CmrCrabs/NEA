@@ -30,7 +30,7 @@ pub fn main(
     let h_0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
 
     unsafe {
-        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
+        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, omega_d));
         spectrum_tex.write(id.xy(), Vec4::new(h_0.x, h_0.y, 0.0, 1.0));
     }
 }
@@ -46,10 +46,12 @@ fn dispersion_derivative(k: f32, consts: &SimConstants) -> f32 {
 }
 
 fn jonswap(omega: f32,omega_p: f32, consts: &SimConstants) -> f32 {
-    let sigma: f32 = match omega {
-        _ if omega <= omega_p => 0.07,
-        _ => 0.09,
-    };
+    let sigma: f32;
+    if omega <= omega_p {
+        sigma = 0.07;
+    } else {
+        sigma = 0.09;
+    }
     let alpha = 0.076 * ((consts.wind_speed * consts.wind_speed) / (consts.fetch * consts.gravity)).powf(0.22);
     let r = (-1.0 * (omega - omega_p).powf(2.0) / (2.0 * omega_p * omega_p * sigma * sigma)).exp();
     alpha * consts.gravity * consts.gravity / (omega * omega * omega * omega * omega) * (-consts.beta * (omega_p / omega).powf(4.0)).exp() * consts.gamma.powf(r)
