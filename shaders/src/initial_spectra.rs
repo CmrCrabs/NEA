@@ -31,7 +31,7 @@ pub fn main(
 
     unsafe {
         wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, 1.0));
-        wave_tex.write(id.xy(), Vec4::new(h_0.x, h_0.y, 0.0, 1.0));
+        spectrum_tex.write(id.xy(), Vec4::new(h_0.x, h_0.y, 0.0, 1.0));
     }
 }
 
