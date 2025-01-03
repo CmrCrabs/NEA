@@ -67,27 +67,22 @@ impl<'a> Renderer<'a> {
 
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
         let sampler_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
-                    count: None,
-                },
-            ],
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::FRAGMENT,
+                ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+                count: None,
+            }],
             label: None,
         });
         let sampler_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &sampler_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::Sampler(&sampler),
-                    },
-                ],
-                label: None,
-            });
-
+            layout: &sampler_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Sampler(&sampler),
+            }],
+            label: None,
+        });
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -154,6 +149,7 @@ impl<'a> Renderer<'a> {
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
                         // Initial Spectra Pass
+                        //if scene.consts_changed {
                         if scene.consts_changed {
                             initial_spectra_pass.compute(
                                 &mut encoder,

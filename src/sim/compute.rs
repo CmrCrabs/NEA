@@ -10,7 +10,7 @@ pub struct InitialSpectraPass {
 impl InitialSpectraPass {
     pub fn new(renderer: &crate::renderer::Renderer, cascade: &super::Cascade) -> Self {
         let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: std::mem::size_of::<shared::SimConstants>() as u64,
+            size: std::mem::size_of::<shared::Constants>() as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             label: None,
@@ -93,5 +93,7 @@ impl InitialSpectraPass {
         pass.set_bind_group(1, &cascade.gaussian_texture.bind_group, &[]);
         pass.set_bind_group(2, &cascade.wave_texture.bind_group, &[]);
         pass.set_bind_group(3, &cascade.spectrum_texture.bind_group, &[]);
+        pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
+        drop(pass);
     }
 }

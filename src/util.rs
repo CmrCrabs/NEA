@@ -25,9 +25,10 @@ impl Texture {
             label: None,
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let layout = renderer.device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
+        let layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[wgpu::BindGroupLayoutEntry {
                     binding: 0,
                     visibility: wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
@@ -36,20 +37,17 @@ impl Texture {
                         multisampled: false,
                     },
                     count: None,
-                },
-            ],
-            label: None,
-        });
+                }],
+                label: None,
+            });
         let bind_group = renderer
             .device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&view),
-                    },
-                ],
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                }],
                 label: None,
             });
 
@@ -78,7 +76,12 @@ impl Texture {
         );
     }
 
-    pub fn new_storage(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer) -> Self {
+    pub fn new_storage(
+        width: u32,
+        height: u32,
+        format: wgpu::TextureFormat,
+        renderer: &Renderer,
+    ) -> Self {
         let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
@@ -89,7 +92,9 @@ impl Texture {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format,
-            usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
+            usage: wgpu::TextureUsages::STORAGE_BINDING
+                | wgpu::TextureUsages::COPY_DST
+                | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats: &[],
             label: None,
         });

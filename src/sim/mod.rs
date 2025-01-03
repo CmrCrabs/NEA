@@ -1,7 +1,4 @@
-use crate::{
-    renderer::Renderer,
-    util::Texture,
-};
+use crate::{renderer::Renderer, util::Texture};
 use glam::Vec4;
 use rand::prelude::*;
 use shared::Constants;
@@ -55,7 +52,7 @@ impl Cascade {
                 Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
                 Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
                 0.0,
-                0.0,
+                1.0,
             ));
         }
         data

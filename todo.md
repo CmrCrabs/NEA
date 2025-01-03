@@ -1,16 +1,6 @@
-- [X] update wgpu
-- [ ] create initial specturm pas;
-    - [X] pipelin;
-    - [X] textures buf (storage_texture), do in utils
-    - [X] make hook for param change
-    - [X] computepass
-    - [X] calls
-    - [ ] shader setup (Image!(StorageImage), .write() .read())
-        - [ ] input gaussian texture
-    - [ ] shader writing
-    - [ ]  shader
-- [ ] convert storage texture to texture func
-- [ ] convert storage textures to texture
+- [ ] make tex view bind group faster
+- [ ] fix texture write from compute shder
+- [ ] every single const is coming back as zero
 //how to map id to correct thing
 // how many threads
 // mention deciding against using sampler
@@ -21,6 +11,8 @@
 - [ ] lighting
 
 
+- [ ] fix hidpi
+- [ ] go through and add labels to everything
 - [ ] write up summation, indices etc
 - [ ] platform check so it wokrs on windows
 - [ ] credit 

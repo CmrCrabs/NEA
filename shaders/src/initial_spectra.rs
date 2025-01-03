@@ -8,8 +8,7 @@ use shared::{Constants, SimConstants};
 
 #[spirv(compute(threads(8,8)))]
 pub fn main(
-    //TODO: FIGURE OUT HOW TO SCALE FOR DIFF SIZES
-    #[spirv(workgroup_id)] id: UVec3,
+    #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &Image!(2D, format=rgba32f, sampled = false),
     #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &Image!(2D, format = rgba32f, sampled = false),
@@ -30,13 +29,13 @@ pub fn main(
     let spectrum = 2.0 * tma * donelan_banner(omega, omega_p, theta) * omega_d * (1.0 / k_length) * dk * dk;
     let h_0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
 
-    //unsafe {
-    //    wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, omega_d));
-    //    spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,0.0));
-    //}
+    let mut meow = consts.shader.base_color;
+    meow.w = 1.0;
     unsafe {
-        wave_tex.write(id.xy(), Vec4::new(1.0, 1.0, 1.0, 1.0));
-        spectrum_tex.write(id.xy(), Vec4::new(1.0,1.0,1.0,1.0));
+        //wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, 1.0));
+        //wave_tex.write(id.xy(), consts.shader.base_color);
+        wave_tex.write(id.xy(), meow);
+        spectrum_tex.write(id.xy(), Vec4::new(h_0.x,h_0.y,0.0,1.0));
     }
 }
 

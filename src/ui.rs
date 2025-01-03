@@ -1,11 +1,15 @@
 use crate::{
-    cast_slice, renderer::{Renderer, FORMAT}, scene::Scene, sim::Cascade, util::Texture
+    cast_slice,
+    renderer::{Renderer, FORMAT},
+    scene::Scene,
+    sim::Cascade,
+    util::Texture,
 };
 use glam::Vec2;
 use imgui::{BackendFlags, DrawVert, FontSource, Image, Key, MouseCursor, TextureId, Ui};
 use shared::Constants;
 use std::mem;
-use wgpu::{util::{DeviceExt, RenderEncoder}, BindGroup, Buffer, Device, Queue, RenderPipeline};
+use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -61,7 +65,11 @@ impl UI {
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: None,
-                    bind_group_layouts: &[&scene.scene_layout, &texture.layout, &renderer.sampler_layout],
+                    bind_group_layouts: &[
+                        &scene.scene_layout,
+                        &texture.layout,
+                        &renderer.sampler_layout,
+                    ],
                     push_constant_ranges: &[],
                 });
         let pipeline = renderer
@@ -221,12 +229,10 @@ impl UI {
                     };
                     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
                         layout: &self.texture.layout,
-                        entries: &[
-                            wgpu::BindGroupEntry {
-                                binding: 0,
-                                resource: wgpu::BindingResource::TextureView(&view),
-                            },
-                        ],
+                        entries: &[wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::TextureView(&view),
+                        }],
                         label: None,
                     });
                     renderpass.set_bind_group(1, &bind_group, &[]);
@@ -331,6 +337,10 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
             ui.separator();
             ui.text("Simulation Parameters");
+            ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
+            ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
+            ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
+            ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
             ui.separator();
             ui.text("Shader Parameters");
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
@@ -340,17 +350,20 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             Image::new(
                 TextureId::new(TexID::Gaussian as usize),
                 Vec2::splat(consts.sim.size as f32),
-            ).build(ui);
+            )
+            .build(ui);
             ui.text("Wave Texture");
             Image::new(
                 TextureId::new(TexID::Wave as usize),
                 Vec2::splat(consts.sim.size as f32),
-            ).build(ui);
+            )
+            .build(ui);
             ui.text("Spectrum Texture");
             Image::new(
                 TextureId::new(TexID::Spectrum as usize),
                 Vec2::splat(consts.sim.size as f32),
-            ).build(ui);
+            )
+            .build(ui);
             focused = ui.is_window_focused();
         });
     focused
