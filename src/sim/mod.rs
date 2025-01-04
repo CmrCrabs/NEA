@@ -11,6 +11,8 @@ pub struct Cascade {
     pub gaussian_noise: Vec<Vec4>,
     pub wave_texture: Texture,
     pub spectrum_texture: Texture,
+    pub height_map: Texture,
+    pub tangent_map: Texture,
 }
 
 impl Cascade {
@@ -24,14 +26,26 @@ impl Cascade {
         let gaussian_noise = Cascade::guassian_noise(consts);
 
         let wave_texture = Texture::new_storage(
-            consts.sim.lengthscale,
-            consts.sim.lengthscale,
+            consts.sim.size,
+            consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
         );
         let spectrum_texture = Texture::new_storage(
-            consts.sim.lengthscale,
-            consts.sim.lengthscale,
+            consts.sim.size,
+            consts.sim.size,
+            wgpu::TextureFormat::Rgba32Float,
+            &renderer,
+        );
+        let height_map = Texture::new_storage(
+            consts.sim.size,
+            consts.sim.size,
+            wgpu::TextureFormat::Rgba32Float,
+            &renderer,
+        );
+        let tangent_map = Texture::new_storage(
+            consts.sim.size,
+            consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
         );
@@ -40,6 +54,8 @@ impl Cascade {
             gaussian_noise,
             wave_texture,
             spectrum_texture,
+            height_map,
+            tangent_map,
         }
     }
 

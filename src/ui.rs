@@ -225,6 +225,8 @@ impl UI {
                         1 => &cascade.gaussian_texture.view,
                         2 => &cascade.wave_texture.view,
                         3 => &cascade.spectrum_texture.view,
+                        4 => &cascade.height_map.view,
+                        5 => &cascade.tangent_map.view,
                         _ => &self.texture.view,
                     };
                     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -323,8 +325,8 @@ pub enum TexID {
     Gaussian,
     Wave,
     Spectrum,
-    _HeightMap,
-    _Derivatives,
+    HeightMap,
+    TangentMap,
 }
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
@@ -339,7 +341,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Simulation Parameters");
             ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
             ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
-            ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
+            ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
             ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
             ui.separator();
             ui.text("Shader Parameters");
@@ -361,6 +363,18 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Spectrum Texture");
             Image::new(
                 TextureId::new(TexID::Spectrum as usize),
+                Vec2::splat(consts.sim.size as f32),
+            )
+            .build(ui);
+            ui.text("Height Map");
+            Image::new(
+                TextureId::new(TexID::HeightMap as usize),
+                Vec2::splat(consts.sim.size as f32),
+            )
+            .build(ui);
+            ui.text("Tangent Map");
+            Image::new(
+                TextureId::new(TexID::TangentMap as usize),
                 Vec2::splat(consts.sim.size as f32),
             )
             .build(ui);

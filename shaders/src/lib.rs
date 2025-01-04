@@ -1,19 +1,30 @@
 #![no_std]
 //#![deny(warnings)]
 pub mod initial_spectra;
+pub mod evolve_spectra;
+pub mod fourier_transform;
 
-use spirv_std::glam::{Vec4,Vec2};
-use spirv_std::{spirv, image::Image2d, Sampler};
+use spirv_std::glam::{Vec4,Vec2,UVec2, Vec4Swizzles};
+use spirv_std::{spirv, image::{Image, Image2d}, Sampler};
 use shared::Constants;
 
+type StorageImage = Image!(2D, format = rgba32f, sampled = false);
 
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec4,
+    id: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+    #[spirv(descriptor_set = 1, binding = 0)] height_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
 ) {
-    *out_pos = consts.camera_proj * pos;
+    let length = consts.sim.size as f32 * consts.sim.mesh_step;
+    //let id = UVec2::new(
+    //    ((pos.x + length * 0.5) / consts.sim.mesh_step) as u32,
+    //    ((pos.y + length * 0.5) / consts.sim.mesh_step) as u32
+    //);
+    let resultant_pos = pos + height_map.read(id);
+    *out_pos = consts.camera_proj * resultant_pos;
 }
 
 #[inline(never)]

@@ -24,7 +24,7 @@ impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,1.0,1.0,1.0),
-            base_color: Vec4::new(1.0,1.0,1.0,1.0),
+            base_color: Vec4::new(0.1,0.4,0.4,1.0),
         }
     }
 }
@@ -45,11 +45,11 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let lengthscale = 64;
+        let size = 128;
         Self {
-            size: 64,
-            lengthscale,
-            mesh_step: 2.0 * core::f32::consts::PI / lengthscale as f32,
+            size,
+            lengthscale: 128,
+            mesh_step: 0.1,
             standard_deviation: 1.0,
             mean: 0.0,
             depth: 100.0,

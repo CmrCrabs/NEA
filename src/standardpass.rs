@@ -2,6 +2,7 @@ use crate::renderer::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{OceanVertex, Scene};
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
+use crate::util::Texture;
 
 pub struct StandardPipeline {
     pub pipeline: RenderPipeline,
@@ -10,7 +11,7 @@ pub struct StandardPipeline {
 }
 
 impl StandardPipeline {
-    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene) -> StandardPipeline {
+    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene, height_map: &Texture) -> StandardPipeline {
         let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
             size: scene.mem_size as u64,
             mapped_at_creation: false,
@@ -28,7 +29,7 @@ impl StandardPipeline {
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&scene.scene_layout],
+            bind_group_layouts: &[&scene.scene_layout, &height_map.layout],
             push_constant_ranges: &[],
             label: None,
         });
@@ -40,7 +41,7 @@ impl StandardPipeline {
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: mem::size_of::<OceanVertex>() as _,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Float32x4],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Uint32x4, 2=> Float32x4],
                 }],
                 compilation_options: Default::default(),
             },

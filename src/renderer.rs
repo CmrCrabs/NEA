@@ -1,7 +1,7 @@
 use crate::{
     cast_slice,
     scene::Scene,
-    sim::{compute::InitialSpectraPass, Cascade},
+    sim::{compute::ComputePass, Cascade},
     standardpass::StandardPipeline,
     ui::{build, UI},
     Result,
@@ -21,7 +21,6 @@ pub struct Renderer<'a> {
     pub config: wgpu::SurfaceConfiguration,
     pub window: &'a winit::window::Window,
     pub shader: wgpu::ShaderModule,
-    pub sampler: wgpu::Sampler,
     pub sampler_bind_group: wgpu::BindGroup, //TEMP MOVE
     pub sampler_layout: wgpu::BindGroupLayout,
     pub depth_view: wgpu::TextureView,
@@ -41,10 +40,13 @@ impl<'a> Renderer<'a> {
         }))
         .unwrap();
 
+        let mut limits = wgpu::Limits::default();
+        limits.max_bind_groups = 5;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
-                required_limits: wgpu::Limits::default(),
+                required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES 
+                    | wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                required_limits: limits,
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
             },
@@ -107,7 +109,6 @@ impl<'a> Renderer<'a> {
             window: &window,
             config,
             shader,
-            sampler,
             sampler_layout,
             sampler_bind_group,
             depth_view,
@@ -119,11 +120,14 @@ impl<'a> Renderer<'a> {
         event_loop: EventLoop<()>,
         mut scene: Scene,
         mut ui: UI,
-        mut cascade: Cascade,
+        cascade: Cascade,
     ) -> Result {
         let mut last_frame = Instant::now();
-        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene);
-        let initial_spectra_pass = InitialSpectraPass::new(&self, &cascade);
+        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade.height_map);
+        let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade);
+        let conjugates_pass = ComputePass::new_conjugates(&self, &cascade);
+        let evolve_spectra_pass = ComputePass::new_evolve_spectra(&self, &cascade);
+        let fourier_pass = ComputePass::new_fourier(&self, &cascade);
 
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
@@ -149,15 +153,31 @@ impl<'a> Renderer<'a> {
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
                         // Initial Spectra Pass
-                        //if scene.consts_changed {
                         if scene.consts_changed {
-                            initial_spectra_pass.compute(
+                            initial_spectra_pass.compute_initial_spectra(
+                                &mut encoder,
+                                &self.queue,
+                                &scene.consts,
+                                &cascade,
+                            );
+                            conjugates_pass.pack_conjugates(
                                 &mut encoder,
                                 &self.queue,
                                 &scene.consts,
                                 &cascade,
                             );
                         }
+
+                        // Evolve Spectra Pass
+                        evolve_spectra_pass.evolve_spectra(
+                            &mut encoder,
+                            &self.queue,
+                            &scene.consts,
+                            &cascade,
+                        );
+
+                        // Fourier Transform
+                        fourier_pass.transform(&mut encoder, &self.queue, &scene.consts, &cascade);
 
                         // Standard Pass
                         self.queue.write_buffer(
@@ -169,6 +189,7 @@ impl<'a> Renderer<'a> {
                             standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &standard_pass.scene_bind_group, &[]);
+                        pass.set_bind_group(1, &cascade.height_map.bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),

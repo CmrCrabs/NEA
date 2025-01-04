@@ -1,20 +1,21 @@
 use spirv_std::{
-    image::Image, spirv, Sampler,
+    image::Image, spirv,
     num_traits::Float,
 };
+use crate::StorageImage;
 use core::f32::consts::{self, PI};
-use spirv_std::glam::{UVec3, Vec3Swizzles, Vec2, Vec4};
+use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
 use shared::{Constants, SimConstants};
 
 #[spirv(compute(threads(8,8)))]
 pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &Image!(2D, format=rgba32f, sampled = false),
-    #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &Image!(2D, format = rgba32f, sampled = false),
-    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &Image!(2D, format = rgba32f, sampled = false),
+    #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage,
 ) {
-    let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
+    let dk: f32 = 2.0 * consts::PI / (consts.sim.size as f32 * consts.sim.mesh_step);
     let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
     let m = id.y as f32 - 0.5 *  consts.sim.size as f32;
     let k: Vec2 = Vec2::new(n, m) * dk;
@@ -22,16 +23,16 @@ pub fn main(
     let theta = f32::atan(k.y / k.x);
 
     let omega = dispersion_relation(k_length, &consts.sim);
-    let omega_d = dispersion_derivative(k_length, &consts.sim);
-    let omega_p = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
+    let omega_d = dispersion_derivative(k_length, &consts.sim); //Derivative
+    let omega_p = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0); // Peak
 
     let tma = jonswap(omega, omega_p, &consts.sim) * depth_attenuation(omega, &consts.sim);
     let spectrum = 2.0 * tma * donelan_banner(omega, omega_p, theta) * omega_d * (1.0 / k_length) * dk * dk;
-    let h_0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
-
+    let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()) * spectrum.sqrt();
+    
     unsafe {
-        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, omega, omega_d));
-        spectrum_tex.write(id.xy(), Vec4::new(h_0.x, h_0.y, 0.0, 1.0));
+        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0 / k_length, omega));
+        spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
     }
 }
 
@@ -77,4 +78,21 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
         beta_s = 10.0_f32.powf(-0.4 + 0.8393 * (-0.567 * (k * k).ln()).exp())
     }
     beta_s / (2.0 * (beta_s * PI).tanh()) * (1.0 / (beta_s * theta).cosh()).powf(2.0)
+}
+
+// math from [4]
+#[spirv(compute(threads(8,8)))]
+pub fn pack_conjugates(
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+    #[spirv(descriptor_set = 1, binding = 0)] spectrum_tex: &Image!(2D, format = rgba32f, sampled = false),
+) {
+    let h0 = spectrum_tex.read(id.xy());
+    let h0c = spectrum_tex.read(UVec2::new(
+        (consts.sim.size - id.x) % consts.sim.size,
+        (consts.sim.size - id.y) % consts.sim.size
+    )).xy();
+    unsafe {
+        spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, h0c.x, h0c.y));
+    }
 }

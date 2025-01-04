@@ -44,6 +44,7 @@ pub struct Mesh {
 pub struct OceanVertex {
     pos: Vec4,
     normal: Vec4,
+    id: glam::UVec2,
 }
 
 impl Scene {
@@ -141,9 +142,7 @@ impl Mesh {
                 );
                 vertices.push(OceanVertex {
                     pos,
-                    //original_pos: pos,
-                    //h0: Vec4::ZERO,
-                    //h0c: Vec4::ZERO,
+                    id: glam::UVec2::new(x,z),
                     normal: Vec4::ZERO,
                 });
             }
@@ -186,7 +185,7 @@ impl Camera {
     pub fn new(window: &Window) -> Camera {
         let pitch: f32 = 0.0;
         let yaw: f32 = -10.0;
-        let zoom: f32 = 10.0;
+        let zoom: f32 = 20.0;
 
         let mut camera = Camera {
             pitch,

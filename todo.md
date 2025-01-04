@@ -6,6 +6,10 @@
 // mention deciding against using sampler
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl
+- [ ] optimise compute pass
+- [ ] optimise ui
+- [ ] update ui code to not hardcode and isntead use enum val
+- [ ] move all textures to one bind group per cascade, remove limit
 
 - [ ] skybox
 - [ ] lighting
@@ -20,7 +24,9 @@
     - [ ] imgui-winit-support
     - [ ] all the to x key
     - [ ] prng -> update to no prng just rng
-
+- [ ] credit gasgiant fftocean if not alreaey
+- [ ] add section and explain complex mult, ih
+- [ ] write a seperate fourier transform impl, takes in read/write texture
 
 
 ### future improvements
