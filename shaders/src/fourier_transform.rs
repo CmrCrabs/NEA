@@ -21,7 +21,7 @@ pub fn main(
     let mut y = 0.0;
     for n in 0..consts.sim.size {
         for m in 0..consts.sim.size {
-            let wave = wave_tex.read(id);
+            let wave = wave_tex.read(UVec2::new(n,m));
             let x = Vec2::new(
                 n as f32 * consts.sim.mesh_step - offset,
                 m as f32 * consts.sim.mesh_step - offset
@@ -35,6 +35,6 @@ pub fn main(
         }
     }
     unsafe {
-        height_map.write(id, Vec4::new(0.0, y, 00.0, 0.0));
+        height_map.write(id, Vec4::new(0.0, y, 0.0, 1.0));
     }
 }

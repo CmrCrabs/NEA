@@ -19,11 +19,8 @@ pub fn main_vs(
     #[spirv(position)] out_pos: &mut Vec4,
 ) {
     let length = consts.sim.size as f32 * consts.sim.mesh_step;
-    //let id = UVec2::new(
-    //    ((pos.x + length * 0.5) / consts.sim.mesh_step) as u32,
-    //    ((pos.y + length * 0.5) / consts.sim.mesh_step) as u32
-    //);
-    let resultant_pos = pos + height_map.read(id);
+    let mut resultant_pos = pos + height_map.read(id);
+    resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;
 }
 
