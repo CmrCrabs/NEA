@@ -4,7 +4,7 @@ use spirv_std::{
 };
 use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
 use shared::Constants;
-use crate::evolve_spectra::ComplexMult;
+use crate::evolve_spectra::complex_mult;
 use crate::StorageImage;
 
 
@@ -28,7 +28,7 @@ pub fn main(
             );
             let exp = wave.xy().dot(x);
             let euler = Vec2::new(exp.cos(), exp.sin());
-            y += ComplexMult(
+            y += complex_mult(
                 height_map.read(UVec2::new(n,m)).xy(),
                 euler,
             ).x;

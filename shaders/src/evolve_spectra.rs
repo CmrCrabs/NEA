@@ -23,7 +23,7 @@ pub fn main(
     let exponent = Vec2::new(phase.cos(), phase.sin());
     let negative_exponent = Vec2::new(exponent.x, -exponent.y);
 
-    let h = ComplexMult(spectrum.xy(), exponent) + ComplexMult(spectrum.zw(), negative_exponent);
+    let h = complex_mult(spectrum.xy(), exponent) + complex_mult(spectrum.zw(), negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
     let y_d = h;
     let x_d = ih * wave.x * wave.z;
@@ -35,6 +35,6 @@ pub fn main(
     }
 }
 
-pub fn ComplexMult(a: Vec2, b: Vec2) -> Vec2 {
+pub fn complex_mult(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x)
 }
