@@ -14,7 +14,7 @@ pub fn main(
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &StorageImage,
     #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage
 ) {
     let dk: f32 = 2.0 * consts::PI/ consts.sim.lengthscale as f32;
     let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
@@ -28,7 +28,7 @@ pub fn main(
         let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
         let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
         let jonswap = jonswap(omega, omega_peak, &consts.sim);
-        //let depth_attenuation = depth_attenuation(omega, &consts.sim);
+        let depth_attenuation = depth_attenuation(omega, &consts.sim);
         //let tma = jonswap * depth_attenuation;
         let tma = jonswap;
         let spectrum = 2.0 * tma * donelan_banner(omega, omega_peak, theta) * domega_dk.abs() * dk * dk / k_length;
@@ -36,7 +36,7 @@ pub fn main(
         
         unsafe {
             wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0 / k_length, omega));
-            spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
+            spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, depth_attenuation, 1.0));
         }
     } else {
         unsafe {
@@ -97,7 +97,7 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
     beta_s / (2.0 * (beta_s * PI).tanh()) * (1.0 / (beta_s * theta).cosh()).powf(2.0)
 }
 
-// math from [4]
+// modulus logic from [4]
 #[spirv(compute(threads(8,8)))]
 pub fn pack_conjugates(
     #[spirv(global_invocation_id)] id: UVec3,

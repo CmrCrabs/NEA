@@ -20,6 +20,8 @@ pub fn main(
     let x = Vec2::new(id.x as f32 * consts.sim.mesh_step, id.y as f32 * consts.sim.mesh_step);
 
     let mut y = 0.0;
+    let mut dx = 0.0;
+    let mut dz = 0.0;
     for n in 0..consts.sim.size - 1 {
         for m in 0..consts.sim.size - 1{
             let pos = UVec2::new(m,n);
@@ -30,9 +32,17 @@ pub fn main(
                 height_map.read(pos).xy(),
                 euler,
             ).x;
+            dx += complex_mult(
+                tangent_map.read(pos).xy(), 
+                euler
+            ).x;
+                dz += complex_mult(
+                tangent_map.read(pos).zw(), 
+                euler
+            ).x;
         }
     }
     unsafe {
-        height_map.write(id, Vec4::new(0.0, y, 0.0, 1.0));
+        height_map.write(id, Vec4::new(dx, y, dz, 1.0));
     }
 }
