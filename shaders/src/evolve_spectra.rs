@@ -26,12 +26,11 @@ pub fn main(
 
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
-    let y_d = h;
-    let x_d = ih * wave.x * wave.z;
-    let z_d = ih * wave.y * wave.z;
+    let x_d = -ih * wave.x * wave.z;
+    let z_d = -ih * wave.y * wave.z;
 
     unsafe {
-        height_map.write(id.xy(), Vec4::new(y_d.x, y_d.y, ih.x, ih.y));
+        height_map.write(id.xy(), Vec4::new(h.x, h.y, ih.x, ih.y));
         tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
     }
 }

@@ -20,16 +20,7 @@ pub fn main_vs(
 ) {
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
-    let mut displacement = height_map.read(uv);
-    if displacement.x >= 1.0 || displacement.x <= -1.0 {
-        displacement.x = 0.0;
-    }
-    if displacement.y >= 1.0 || displacement.y <= -1.0 {
-        displacement.y = 0.0;
-    }
-    if displacement.z >= 1.0 || displacement.z <= -1.0 {
-        displacement.z = 0.0;
-    }
+    let displacement = height_map.read(uv);
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;

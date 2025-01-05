@@ -42,6 +42,7 @@ pub struct SimConstants {
     pub gamma: f32,
     pub wind_speed: f32,
     pub fetch: f32,
+    pub choppiness: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
@@ -52,12 +53,13 @@ impl Default for SimConstants {
             mesh_step: 0.1,
             standard_deviation: 1.0,
             mean: 0.0,
-            depth: 100.0,
+            depth: 150.0,
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 20.0,
-            fetch: 8000.0,
+            wind_speed: 75.0,
+            fetch: 1250.0,
+            choppiness: 1.0,
         }
     }
 }

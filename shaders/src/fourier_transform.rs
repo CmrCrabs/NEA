@@ -43,6 +43,6 @@ pub fn main(
         }
     }
     unsafe {
-        height_map.write(id, Vec4::new(dx, y, dz, 1.0));
+        height_map.write(id, Vec4::new(dx * consts.sim.choppiness, y, dz * consts.sim.choppiness, 1.0));
     }
 }
