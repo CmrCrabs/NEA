@@ -24,7 +24,7 @@ impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,1.0,1.0,1.0),
-            base_color: Vec4::new(0.1,0.4,0.4,1.0),
+            base_color: Vec4::new(0.0,0.1,0.3,1.0),
         }
     }
 }
