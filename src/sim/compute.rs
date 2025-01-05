@@ -20,7 +20,7 @@ impl ComputePass {
             size: mem_size as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
+            label: Some("Consts Buffer"),
         });
         let consts_layout =
             renderer
@@ -46,7 +46,7 @@ impl ComputePass {
                     binding: 0,
                     resource: consts_buf.as_entire_binding(),
                 }],
-                label: None,
+                label: Some("Consts Bind Group"),
             });
 
         let pipeline_layout =
@@ -60,7 +60,7 @@ impl ComputePass {
                         &cascade.spectrum_texture.layout,
                     ],
                     push_constant_ranges: &[],
-                    label: None,
+                    label: Some("Initial Spectra"),
                 });
         let pipeline = renderer
             .device
@@ -70,7 +70,7 @@ impl ComputePass {
                 module: &renderer.shader,
                 compilation_options: Default::default(),
                 cache: None,
-                label: None,
+                label: Some("Initial Spectra"),
             });
 
         Self {
@@ -89,7 +89,7 @@ impl ComputePass {
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
-            label: None,
+            label: Some("Initial Spectra"),
         });
 
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
@@ -177,7 +177,7 @@ impl ComputePass {
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
-            label: None,
+            label: Some("Pack Conjugates"),
         });
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
         pass.set_pipeline(&self.pipeline);
@@ -198,7 +198,7 @@ impl ComputePass {
             size: mem_size as u64,
             mapped_at_creation: false,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
+            label: Some("Evolve Spectra"),
         });
         let consts_layout =
             renderer
@@ -359,7 +359,7 @@ impl ComputePass {
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
-            label: None,
+            label: Some("Fourier Transform"),
         });
 
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));

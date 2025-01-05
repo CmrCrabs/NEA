@@ -264,15 +264,16 @@ where
   - $xi$ are gaussian random numbers defined below
   - $S_"TMA" (arrow(k))$ is the spectrum function defined above
 
-=== Gaussian Random Numbers @Gaussian @Empirical-Spectra
-The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean ($tilde(x)$) 0 and standard deviation ($sigma$) 1. @JTessendorf 
-\ In order to create repeatability, we create pseudorandom numbers for $x$, by by seeding a random number generator with a hash of the wave number truncated to 5 digits, preventing numerical imprecision from changing the seeding @Empirical-Spectra. These are generated in pairs and then stored into the red and green channels of a texture to be accessed.
+=== Box-Muller Transform @Gaussian
+The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean ($tilde(x)$) 0 and standard deviation ($sigma$) 1, which we generate using the box-muller transform. @JTessendorf. Derivation is from polar coordinates, by treating x and y as cartesian coordinates, more details at @Gaussian
+$ X, Y ~ N(tilde(x), sigma) $
+$ X = R cos theta = sqrt(-2.0 ln (u_1)) cos (2 pi u_2) $
+$ Y = R sin theta = sqrt(-2.0 ln (u_1)) sin (2 pi u_2) $
 
-$ 1 / sqrt(2 pi sigma ^2) e^(- ((x - tilde(x)^2))/(2 sigma^2)) $
 where
 - $sigma$ is the standard deviation
 - $tilde(x)$ is the mean
-- $x$ is a random number, $-1..1$
+- $u_1, u_2$ are 2 random numbers, $[0..1]$
 
 
 

@@ -175,8 +175,7 @@ impl<'a> Renderer<'a> {
                             &scene.consts,
                             &cascade,
                         );
-
-                        // Fourier Transform
+                        //// Fourier Transform
                         fourier_pass.transform(&mut encoder, &self.queue, &scene.consts, &cascade);
 
                         // Standard Pass
@@ -210,7 +209,6 @@ impl<'a> Renderer<'a> {
                             &surface_view,
                             &self.sampler_bind_group,
                             &scene,
-                            &cascade,
                         );
                         if consts_copy != scene.consts {
                             scene.consts_changed = true;

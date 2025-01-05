@@ -41,7 +41,7 @@ impl StandardPipeline {
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: mem::size_of::<OceanVertex>() as _,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Uint32x4, 2=> Float32x4],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Uint32x2, 2=> Float32x4],
                 }],
                 compilation_options: Default::default(),
             },

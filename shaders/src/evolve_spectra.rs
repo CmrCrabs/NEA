@@ -18,12 +18,13 @@ pub fn main(
     // Evolving spectra, calculating amplitudes
     let wave = wave_tex.read(id.xy());
     let spectrum = spectrum_tex.read(id.xy());
-
+    let h0 = spectrum.xy();
+    let h0c = spectrum.zw();
     let phase = wave.w * consts.time;
     let exponent = Vec2::new(phase.cos(), phase.sin());
     let negative_exponent = Vec2::new(exponent.x, -exponent.y);
 
-    let h = complex_mult(spectrum.xy(), exponent) + complex_mult(spectrum.zw(), negative_exponent);
+    let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
     let y_d = h;
     let x_d = ih * wave.x * wave.z;

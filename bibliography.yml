@@ -117,9 +117,9 @@ Empirical-Spectra:
     date: 2024-10-20
 
 Gaussian:
-  type: article
-  title: Normal Distribution
-  author: Wikipedia
+  type: video
+  title: Box-Muller Transform + R Demo
+  author: math et al
   url:
-    value: https://en.wikipedia.org/wiki/Normal_distribution
-    date: 2024-10-20
+    value: https://www.youtube.com/watch?v=T6Oay7g_Ik8
+    date: 2025-01-04

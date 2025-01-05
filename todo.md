@@ -1,3 +1,5 @@
+- [ ] fix issue with depth attenuation later
+
 - [ ] make tex view bind group faster
 - [ ] fix texture write from compute shder
 - [ ] every single const is coming back as zero

@@ -9,7 +9,7 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer) -> Self {
+    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer, label: &str) -> Self {
         let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
@@ -22,7 +22,7 @@ impl Texture {
             format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[],
-            label: None,
+            label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let layout = renderer
@@ -38,7 +38,7 @@ impl Texture {
                     },
                     count: None,
                 }],
-                label: None,
+                label: Some(label),
             });
         let bind_group = renderer
             .device
@@ -48,7 +48,7 @@ impl Texture {
                     binding: 0,
                     resource: wgpu::BindingResource::TextureView(&view),
                 }],
-                label: None,
+                label: Some(label),
             });
 
         Self {
@@ -81,6 +81,7 @@ impl Texture {
         height: u32,
         format: wgpu::TextureFormat,
         renderer: &Renderer,
+        label: &str,
     ) -> Self {
         let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
@@ -96,7 +97,7 @@ impl Texture {
                 | wgpu::TextureUsages::COPY_DST
                 | wgpu::TextureUsages::TEXTURE_BINDING,
             view_formats: &[],
-            label: None,
+            label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
@@ -113,7 +114,7 @@ impl Texture {
                     },
                     count: None,
                 }],
-                label: None,
+                label: Some(label),
             });
         let bind_group = renderer
             .device
@@ -123,7 +124,7 @@ impl Texture {
                     binding: 0,
                     resource: wgpu::BindingResource::TextureView(&view),
                 }],
-                label: None,
+                label: Some(label),
             });
 
         Self {

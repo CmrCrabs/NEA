@@ -1,8 +1,7 @@
 use crate::{renderer::Renderer, util::Texture};
-use glam::Vec4;
+use glam::{Vec4, Vec2};
 use rand::prelude::*;
 use shared::Constants;
-use std::f32::consts::{E, PI};
 
 pub mod compute;
 
@@ -22,6 +21,7 @@ impl Cascade {
             consts.sim.lengthscale,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
+            "Gaussian"
         );
         let gaussian_noise = Cascade::guassian_noise(consts);
 
@@ -30,24 +30,28 @@ impl Cascade {
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
+            "Waves"
         );
         let spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
+            "Spectrum"
         );
         let height_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
+            "Height Map"
         );
         let tangent_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
+            "Tangents"
         );
         Self {
             gaussian_texture,
@@ -63,21 +67,24 @@ impl Cascade {
     fn guassian_noise(consts: &Constants) -> Vec<Vec4> {
         let mut rng = rand::thread_rng();
         let mut data = vec![];
-        for _ in 0..(consts.sim.lengthscale * consts.sim.lengthscale) {
+        for _ in 0..(consts.sim.size * consts.sim.size) {
+            let gaussian_pair = Self::gaussian_number(
+                rng.gen_range(0.0..1.0),
+                rng.gen_range(0.0..1.0),
+            );
             data.push(Vec4::new(
-                Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
-                Self::gaussian_number(rng.gen_range(-1.0..1.0), consts),
+                gaussian_pair.x,
+                gaussian_pair.y,
                 0.0,
                 1.0,
             ));
         }
         data
     }
-    fn gaussian_number(x: f32, consts: &shared::Constants) -> f32 {
-        1.0 / (2.0 * PI * consts.sim.standard_deviation * consts.sim.standard_deviation)
-            * E.powf(
-                -1.0 * (x - consts.sim.mean * consts.sim.mean)
-                    / (2.0 * consts.sim.standard_deviation * consts.sim.standard_deviation),
-            )
+    fn gaussian_number(u1: f32, u2: f32) -> Vec2 {
+       Vec2::new( 
+           (-2.0 * u1.ln()).sqrt() * (2.0 * std::f32::consts::PI * u2).cos(),
+           (-2.0 * u1.ln()).sqrt() * (2.0 * std::f32::consts::PI * u2).sin()
+       )
     }
 }

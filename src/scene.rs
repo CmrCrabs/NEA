@@ -43,8 +43,8 @@ pub struct Mesh {
 #[repr(C, align(16))]
 pub struct OceanVertex {
     pos: Vec4,
+    uv: glam::UVec2,
     normal: Vec4,
-    id: glam::UVec2,
 }
 
 impl Scene {
@@ -135,14 +135,15 @@ impl Mesh {
         for z in 0..scale {
             for x in 0..scale {
                 let pos = Vec4::new(
-                    x as f32 * step - 0.5 * scale as f32 * step,
+                    x as f32 * step,
                     0.0,
-                    z as f32 * step - 0.5 * scale as f32 * step,
+                    z as f32 * step,
                     1.0,
                 );
+                let uv = glam::UVec2::new(x,z);
                 vertices.push(OceanVertex {
                     pos,
-                    id: glam::UVec2::new(x,z),
+                    uv,
                     normal: Vec4::ZERO,
                 });
             }

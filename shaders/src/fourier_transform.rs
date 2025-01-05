@@ -17,19 +17,17 @@ pub fn main(
     #[spirv(descriptor_set = 3, binding = 0)] tangent_map: &StorageImage,
 ) {
     let id = id.xy();
-    let offset = consts.sim.size as f32 * 0.5 * consts.sim.mesh_step;
+    let x = Vec2::new(id.x as f32 * consts.sim.mesh_step, id.y as f32 * consts.sim.mesh_step);
+
     let mut y = 0.0;
-    for n in 0..consts.sim.size {
-        for m in 0..consts.sim.size {
-            let wave = wave_tex.read(UVec2::new(n,m));
-            let x = Vec2::new(
-                n as f32 * consts.sim.mesh_step - offset,
-                m as f32 * consts.sim.mesh_step - offset
-            );
-            let exp = wave.xy().dot(x);
-            let euler = Vec2::new(exp.cos(), exp.sin());
+    for n in 0..consts.sim.size - 1 {
+        for m in 0..consts.sim.size - 1{
+            let pos = UVec2::new(m,n);
+            let k = wave_tex.read(pos).xy();
+            let exponent = k.dot(x);
+            let euler = Vec2::new(exponent.cos(), exponent.sin());
             y += complex_mult(
-                height_map.read(UVec2::new(n,m)).xy(),
+                height_map.read(pos).xy(),
                 euler,
             ).x;
         }
