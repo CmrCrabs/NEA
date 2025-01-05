@@ -30,13 +30,13 @@ pub fn main(
             let euler = Vec2::new(exponent.cos(), exponent.sin());
             y += complex_mult(
                 height_map.read(pos).xy(),
-                euler,
+                euler
             ).x;
             dx += complex_mult(
                 tangent_map.read(pos).xy(), 
                 euler
             ).x;
-                dz += complex_mult(
+            dz += complex_mult(
                 tangent_map.read(pos).zw(), 
                 euler
             ).x;

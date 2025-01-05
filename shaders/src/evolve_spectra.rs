@@ -15,7 +15,7 @@ pub fn main(
     #[spirv(descriptor_set = 3, binding = 0)] height_map: &StorageImage,
     #[spirv(descriptor_set = 4, binding = 0)] tangent_map: &StorageImage,
 ) {
-    // Evolving spectra, calculating amplitudes
+    // Evolving spectra
     let wave = wave_tex.read(id.xy());
     let spectrum = spectrum_tex.read(id.xy());
     let h0 = spectrum.xy();
@@ -24,13 +24,15 @@ pub fn main(
     let exponent = Vec2::new(phase.cos(), phase.sin());
     let negative_exponent = Vec2::new(exponent.x, -exponent.y);
 
+    // Precalculating Amplitudes
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
+    let y_d = h;
     let x_d = -ih * wave.x * wave.z;
     let z_d = -ih * wave.y * wave.z;
 
     unsafe {
-        height_map.write(id.xy(), Vec4::new(h.x, h.y, ih.x, ih.y));
+        height_map.write(id.xy(), Vec4::new(y_d.x, y_d.y, ih.x, ih.y));
         tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
     }
 }

@@ -1,8 +1,7 @@
 use spirv_std::{
-    image::Image, spirv,
+    spirv,
     num_traits::Float,
 };
-use core::cmp::min;
 use crate::StorageImage;
 use core::f32::consts::{self, PI};
 use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
@@ -22,7 +21,7 @@ pub fn main(
     let k: Vec2 = Vec2::new(n, m) * dk;
     let k_length = k.length();
 
-    if k_length <= 8.0 && k_length >= 0.0001 {
+    if k_length <= 6.0 && k_length >= 0.0001 {
         let theta = f32::atan(k.y / k.x);
         let omega = dispersion_relation(k_length, &consts.sim);
         let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
