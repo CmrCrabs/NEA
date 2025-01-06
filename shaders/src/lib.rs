@@ -22,6 +22,15 @@ pub fn main_vs(
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
     let displacement = height_map.read(uv);
+    //if displacement.x >= 5.0 || displacement.x <= -5.0 {
+    //    displacement.x = 0.0;
+    //}
+    //if displacement.y >= 5.0 || displacement.y <= -5.0 {
+    //    displacement.y = 0.0;
+    //}
+    //if displacement.z >= 5.0 || displacement.z <= -5.0 {
+    //    displacement.z = 0.0;
+    //}
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;
@@ -35,7 +44,10 @@ pub fn main_fs(
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     output: &mut Vec4,
 ) {    
-    *output = consts.shader.base_color * h;
+    let mut c = consts.shader.base_color * h.abs();
+    c.w = 1.0;
+    *output = c;
+
 }
 
 #[spirv(vertex)]
