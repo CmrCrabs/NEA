@@ -32,8 +32,8 @@ pub fn main(
     let z_d = -ih * wave.y * wave.z;
 
     unsafe {
-        height_map.write(id.xy(), Vec4::new(y_d.x, y_d.y, ih.x, ih.y));
-        tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
+        tangent_map.write(id.xy(), Vec4::new(y_d.x, y_d.y, ih.x, ih.y));
+        //tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
     }
 }
 

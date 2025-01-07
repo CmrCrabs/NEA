@@ -29,20 +29,20 @@ pub fn main(
             let exponent = k.dot(x);
             let euler = Vec2::new(exponent.cos(), exponent.sin());
             y += complex_mult(
-                height_map.read(pos).xy(),
+                tangent_map.read(pos).xy(),
                 euler
             ).x;
-            dx += complex_mult(
-                tangent_map.read(pos).xy(), 
-                euler
-            ).x;
-            dz += complex_mult(
-                tangent_map.read(pos).zw(), 
-                euler
-            ).x;
+            //dx += complex_mult(
+            //    tangent_map.read(pos).xy(), 
+            //    euler
+            //).x;
+            //dz += complex_mult(
+            //    tangent_map.read(pos).zw(), 
+            //    euler
+            //).x;
         }
     }
     unsafe {
-        height_map.write(id, Vec4::new(dx * consts.sim.choppiness, y * consts.sim.choppiness, dz * consts.sim.choppiness, 1.0));
+        height_map.write(id, Vec4::new(dx * consts.sim.choppiness, y, dz * consts.sim.choppiness, 1.0));
     }
 }
