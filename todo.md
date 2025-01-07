@@ -1,6 +1,7 @@
 - [ ] fix issue with depth attenuation later
 - [ ] swell
 - [ ] lengthscales
+- [ ] try gaussian numbers rather than gaussian pairs
 
 - [ ] make tex view bind group faster
 - [ ] fix texture write from compute shder

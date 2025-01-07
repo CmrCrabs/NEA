@@ -47,7 +47,6 @@ pub fn main_fs(
     let mut c = consts.shader.base_color * h.abs();
     c.w = 1.0;
     *output = c;
-
 }
 
 #[spirv(vertex)]
