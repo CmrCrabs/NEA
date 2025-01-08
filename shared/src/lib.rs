@@ -53,13 +53,13 @@ impl Default for SimConstants {
             mesh_step: 12.8 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
-            depth: 150.0,
+            depth: 500.0,
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 75.0,
-            fetch: 1250.0,
-            choppiness: 1.0,
+            wind_speed: 30.0,
+            fetch: 8000.0,
+            choppiness: 0.2,
         }
     }
 }

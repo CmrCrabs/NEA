@@ -317,7 +317,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
             ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
             ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
-            ui.slider("Choppiness", 0.0, 3.0, &mut consts.sim.choppiness);
+            ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
             ui.separator();
             ui.text("Shader Parameters");
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());

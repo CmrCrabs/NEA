@@ -1,25 +1,22 @@
-- [ ] fix issue with depth attenuation later
 - [ ] swell
+- [ ] fft
+    - [ ] impl?
+    - [ ] alg
+- [ ] derivatvies
+- [ ] 5th compute pass
+- [ ] foam
+- [ ] lighting
 - [ ] lengthscales
-- [ ] try gaussian numbers rather than gaussian pairs
+- [ ] skybox
+- [ ] tiling
+- [ ] post processing
 
-- [ ] make tex view bind group faster
-- [ ] fix texture write from compute shder
-- [ ] every single const is coming back as zero
-//how to map id to correct thing
-// how many threads
-// mention deciding against using sampler
 - [ ] move renderer to /gfx/ (?)
-- [ ] compute pass impl
+- [ ] compute pass impl (?)
 - [ ] optimise compute pass
 - [ ] optimise ui
 - [ ] update ui code to not hardcode and isntead use enum val
 - [ ] move all textures to one bind group per cascade, remove limit
-
-- [ ] skybox
-- [ ] lighting
-
-
 - [ ] fix hidpi
 - [ ] go through and add labels to everything
 - [ ] write up summation, indices etc
@@ -31,7 +28,6 @@
     - [ ] prng -> update to no prng just rng
 - [ ] credit gasgiant fftocean if not alreaey
 - [ ] add section and explain complex mult, ih
-- [ ] write a seperate fourier transform impl, takes in read/write texture
 
 
 ### future improvements
