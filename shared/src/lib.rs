@@ -49,8 +49,8 @@ impl Default for SimConstants {
         let size = 128;
         Self {
             size,
-            lengthscale: 128,
-            mesh_step: 0.1,
+            lengthscale: 120,
+            mesh_step: 12.8 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
             depth: 150.0,

@@ -29,7 +29,10 @@ impl StandardPipeline {
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&scene.scene_layout, &height_map.layout],
+            bind_group_layouts: &[
+                &scene.scene_layout, 
+                &height_map.layout
+            ],
             push_constant_ranges: &[],
             label: None,
         });

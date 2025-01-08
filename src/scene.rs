@@ -129,7 +129,7 @@ impl Scene {
 
 impl Mesh {
     pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
-        let scale = consts.sim.lengthscale;
+        let scale = consts.sim.size;
         let step = consts.sim.mesh_step;
         let mut vertices: Vec<OceanVertex> = vec![];
         for z in 0..scale {

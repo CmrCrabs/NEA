@@ -21,15 +21,14 @@ pub fn main(
     let k: Vec2 = Vec2::new(n, m) * dk;
     let k_length = k.length();
 
-    if k_length <= 6.0 && k_length >= 0.0001 {
+    if k_length <= 6.0 && k_length >= 0.000001 {
         let theta = f32::atan(k.y / k.x);
         let omega = dispersion_relation(k_length, &consts.sim);
         let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
         let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
         let jonswap = jonswap(omega, omega_peak, &consts.sim);
         let depth_attenuation = depth_attenuation(omega, &consts.sim);
-        //let tma = jonswap * depth_attenuation;
-        let tma = jonswap;
+        let tma = jonswap * depth_attenuation;
         let spectrum = 2.0 * tma * donelan_banner(omega, omega_peak, theta) * domega_dk.abs() * dk * dk / k_length;
         let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()).xy() * spectrum.sqrt();
         
@@ -39,7 +38,7 @@ pub fn main(
         }
     } else {
         unsafe {
-            wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0, 0.0));
+            wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
             spectrum_tex.write(id.xy(), Vec4::ZERO);
         }
     }
@@ -78,8 +77,10 @@ fn depth_attenuation(omega: f32, consts: &SimConstants) -> f32 {
     let omega_h = omega * (consts.depth / consts.gravity).sqrt();
     if omega_h <= 1.0 {
         0.5 * omega_h * omega_h 
-    } else {
+    } else if omega_h < 2.0 {
         1.0 - 0.5 * (2.0 - omega_h) * (2.0 - omega_h)
+    } else {
+        1.0
     }
 } 
 
@@ -87,9 +88,9 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
     let k = omega / omega_p; // arbitrary shorthand
     let beta_s: f32;
     if k < 0.95 {
-        beta_s = 2.61 * k.powf(1.3);
+        beta_s = 2.61 * k.abs().powf(1.3);
     } else if k <= 1.6 && k >= 0.95 { 
-        beta_s = 2.28 * k.powf(-1.3);
+        beta_s = 2.28 * k.abs().powf(-1.3);
     } else {
         beta_s = 10.0_f32.powf(-0.4 + 0.8393 * (-0.567 * (k * k).ln()).exp())
     }

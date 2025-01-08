@@ -1,5 +1,6 @@
 use crate::cast_slice;
 use shared::Constants;
+use wgpu::core::id::markers::BindGroup;
 use std::mem;
 
 pub struct ComputePass {
@@ -235,7 +236,7 @@ impl ComputePass {
                         &consts_layout,
                         &cascade.wave_texture.layout,
                         &cascade.spectrum_texture.layout,
-                        &cascade.height_map.layout,
+                        &cascade.storage_texture.layout,
                         &cascade.tangent_map.layout,
                     ],
                     push_constant_ranges: &[],
@@ -276,7 +277,7 @@ impl ComputePass {
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
         pass.set_bind_group(2, &cascade.spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.height_map.bind_group, &[]);
+        pass.set_bind_group(3, &cascade.storage_texture.bind_group, &[]);
         pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
@@ -326,6 +327,7 @@ impl ComputePass {
                     bind_group_layouts: &[
                         &consts_layout,
                         &cascade.wave_texture.layout,
+                        &cascade.storage_texture.layout,
                         &cascade.height_map.layout,
                         &cascade.tangent_map.layout,
                     ],
@@ -366,8 +368,9 @@ impl ComputePass {
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.height_map.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.tangent_map.bind_group, &[]);
+        pass.set_bind_group(2, &cascade.storage_texture.bind_group, &[]);
+        pass.set_bind_group(3, &cascade.height_map.bind_group, &[]);
+        pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
     }
