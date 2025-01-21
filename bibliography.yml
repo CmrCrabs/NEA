@@ -123,3 +123,11 @@ Gaussian:
   url:
     value: https://www.youtube.com/watch?v=T6Oay7g_Ik8
     date: 2025-01-04
+
+GPGPU:
+  type: report
+  title: Realtime GPGPU FFT ocean water simulation
+  author:  Flügge, Fynn-Jorin
+  url: 
+    value: http://tubdok.tub.tuhh.de/handle/11420/1439
+    date: 25-01-14

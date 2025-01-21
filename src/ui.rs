@@ -2,13 +2,11 @@ use crate::{
     cast_slice,
     renderer::{Renderer, FORMAT},
     scene::Scene,
-    sim::Cascade,
     util::Texture,
 };
-use glam::Vec2;
-use imgui::{BackendFlags, DrawVert, FontSource, Image, Key, MouseCursor, TextureId, Ui};
+use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
 use shared::Constants;
-use std::mem;
+use std::{f32::consts::PI, mem};
 use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
@@ -79,7 +77,7 @@ impl UI {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
                     module: &renderer.shader,
-                    entry_point: Some("ui_vs"),
+                    entry_point: Some("ui::ui_vs"),
                     buffers: &[wgpu::VertexBufferLayout {
                         array_stride: mem::size_of::<DrawVert>() as _,
                         step_mode: wgpu::VertexStepMode::Vertex,
@@ -89,7 +87,7 @@ impl UI {
                 },
                 fragment: Some(wgpu::FragmentState {
                     module: &renderer.shader,
-                    entry_point: Some("ui_fs"),
+                    entry_point: Some("ui::ui_fs"),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: FORMAT,
                         blend: Some(wgpu::BlendState::ALPHA_BLENDING),
@@ -310,14 +308,17 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
         .build(|| {
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
-            ui.text(format!("{:.1$} fps", 1.0 / consts.frametime, 0));
+            ui.text(format!("{} fps", ui.io().framerate));
+            ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN);
             ui.separator();
             ui.text("Simulation Parameters");
             ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
             ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
             ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
+            ui.slider("Wind Offset", 0.0, 1.0 * PI, &mut consts.sim.wind_offset);
             ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
             ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
+            ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
             ui.separator();
             ui.text("Shader Parameters");
             ui.color_picker4("Base Color", consts.shader.base_color.as_mut());

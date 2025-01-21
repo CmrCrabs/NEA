@@ -1,5 +1,7 @@
 #![no_std]
 
+use core::f32;
+
 use glam::Vec4;
 
 #[repr(C)]
@@ -41,6 +43,7 @@ pub struct SimConstants {
     pub beta: f32,
     pub gamma: f32,
     pub wind_speed: f32,
+    pub wind_offset: f32,
     pub fetch: f32,
     pub choppiness: f32,
 }
@@ -58,6 +61,7 @@ impl Default for SimConstants {
             beta: 5.0 / 4.0,
             gamma: 3.3,
             wind_speed: 30.0,
+            wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
             choppiness: 0.2,
         }

@@ -280,7 +280,6 @@ impl ComputePass {
         pass.set_bind_group(3, &cascade.storage_texture.bind_group, &[]);
         pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
-        drop(pass);
     }
 
     pub fn new_fourier(renderer: &crate::renderer::Renderer, cascade: &super::Cascade) -> Self {
@@ -372,6 +371,5 @@ impl ComputePass {
         pass.set_bind_group(3, &cascade.height_map.bind_group, &[]);
         pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
-        drop(pass);
     }
 }

@@ -15,14 +15,14 @@ pub fn main(
     #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
     #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage
 ) {
-    let dk: f32 = 2.0 * consts::PI/ consts.sim.lengthscale as f32;
+    let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
     let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
     let m = id.y as f32 - 0.5 *  consts.sim.size as f32;
     let k: Vec2 = Vec2::new(n, m) * dk;
     let k_length = k.length();
 
     if k_length <= 6.0 && k_length >= 0.000001 {
-        let theta = f32::atan(k.y / k.x);
+        let theta = k.y.atan2(k.x) - consts.sim.wind_offset;
         let omega = dispersion_relation(k_length, &consts.sim);
         let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
         let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
@@ -34,7 +34,7 @@ pub fn main(
         
         unsafe {
             wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0 / k_length, omega));
-            spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, depth_attenuation, 1.0));
+            spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
         }
     } else {
         unsafe {
@@ -94,7 +94,8 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
     } else {
         beta_s = 10.0_f32.powf(-0.4 + 0.8393 * (-0.567 * (k * k).ln()).exp())
     }
-    beta_s / (2.0 * (beta_s * PI).tanh()) * (1.0 / (beta_s * theta).cosh()).powf(2.0)
+    let sech = 1.0 / (beta_s * theta).cosh();
+    beta_s / (2.0 * (beta_s * PI).tanh()) * sech * sech
 }
 
 // modulus logic from [4]

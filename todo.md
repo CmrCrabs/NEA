@@ -1,15 +1,17 @@
 - [ ] swell
+- [ ] lengthscales
+- [ ] compute pass impl
 - [ ] fft
     - [ ] impl?
     - [ ] alg
 - [ ] derivatvies
-- [ ] 5th compute pass
+- [ ] 5th compute pass, prep fft
 - [ ] foam
 - [ ] lighting
-- [ ] lengthscales
 - [ ] skybox
 - [ ] tiling
 - [ ] post processing
+    - [ ] add update constants fn, multiply light vector by matrix
 
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl (?)
@@ -25,7 +27,7 @@
     - [ ] imgui-wgpu-rs
     - [ ] imgui-winit-support
     - [ ] all the to x key
-    - [ ] prng -> update to no prng just rng
+    - [ ] prng -> update to no prng just rng -> add prng?
 - [ ] credit gasgiant fftocean if not alreaey
 - [ ] add section and explain complex mult, ih
 

@@ -344,10 +344,16 @@ When computing lighting using vectors, we are only concerned with the direction 
 
 === Surface Normals @JTessendorf @Jump-Trajectory
 In order to compute the surface normals we need the derivatives of the displacement(s), the values for which are obtained from the fourier transform above.
+  //$ arrow(N) = vec((0,1,0)
+  //- ( (delta h) / (delta x) ) / (1 + (delta D_x) / (delta x) ), 
+  //1, 
+  //- ( (delta h) / (delta z) ) / (1 + (delta D_z) / (delta z) ), 
+  //) $
+  $ arrow(epsilon)(arrow(x), t) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ arrow(N) = vec(
-  - ( (delta h) / (delta x) ) / (1 + (delta D_x) / (delta x) ), 
-  1, 
-  - ( (delta h) / (delta z) ) / (1 + (delta D_z) / (delta z) ), 
+    -epsilon_x(arrow(x), t),
+    1.0,
+    -epsilon_z(arrow(x), t),
   ) $
 note that we need to normalise this for actual usage.
 
