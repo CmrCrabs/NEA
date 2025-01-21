@@ -35,8 +35,9 @@ pub fn main_fs(
     h: f32,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     output: &mut Vec4,
-) {    
-    let mut c = consts.shader.base_color * h.abs();
+) { 
+
+    let mut c = consts.shader.base_color * (h + 2.0 * h.abs());
     c.w = 1.0;
     *output = c;
 }

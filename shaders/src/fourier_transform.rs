@@ -23,8 +23,8 @@ pub fn main(
     let mut y = 0.0;
     let mut dx = 0.0;
     let mut dz = 0.0;
-    for n in 0..consts.sim.size - 1 {
-        for m in 0..consts.sim.size - 1{
+    for n in 0..consts.sim.size {
+        for m in 0..consts.sim.size {
             let pos = UVec2::new(m,n);
             let k = wave_tex.read(pos).xy();
             let exponent = k.dot(x);
@@ -45,5 +45,6 @@ pub fn main(
     }
     unsafe {
         height_map.write(id, Vec4::new(dx * consts.sim.choppiness, y, dz * consts.sim.choppiness, 1.0));
+        //tangent_map.write(id, Vec4::new());
     }
 }

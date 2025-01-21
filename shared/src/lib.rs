@@ -21,11 +21,13 @@ pub struct Constants {
 pub struct ShaderConstants {
     pub light: Vec4,
     pub base_color: Vec4,
+    pub light_rotation: f32,
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,1.0,1.0,1.0),
+            light_rotation: 0.0,
             base_color: Vec4::new(0.0,0.1,0.3,1.0),
         }
     }
@@ -49,10 +51,10 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 128;
+        let size = 256;
         Self {
             size,
-            lengthscale: 120,
+            lengthscale: 250,
             mesh_step: 12.8 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,

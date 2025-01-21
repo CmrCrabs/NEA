@@ -309,19 +309,23 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
             ui.text(format!("{} fps", ui.io().framerate));
-            ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN);
+            if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
+                ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
+                ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
+                ui.slider("Wind Offset", -PI, PI, &mut consts.sim.wind_offset);
+                ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
+                ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
+                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
+            }
             ui.separator();
-            ui.text("Simulation Parameters");
-            ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
-            ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
-            ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
-            ui.slider("Wind Offset", 0.0, 1.0 * PI, &mut consts.sim.wind_offset);
-            ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
-            ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
-            ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
+            if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.slider("Light Vector Angle", 0.0, 2.0 * PI, &mut consts.shader.light_rotation);
+            }
             ui.separator();
-            ui.text("Shader Parameters");
-            ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+            if ui.collapsing_header("Colors", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+            }
             focused = ui.is_window_focused();
         });
     focused

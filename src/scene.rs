@@ -96,7 +96,7 @@ impl Scene {
         }
     }
 
-    pub fn redraw(&mut self, window: &Window) {
+    pub fn update_redraw(&mut self, window: &Window) {
         let duration = self.start_time.elapsed().as_secs_f32();
         self.consts.frametime = duration - self.consts.time;
         self.consts.time = duration;
@@ -104,6 +104,8 @@ impl Scene {
         let dimensions = window.inner_size();
         self.consts.width = dimensions.width as f32;
         self.consts.height = dimensions.height as f32;
+
+        self.consts.shader.light = Mat4::from_rotation_y(self.consts.shader.light_rotation) * self.consts.shader.light;
     }
 
     pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {

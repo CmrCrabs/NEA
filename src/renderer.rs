@@ -143,7 +143,7 @@ impl<'a> Renderer<'a> {
                 }
                 match event {
                     WindowEvent::RedrawRequested => {
-                        scene.redraw(&self.window);
+                        scene.update_redraw(&self.window);
                         let surface = self.surface.get_current_texture().unwrap();
                         let surface_view = surface
                             .texture

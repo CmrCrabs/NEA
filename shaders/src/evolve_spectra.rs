@@ -27,12 +27,14 @@ pub fn main(
     // Precalculating Amplitudes
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
+    let nx = ih * wave.x;
+    let nz = ih * wave.y;
     let y_d = h;
     let x_d = -ih * wave.x * wave.z;
     let z_d = -ih * wave.y * wave.z;
 
     unsafe {
-        storage_tex.write(id.xy(), Vec4::new(y_d.x, y_d.y, ih.x, ih.y));
+        storage_tex.write(id.xy(), Vec4::new(y_d.x, y_d.y, nx.x, nz.y));
         tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
     }
 }
