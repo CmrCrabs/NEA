@@ -7,7 +7,6 @@ use shared::Constants;
 use crate::evolve_spectra::complex_mult;
 use crate::StorageImage;
 
-
 #[spirv(compute(threads(8,8)))]
 pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,

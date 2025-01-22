@@ -1,6 +1,6 @@
 use crate::{
     cast_slice,
-    scene::Scene,
+    scene::{Scene, Mesh},
     sim::{compute::ComputePass, Cascade},
     standardpass::StandardPipeline,
     ui::{build, UI},
@@ -153,7 +153,7 @@ impl<'a> Renderer<'a> {
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
                         // Initial Spectra Pass
-                        if true {
+                        if scene.consts_changed {
                             initial_spectra_pass.compute_initial_spectra(
                                 &mut encoder,
                                 &self.queue,
@@ -166,6 +166,7 @@ impl<'a> Renderer<'a> {
                                 &scene.consts,
                                 &cascade,
                             );
+                            scene.mesh = Mesh::new(&self.device, &scene.consts);
                         }
 
                         // Evolve Spectra Pass
