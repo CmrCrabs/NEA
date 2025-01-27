@@ -1,6 +1,6 @@
 use spirv_std::{
     spirv,
-    num_traits::Float,
+num_traits::Float,
 };
 use crate::StorageImage;
 use core::f32::consts::{self, PI};
@@ -9,37 +9,37 @@ use shared::{Constants, SimConstants};
 
 #[spirv(compute(threads(8,8)))]
 pub fn main(
-    #[spirv(global_invocation_id)] id: UVec3,
-    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage
+#[spirv(global_invocation_id)] id: UVec3,
+#[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+#[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &StorageImage,
+#[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
+#[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage
 ) {
-    let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
-    let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
-    let m = id.y as f32 - 0.5 *  consts.sim.size as f32;
-    let k: Vec2 = Vec2::new(n, m) * dk;
-    let k_length = k.length();
+let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
+let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
+let m = id.y as f32 - 0.5 *  consts.sim.size as f32;
+let k: Vec2 = Vec2::new(n, m) * dk;
+let k_length = k.length();
 
-    if k_length <= 6.0 && k_length >= 0.000001 {
-        let theta = k.y.atan2(k.x) - consts.sim.wind_offset;
-        let omega = dispersion_relation(k_length, &consts.sim);
-        let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
-        let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
-        let jonswap = jonswap(omega, omega_peak, &consts.sim);
-        let depth_attenuation = depth_attenuation(omega, &consts.sim);
-        let tma = jonswap * depth_attenuation;
-        let spectrum = 2.0 * tma * donelan_banner(omega, omega_peak, theta) * domega_dk.abs() * dk * dk / k_length;
-        let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()).xy() * spectrum.sqrt();
-        
-        unsafe {
-            wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0 / k_length, omega));
-            spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
-        }
-    } else {
-        unsafe {
-            wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
-            spectrum_tex.write(id.xy(), Vec4::ZERO);
+if k_length <= 6.0 && k_length >= 0.000001 {
+    let theta = k.y.atan2(k.x) - consts.sim.wind_offset;
+    let omega = dispersion_relation(k_length, &consts.sim);
+    let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
+    let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
+    let jonswap = jonswap(omega, omega_peak, &consts.sim);
+    let depth_attenuation = depth_attenuation(omega, &consts.sim);
+    let tma = jonswap * depth_attenuation;
+    let spectrum = 2.0 * tma * donelan_banner(omega, omega_peak, theta) * domega_dk.abs() * dk * dk / k_length;
+    let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()).xy() * spectrum.sqrt();
+    
+    unsafe {
+        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 1.0 / k_length, omega));
+        spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
+    }
+} else {
+    unsafe {
+        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
+        spectrum_tex.write(id.xy(), Vec4::ZERO);
         }
     }
 }

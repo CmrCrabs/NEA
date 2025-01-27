@@ -1,6 +1,5 @@
 use crate::cast_slice;
 use shared::Constants;
-use wgpu::core::id::markers::BindGroup;
 use std::mem;
 
 pub struct ComputePass {

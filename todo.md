@@ -1,11 +1,13 @@
 - [ ] swell
 - [ ] lengthscales
 - [ ] compute pass impl
+- [ ] 5th compute pass, prep fft
 - [ ] fft
     - [ ] impl?
-    - [ ] alg
+    - [ ] cpu alg
+    - [ ] gpu alg
 - [ ] derivatvies
-- [ ] 5th compute pass, prep fft
+- [ ] normal map
 - [ ] foam
 - [ ] lighting
 - [ ] skybox
