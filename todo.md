@@ -1,11 +1,17 @@
-- [ ] swell
-- [ ] lengthscales
+// highly non exhaustive, purely for memories sake
+
+- [ ] move gaussian out of cascade and into startup?
+    - [ ] butterfly texture generate
+    - [ ] gaussian prng
+
 - [ ] compute pass impl
 - [ ] 5th compute pass, prep fft
 - [ ] fft
-    - [ ] impl?
+    - [ ] impl
     - [ ] cpu alg
-    - [ ] gpu alg
+    - [ ] 1d ifft gpu
+- [ ] swell
+- [ ] lengthscales
 - [ ] derivatvies
 - [ ] normal map
 - [ ] foam
@@ -13,7 +19,7 @@
 - [ ] skybox
 - [ ] tiling
 - [ ] post processing
-    - [ ] add update constants fn, multiply light vector by matrix
+    - [X] add update constants fn, multiply light vector by matrix
 
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl (?)
@@ -31,6 +37,7 @@
     - [ ] all the to x key
     - [ ] prng -> update to no prng just rng -> add prng?
 - [ ] credit gasgiant fftocean if not alreaey
+- [ ] mention nyquist theorem for bounds
 - [ ] add section and explain complex mult, ih
 
 
@@ -38,4 +45,6 @@
 - handle state better
 - use push constants
 - better optimise
-- implement swell
+- shore interactions
+- more advanced foam
+- sea spray

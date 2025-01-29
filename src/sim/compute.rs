@@ -57,7 +57,7 @@ impl ComputePass {
                         &consts_layout,
                         &cascade.gaussian_texture.layout,
                         &cascade.wave_texture.layout,
-                        &cascade.spectrum_texture.layout,
+                        &cascade.initial_spectrum_texture.layout,
                     ],
                     push_constant_ranges: &[],
                     label: Some("Initial Spectra"),
@@ -100,7 +100,7 @@ impl ComputePass {
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.gaussian_texture.bind_group, &[]);
         pass.set_bind_group(2, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(3, &cascade.initial_spectrum_texture.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
     }
@@ -146,7 +146,7 @@ impl ComputePass {
             renderer
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[&consts_layout, &cascade.spectrum_texture.layout],
+                    bind_group_layouts: &[&consts_layout, &cascade.initial_spectrum_texture.layout],
                     push_constant_ranges: &[],
                     label: None,
                 });
@@ -182,7 +182,7 @@ impl ComputePass {
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(1, &cascade.initial_spectrum_texture.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
     }
@@ -234,8 +234,8 @@ impl ComputePass {
                     bind_group_layouts: &[
                         &consts_layout,
                         &cascade.wave_texture.layout,
-                        &cascade.spectrum_texture.layout,
-                        &cascade.storage_texture.layout,
+                        &cascade.initial_spectrum_texture.layout,
+                        &cascade.evolved_spectrum_texture.layout,
                         &cascade.tangent_map.layout,
                     ],
                     push_constant_ranges: &[],
@@ -275,8 +275,8 @@ impl ComputePass {
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.storage_texture.bind_group, &[]);
+        pass.set_bind_group(2, &cascade.initial_spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(3, &cascade.evolved_spectrum_texture.bind_group, &[]);
         pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
     }
@@ -325,7 +325,7 @@ impl ComputePass {
                     bind_group_layouts: &[
                         &consts_layout,
                         &cascade.wave_texture.layout,
-                        &cascade.storage_texture.layout,
+                        &cascade.evolved_spectrum_texture.layout,
                         &cascade.height_map.layout,
                         &cascade.tangent_map.layout,
                     ],
@@ -366,7 +366,7 @@ impl ComputePass {
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.storage_texture.bind_group, &[]);
+        pass.set_bind_group(2, &cascade.evolved_spectrum_texture.bind_group, &[]);
         pass.set_bind_group(3, &cascade.height_map.bind_group, &[]);
         pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);

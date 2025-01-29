@@ -153,7 +153,7 @@ impl<'a> Renderer<'a> {
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
                         // Initial Spectra Pass
-                        if scene.consts_changed {
+                        if true {
                             initial_spectra_pass.compute_initial_spectra(
                                 &mut encoder,
                                 &self.queue,

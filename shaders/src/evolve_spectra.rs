@@ -11,13 +11,13 @@ pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] wave_tex: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 0)] spectrum_tex: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] storage_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] initial_spectrum_tex: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] evolved_spectrum_tex: &StorageImage,
     #[spirv(descriptor_set = 4, binding = 0)] tangent_map: &StorageImage,
 ) {
     // Evolving spectra
     let wave = wave_tex.read(id.xy());
-    let spectrum = spectrum_tex.read(id.xy());
+    let spectrum = initial_spectrum_tex.read(id.xy());
     let h0 = spectrum.xy();
     let h0c = spectrum.zw();
     let phase = wave.w * consts.time;
@@ -32,7 +32,7 @@ pub fn main(
     let z_d = -ih * wave.y * wave.z;
 
     unsafe {
-        storage_tex.write(id.xy(), Vec4::new(y_d.x, y_d.y, 0.0, 1.0));
+        evolved_spectrum_tex.write(id.xy(), Vec4::new(y_d.x, y_d.y, 0.0, 1.0));
         tangent_map.write(id.xy(), Vec4::new(x_d.x, x_d.y, z_d.x, z_d.y));
     }
 }

@@ -7,10 +7,10 @@ pub mod compute;
 
 pub struct Cascade {
     pub gaussian_texture: Texture,
-    pub gaussian_noise: Vec<Vec4>,
+    pub gaussian_noise: Vec<Vec4>, // check move to seperate
     pub wave_texture: Texture,
-    pub spectrum_texture: Texture,
-    pub storage_texture: Texture,
+    pub initial_spectrum_texture: Texture,
+    pub evolved_spectrum_texture: Texture,
     pub height_map: Texture,
     pub tangent_map: Texture,
 }
@@ -33,7 +33,7 @@ impl Cascade {
             &renderer,
             "Waves"
         );
-        let spectrum_texture = Texture::new_storage(
+        let initial_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
@@ -54,7 +54,7 @@ impl Cascade {
             &renderer,
             "Tangents"
         );
-        let storage_texture = Texture::new_storage(
+        let evolved_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
@@ -66,10 +66,10 @@ impl Cascade {
             gaussian_texture,
             gaussian_noise,
             wave_texture,
-            spectrum_texture,
+            initial_spectrum_texture,
             height_map,
             tangent_map,
-            storage_texture
+            evolved_spectrum_texture
         }
     }
 
