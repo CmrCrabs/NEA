@@ -12,6 +12,7 @@ impl ComputePass {
     pub fn new_initial_spectra(
         renderer: &crate::renderer::Renderer,
         cascade: &super::Cascade,
+        simdata: &crate::sim::util::SimData,
     ) -> Self {
         let mem_size = mem::size_of::<shared::Constants>()
             + mem::size_of::<shared::SimConstants>()
@@ -55,7 +56,7 @@ impl ComputePass {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts: &[
                         &consts_layout,
-                        &cascade.gaussian_texture.layout,
+                        &simdata.gaussian_tex.layout,
                         &cascade.wave_texture.layout,
                         &cascade.initial_spectrum_texture.layout,
                     ],
@@ -86,6 +87,7 @@ impl ComputePass {
         queue: &wgpu::Queue,
         consts: &Constants,
         cascade: &super::Cascade,
+        simdata: &crate::sim::util::SimData,
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
@@ -93,12 +95,12 @@ impl ComputePass {
         });
 
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
-        cascade
-            .gaussian_texture
-            .write(queue, cast_slice(&cascade.gaussian_noise.clone()), 16);
+        simdata
+            .gaussian_tex
+            .write(queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.gaussian_texture.bind_group, &[]);
+        pass.set_bind_group(1, &simdata.gaussian_tex.bind_group, &[]);
         pass.set_bind_group(2, &cascade.wave_texture.bind_group, &[]);
         pass.set_bind_group(3, &cascade.initial_spectrum_texture.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
@@ -281,7 +283,7 @@ impl ComputePass {
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
     }
 
-    pub fn new_fourier(renderer: &crate::renderer::Renderer, cascade: &super::Cascade) -> Self {
+    pub fn new_fourier(renderer: &crate::renderer::Renderer, cascade: &super::Cascade, simdata: &crate::sim::util::SimData) -> Self {
         let mem_size = mem::size_of::<shared::Constants>()
             + mem::size_of::<shared::SimConstants>()
             + mem::size_of::<shared::ShaderConstants>();
@@ -325,6 +327,7 @@ impl ComputePass {
                     bind_group_layouts: &[
                         &consts_layout,
                         &cascade.wave_texture.layout,
+                        &simdata.butterfly_tex.layout,
                         &cascade.evolved_spectrum_texture.layout,
                         &cascade.height_map.layout,
                         &cascade.tangent_map.layout,
@@ -356,6 +359,7 @@ impl ComputePass {
         queue: &wgpu::Queue,
         consts: &Constants,
         cascade: &super::Cascade,
+        simdata: &crate::sim::util::SimData,
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
@@ -363,12 +367,16 @@ impl ComputePass {
         });
 
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
+        simdata
+            .butterfly_tex
+            .write(queue, cast_slice(&simdata.butterfly_data.clone()), 16);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
         pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.evolved_spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.height_map.bind_group, &[]);
-        pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
+        pass.set_bind_group(2, &simdata.butterfly_tex.bind_group, &[]);
+        pass.set_bind_group(3, &cascade.evolved_spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(4, &cascade.height_map.bind_group, &[]);
+        pass.set_bind_group(5, &cascade.tangent_map.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
     }
 }

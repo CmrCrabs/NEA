@@ -5,7 +5,7 @@ pub struct Texture {
     pub texture: wgpu::Texture,
     pub bind_group: wgpu::BindGroup,
     pub layout: wgpu::BindGroupLayout,
-    pub view: wgpu::TextureView,
+    pub _view: wgpu::TextureView,
 }
 
 impl Texture {
@@ -53,7 +53,7 @@ impl Texture {
 
         Self {
             texture,
-            view,
+            _view: view,
             bind_group,
             layout,
         }
@@ -129,7 +129,7 @@ impl Texture {
 
         Self {
             texture,
-            view,
+            _view: view,
             bind_group,
             layout,
         }

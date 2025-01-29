@@ -4,6 +4,9 @@
     - [ ] butterfly texture generate
     - [ ] gaussian prng
 
+- [ ] combine cascade data into one bind group
+- [ ] combine simdata into one bind group
+
 - [ ] compute pass impl
 - [ ] 5th compute pass, prep fft
 - [ ] fft

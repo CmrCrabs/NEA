@@ -1,7 +1,7 @@
 use crate::{
     cast_slice,
-    scene::{Scene, Mesh},
-    sim::{compute::ComputePass, Cascade},
+    scene::{Mesh, Scene},
+    sim::{self, compute::ComputePass, Cascade},
     standardpass::StandardPipeline,
     ui::{build, UI},
     Result,
@@ -123,8 +123,9 @@ impl<'a> Renderer<'a> {
         cascade: Cascade,
     ) -> Result {
         let mut last_frame = Instant::now();
+        let simdata = sim::util::SimData::new(&self, &scene.consts);
         let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade.height_map);
-        let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade);
+        let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade, &simdata);
         let conjugates_pass = ComputePass::new_conjugates(&self, &cascade);
         let evolve_spectra_pass = ComputePass::new_evolve_spectra(&self, &cascade);
         let fourier_pass = ComputePass::new_fourier(&self, &cascade);
@@ -159,6 +160,7 @@ impl<'a> Renderer<'a> {
                                 &self.queue,
                                 &scene.consts,
                                 &cascade,
+                                &simdata,
                             );
                             conjugates_pass.pack_conjugates(
                                 &mut encoder,

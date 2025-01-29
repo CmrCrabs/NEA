@@ -1,13 +1,10 @@
 use crate::{renderer::Renderer, util::Texture};
-use glam::{Vec4, Vec2};
-use rand::prelude::*;
 use shared::Constants;
 
 pub mod compute;
+pub mod util;
 
 pub struct Cascade {
-    pub gaussian_texture: Texture,
-    pub gaussian_noise: Vec<Vec4>, // check move to seperate
     pub wave_texture: Texture,
     pub initial_spectrum_texture: Texture,
     pub evolved_spectrum_texture: Texture,
@@ -17,15 +14,6 @@ pub struct Cascade {
 
 impl Cascade {
     pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
-        let gaussian_texture = Texture::new_storage(
-            consts.sim.size,
-            consts.sim.size,
-            wgpu::TextureFormat::Rgba32Float,
-            &renderer,
-            "Gaussian"
-        );
-        let gaussian_noise = Cascade::guassian_noise(consts);
-
         let wave_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
@@ -63,38 +51,11 @@ impl Cascade {
         );
 
         Self {
-            gaussian_texture,
-            gaussian_noise,
             wave_texture,
             initial_spectrum_texture,
             height_map,
             tangent_map,
             evolved_spectrum_texture
         }
-    }
-
-    //TODO: seed with wavenumber?
-    fn guassian_noise(consts: &Constants) -> Vec<Vec4> {
-        let mut rng = rand::thread_rng();
-        let mut data = vec![];
-        for _ in 0..(consts.sim.size * consts.sim.size) {
-            let gaussian_pair = Self::gaussian_number(
-                rng.gen_range(0.0..1.0),
-                rng.gen_range(0.0..1.0),
-            );
-            data.push(Vec4::new(
-                gaussian_pair.x,
-                gaussian_pair.y,
-                0.0,
-                1.0,
-            ));
-        }
-        data
-    }
-    fn gaussian_number(u1: f32, u2: f32) -> Vec2 {
-       Vec2::new( 
-           (-2.0 * u1.ln()).sqrt() * (2.0 * std::f32::consts::PI * u2).cos(),
-           (-2.0 * u1.ln()).sqrt() * (2.0 * std::f32::consts::PI * u2).sin()
-       )
     }
 }
