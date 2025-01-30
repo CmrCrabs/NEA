@@ -1,8 +1,8 @@
 use crate::renderer::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{OceanVertex, Scene};
+use crate::sim::Cascade;
 use std::mem;
 use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
-use crate::util::Texture;
 
 pub struct StandardPipeline {
     pub pipeline: RenderPipeline,
@@ -11,7 +11,7 @@ pub struct StandardPipeline {
 }
 
 impl StandardPipeline {
-    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene, height_map: &Texture) -> StandardPipeline {
+    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene, cascade: &Cascade) -> StandardPipeline {
         let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
             size: scene.mem_size as u64,
             mapped_at_creation: false,
@@ -31,7 +31,7 @@ impl StandardPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             bind_group_layouts: &[
                 &scene.scene_layout, 
-                &height_map.layout
+                &cascade.layout
             ],
             push_constant_ranges: &[],
             label: None,

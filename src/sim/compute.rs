@@ -56,9 +56,8 @@ impl ComputePass {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts: &[
                         &consts_layout,
-                        &simdata.gaussian_tex.layout,
-                        &cascade.wave_texture.layout,
-                        &cascade.initial_spectrum_texture.layout,
+                        &simdata.layout,
+                        &cascade.layout,
                     ],
                     push_constant_ranges: &[],
                     label: Some("Initial Spectra"),
@@ -100,9 +99,8 @@ impl ComputePass {
             .write(queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &simdata.gaussian_tex.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.initial_spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(1, &simdata.bind_group, &[]);
+        pass.set_bind_group(2, &cascade.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
     }
@@ -148,7 +146,7 @@ impl ComputePass {
             renderer
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[&consts_layout, &cascade.initial_spectrum_texture.layout],
+                    bind_group_layouts: &[&consts_layout, &cascade.layout],
                     push_constant_ranges: &[],
                     label: None,
                 });
@@ -184,7 +182,7 @@ impl ComputePass {
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.initial_spectrum_texture.bind_group, &[]);
+        pass.set_bind_group(1, &cascade.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
         drop(pass);
     }
@@ -235,10 +233,7 @@ impl ComputePass {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts: &[
                         &consts_layout,
-                        &cascade.wave_texture.layout,
-                        &cascade.initial_spectrum_texture.layout,
-                        &cascade.evolved_spectrum_texture.layout,
-                        &cascade.tangent_map.layout,
+                        &cascade.layout,
                     ],
                     push_constant_ranges: &[],
                     label: None,
@@ -276,10 +271,7 @@ impl ComputePass {
         queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.initial_spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.evolved_spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(4, &cascade.tangent_map.bind_group, &[]);
+        pass.set_bind_group(1, &cascade.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
     }
 
@@ -326,11 +318,8 @@ impl ComputePass {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts: &[
                         &consts_layout,
-                        &cascade.wave_texture.layout,
-                        &simdata.butterfly_tex.layout,
-                        &cascade.evolved_spectrum_texture.layout,
-                        &cascade.height_map.layout,
-                        &cascade.tangent_map.layout,
+                        &simdata.layout,
+                        &cascade.layout,
                     ],
                     push_constant_ranges: &[],
                     label: None,
@@ -372,11 +361,8 @@ impl ComputePass {
             .write(queue, cast_slice(&simdata.butterfly_data.clone()), 16);
         pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.wave_texture.bind_group, &[]);
-        pass.set_bind_group(2, &simdata.butterfly_tex.bind_group, &[]);
-        pass.set_bind_group(3, &cascade.evolved_spectrum_texture.bind_group, &[]);
-        pass.set_bind_group(4, &cascade.height_map.bind_group, &[]);
-        pass.set_bind_group(5, &cascade.tangent_map.bind_group, &[]);
+        pass.set_bind_group(1, &simdata.bind_group, &[]);
+        pass.set_bind_group(2, &cascade.bind_group, &[]);
         pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
     }
 }

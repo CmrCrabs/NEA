@@ -6,6 +6,7 @@
     - [ ] butterfly texture generate
     - [ ] gaussian prng
 
+- [ ] update standardpass to handle render calls locally
 - [ ] compute pass impl
 - [ ] 5th compute pass, prep fft
 - [ ] fft

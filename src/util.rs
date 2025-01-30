@@ -3,9 +3,9 @@ use wgpu::Queue;
 
 pub struct Texture {
     pub texture: wgpu::Texture,
-    pub bind_group: wgpu::BindGroup,
-    pub layout: wgpu::BindGroupLayout,
-    pub _view: wgpu::TextureView,
+    pub view: wgpu::TextureView,
+    pub bind_group: Option<wgpu::BindGroup>,
+    pub layout: Option<wgpu::BindGroupLayout>,
 }
 
 impl Texture {
@@ -53,9 +53,9 @@ impl Texture {
 
         Self {
             texture,
-            _view: view,
-            bind_group,
-            layout,
+            view,
+            bind_group: Some(bind_group),
+            layout: Some(layout),
         }
     }
     pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
@@ -101,37 +101,24 @@ impl Texture {
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let layout = renderer
-            .device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::StorageTexture {
-                        access: wgpu::StorageTextureAccess::ReadWrite,
-                        format,
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                    },
-                    count: None,
-                }],
-                label: Some(label),
-            });
-        let bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                }],
-                label: Some(label),
-            });
-
         Self {
             texture,
-            _view: view,
-            bind_group,
-            layout,
+            view,
+            bind_group: None,
+            layout: None,
         }
+    }
+}
+
+pub fn bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::VERTEX_FRAGMENT,
+        ty: wgpu::BindingType::StorageTexture {
+            access: wgpu::StorageTextureAccess::ReadWrite,
+            format: wgpu::TextureFormat::Rgba32Float,
+            view_dimension: wgpu::TextureViewDimension::D2,
+        },
+        count: None,
     }
 }

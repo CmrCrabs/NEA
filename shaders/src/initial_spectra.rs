@@ -13,7 +13,7 @@ pub fn main(
 #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
 #[spirv(descriptor_set = 1, binding = 0)] gaussian_tex: &StorageImage,
 #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
-#[spirv(descriptor_set = 3, binding = 0)] spectrum_tex: &StorageImage
+#[spirv(descriptor_set = 2, binding = 1)] spectrum_tex: &StorageImage
 ) {
 let dk: f32 = 2.0 * consts::PI / consts.sim.lengthscale as f32;
 let n = id.x as f32 - 0.5 *  consts.sim.size as f32;
@@ -103,7 +103,7 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
 pub fn pack_conjugates(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] spectrum_tex: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 1)] spectrum_tex: &StorageImage,
 ) {
     let h0 = spectrum_tex.read(id.xy());
     let h0c = spectrum_tex.read(UVec2::new(

@@ -1,15 +1,12 @@
-use crate::{renderer::Renderer, util::Texture};
+use crate::{renderer::Renderer, util::{bind_group_descriptor, Texture}};
 use shared::Constants;
 
 pub mod compute;
 pub mod util;
 
 pub struct Cascade {
-    pub wave_texture: Texture,
-    pub initial_spectrum_texture: Texture,
-    pub evolved_spectrum_texture: Texture,
-    pub height_map: Texture,
-    pub tangent_map: Texture,
+    pub bind_group: wgpu::BindGroup,
+    pub layout: wgpu::BindGroupLayout,
 }
 
 impl Cascade {
@@ -50,12 +47,50 @@ impl Cascade {
             "Storage"
         );
 
+        let layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    bind_group_descriptor(0),
+                    bind_group_descriptor(1),
+                    bind_group_descriptor(2),
+                    bind_group_descriptor(3),
+                    bind_group_descriptor(4),
+                ],
+                label: Some("Storage Textures Layout"),
+            });
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&wave_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::TextureView(&initial_spectrum_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::TextureView(&evolved_spectrum_texture.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: wgpu::BindingResource::TextureView(&height_map.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: wgpu::BindingResource::TextureView(&tangent_map.view),
+                    },
+                ],
+                label: Some("Storage Textures"),
+            });
+
         Self {
-            wave_texture,
-            initial_spectrum_texture,
-            height_map,
-            tangent_map,
-            evolved_spectrum_texture
+            layout,
+            bind_group,
         }
     }
 }

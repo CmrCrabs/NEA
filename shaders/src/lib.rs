@@ -16,7 +16,7 @@ pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] height_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 3)] height_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_h: &mut f32,
 ) {

@@ -66,7 +66,7 @@ impl UI {
                     label: None,
                     bind_group_layouts: &[
                         &scene.scene_layout,
-                        &texture.layout,
+                        texture.layout.as_ref().unwrap(),
                         &renderer.sampler_layout,
                     ],
                     push_constant_ranges: &[],

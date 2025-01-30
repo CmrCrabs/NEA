@@ -11,9 +11,9 @@ pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] wave_tex: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 0)] initial_spectrum_tex: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] evolved_spectrum_tex: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] tangent_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 1)] initial_spectrum_tex: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 2)] evolved_spectrum_tex: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 4)] tangent_map: &StorageImage,
 ) {
     // Evolving spectra
     let wave = wave_tex.read(id.xy());

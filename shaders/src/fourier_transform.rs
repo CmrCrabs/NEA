@@ -11,11 +11,11 @@ use crate::StorageImage;
 pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] wave_tex: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 0)] butterfly_tex: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] storage_tex: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] height_map: &StorageImage,
-    #[spirv(descriptor_set = 5, binding = 0)] tangent_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 0)] butterfly_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 2)] evolved_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 3)] height_map: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 4)] tangent_map: &StorageImage,
 ) {
     let id = id.xy();
     let x = Vec2::new(id.x as f32 * consts.sim.mesh_step, id.y as f32 * consts.sim.mesh_step);
@@ -30,7 +30,7 @@ pub fn main(
             let exponent = k.dot(x);
             let euler = Vec2::new(exponent.cos(), exponent.sin());
             y += complex_mult(
-                storage_tex.read(pos).xy(),
+                evolved_tex.read(pos).xy(),
                 euler
             ).x;
             dx += complex_mult(

@@ -2,12 +2,15 @@ use glam::{Vec4, Vec2};
 use shared::Constants;
 use crate::{renderer::Renderer, util::Texture};
 use rand::prelude::*;
+use crate::util::bind_group_descriptor;
 
 pub struct SimData {
     pub gaussian_noise: Vec<Vec4>,
     pub butterfly_data: Vec<Vec4>,
     pub gaussian_tex: Texture,
     pub butterfly_tex: Texture,
+    pub layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
 }
 
 impl SimData {
@@ -28,13 +31,41 @@ impl SimData {
             &renderer,
             "Butterfly"
         );
-
         let butterfly_data = Self::butterfly_data(consts);
+
+        let layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[ 
+                   bind_group_descriptor(0),
+                   bind_group_descriptor(1) 
+                ],
+                label: Some("Sim Data Layout"),
+            });
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&gaussian_tex.view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::TextureView(&butterfly_tex.view),
+                    }
+                ],
+                label: Some("Sim Data Textures"),
+            });
+        
         Self {
             gaussian_tex,
             gaussian_noise,
             butterfly_tex,
             butterfly_data,
+            bind_group,
+            layout,
         }
     }
 

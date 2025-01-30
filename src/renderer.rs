@@ -40,13 +40,13 @@ impl<'a> Renderer<'a> {
         }))
         .unwrap();
 
-        let mut limits = wgpu::Limits::default();
-        limits.max_bind_groups = 6;
+        let mut required_limits = wgpu::Limits::default();
+        required_limits.max_storage_textures_per_shader_stage = 5;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES 
                     | wgpu::Features::VERTEX_WRITABLE_STORAGE,
-                required_limits: limits,
+                required_limits,
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
             },
@@ -124,7 +124,7 @@ impl<'a> Renderer<'a> {
     ) -> Result {
         let mut last_frame = Instant::now();
         let simdata = sim::util::SimData::new(&self, &scene.consts);
-        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade.height_map);
+        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade);
         let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade, &simdata);
         let conjugates_pass = ComputePass::new_conjugates(&self, &cascade);
         let evolve_spectra_pass = ComputePass::new_evolve_spectra(&self, &cascade);
@@ -191,7 +191,7 @@ impl<'a> Renderer<'a> {
                             standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &standard_pass.scene_bind_group, &[]);
-                        pass.set_bind_group(1, &cascade.height_map.bind_group, &[]);
+                        pass.set_bind_group(1, &cascade.bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),
