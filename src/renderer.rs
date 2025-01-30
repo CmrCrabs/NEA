@@ -41,7 +41,7 @@ impl<'a> Renderer<'a> {
         .unwrap();
 
         let mut limits = wgpu::Limits::default();
-        limits.max_bind_groups = 5;
+        limits.max_bind_groups = 6;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES 
@@ -128,7 +128,7 @@ impl<'a> Renderer<'a> {
         let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade, &simdata);
         let conjugates_pass = ComputePass::new_conjugates(&self, &cascade);
         let evolve_spectra_pass = ComputePass::new_evolve_spectra(&self, &cascade);
-        let fourier_pass = ComputePass::new_fourier(&self, &cascade);
+        let fourier_pass = ComputePass::new_fourier(&self, &cascade, &simdata);
 
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
@@ -179,7 +179,7 @@ impl<'a> Renderer<'a> {
                             &cascade,
                         );
                         //// Fourier Transform
-                        fourier_pass.transform(&mut encoder, &self.queue, &scene.consts, &cascade);
+                        fourier_pass.transform(&mut encoder, &self.queue, &scene.consts, &cascade, &simdata);
 
                         // Standard Pass
                         self.queue.write_buffer(

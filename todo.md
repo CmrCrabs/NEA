@@ -1,11 +1,10 @@
 // highly non exhaustive, purely for memories sake
 
-- [ ] move gaussian out of cascade and into startup?
-    - [ ] butterfly texture generate
-    - [ ] gaussian prng
-
 - [ ] combine cascade data into one bind group
 - [ ] combine simdata into one bind group
+- [X] move gaussian out of cascade and into startup?
+    - [ ] butterfly texture generate
+    - [ ] gaussian prng
 
 - [ ] compute pass impl
 - [ ] 5th compute pass, prep fft
