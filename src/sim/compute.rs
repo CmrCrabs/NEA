@@ -34,8 +34,9 @@ impl ComputePass {
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,
         label: &str,
-        scene: &crate::scene::Scene,
         bind_groups: &[&wgpu::BindGroup],
+        x: u32,
+        y: u32,
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
@@ -46,6 +47,6 @@ impl ComputePass {
         for i in 0..bind_groups.len() {
             pass.set_bind_group(i as u32, bind_groups[i], &[]);
         }
-        pass.dispatch_workgroups(scene.consts.sim.size / 8, scene.consts.sim.size / 8, 1);
+        pass.dispatch_workgroups(x, y, 1);
     }
 }

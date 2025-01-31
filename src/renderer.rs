@@ -14,6 +14,8 @@ use winit::{
     keyboard::PhysicalKey,
 };
 
+const WG_SIZE: u32 = 8;
+
 pub struct Renderer<'a> {
     pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
@@ -123,14 +125,21 @@ impl<'a> Renderer<'a> {
         cascade: Cascade,
     ) -> Result {
         let mut last_frame = Instant::now();
-        let simdata = sim::util::SimData::new(&self, &scene.consts);
+        let simdata = sim::SimData::new(&self, &scene.consts);
         let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade);
+        let workgroup_size = scene.consts.sim.size / WG_SIZE;
 
         let initial_spectra_pass = ComputePass::new(
             &[&scene.consts_layout, &simdata.layout, &cascade.layout],
             &self,
             "Initial Spectra",
             "initial_spectra::main",
+        );
+        let butterfly_precompute_pass = ComputePass::new(
+            &[&scene.consts_layout, &simdata.layout],
+            &self,
+            "Precompute Butterfly",
+            "fft::precompute_butterfly",
         );
         let conjugates_pass = ComputePass::new(
             &[&scene.consts_layout, &cascade.layout],
@@ -174,23 +183,70 @@ impl<'a> Renderer<'a> {
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-                        // Compute Initial spectrum on param change
-                        if scene.consts_changed {
-                            self.queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
-                            simdata
-                                .gaussian_tex
-                                .write(&self.queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
-                            initial_spectra_pass.compute(&mut encoder, "Initial Spectra", &scene, &[&scene.consts_bind_group, &simdata.bind_group, &cascade.bind_group]);
+                        butterfly_precompute_pass.compute(
+                            &mut encoder,
+                            "Precompute Butterfly",
+                            &[&scene.consts_bind_group, &simdata.bind_group],
+                            scene.consts.sim.size.ilog2(),
+                            scene.consts.sim.size / 2 / WG_SIZE,
+                        );
+                        simdata.gaussian_tex.write(
+                            &self.queue,
+                            cast_slice(&simdata.gaussian_noise.clone()),
+                            16,
+                        );
 
-                            self.queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
-                            conjugates_pass.compute(&mut encoder, "Pack Conjugates", &scene, &[&scene.consts_bind_group, &cascade.bind_group]);
+                        // Compute Initial spectrum on param change
+                        // TODO: change to consts changed
+                        if true {
+                            self.queue.write_buffer(
+                                &scene.consts_buf,
+                                0,
+                                cast_slice(&[scene.consts]),
+                            );
+
+                            initial_spectra_pass.compute(
+                                &mut encoder,
+                                "Initial Spectra",
+                                &[
+                                    &scene.consts_bind_group,
+                                    &simdata.bind_group,
+                                    &cascade.bind_group,
+                                ],
+                                workgroup_size,
+                                workgroup_size,
+                            );
+
+                            conjugates_pass.compute(
+                                &mut encoder,
+                                "Pack Conjugates",
+                                &[&scene.consts_bind_group, &cascade.bind_group],
+                                workgroup_size,
+                                workgroup_size,
+                            );
 
                             scene.mesh = Mesh::new(&self.device, &scene.consts);
                         }
 
                         // per frame computation
-                        evolve_spectra_pass.compute(&mut encoder, "Evolve Spectra", &scene, &[&scene.consts_bind_group, &cascade.bind_group]);
-                        fourier_pass.compute(&mut encoder, "Fourier Transform", &scene, &[&scene.consts_bind_group, &simdata.bind_group, &cascade.bind_group]);
+                        evolve_spectra_pass.compute(
+                            &mut encoder,
+                            "Evolve Spectra",
+                            &[&scene.consts_bind_group, &cascade.bind_group],
+                            workgroup_size,
+                            workgroup_size,
+                        );
+                        fourier_pass.compute(
+                            &mut encoder,
+                            "Fourier Transform",
+                            &[
+                                &scene.consts_bind_group,
+                                &simdata.bind_group,
+                                &cascade.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
 
                         // Standard Pass
                         self.queue

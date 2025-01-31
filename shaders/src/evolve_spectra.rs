@@ -40,3 +40,7 @@ pub fn main(
 pub fn complex_mult(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x)
 }
+
+pub fn complex_exp(a: Vec2) -> Vec2 {
+    Vec2::new(a.y.cos(), a.y.sin()) * a.x.exp()
+}

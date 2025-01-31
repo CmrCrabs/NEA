@@ -1,8 +1,10 @@
 #![no_std]
+// TODO: clean warnings
 //#![deny(warnings)]
 pub mod initial_spectra;
 pub mod evolve_spectra;
 pub mod fourier_transform;
+pub mod fft;
 pub mod ui;
 
 use spirv_std::glam::{Vec4,UVec2};
