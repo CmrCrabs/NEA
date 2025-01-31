@@ -1,9 +1,12 @@
-- [ ] collapse gaussian / butterfly into storage textures
+- [X] move consts buf to scene
 - [ ] compute pass impl
 - [ ] minify compute passes
 - [ ] twiddle factor & indices precompute pass
     - [ ] butterfly texture generate
     - [ ] gaussian prng
+
+compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
+
 
 - [ ] update standardpass to handle render calls locally
 - [ ] compute pass impl
@@ -41,6 +44,7 @@
 - [ ] credit gasgiant fftocean if not alreaey
 - [ ] mention nyquist theorem for bounds
 - [ ] add section and explain complex mult, ih
+- [ ] credit biebras
 
 
 ### future improvements

@@ -1,368 +1,51 @@
-use crate::cast_slice;
-use shared::Constants;
-use std::mem;
-
 pub struct ComputePass {
     pipeline: wgpu::ComputePipeline,
-    consts_buf: wgpu::Buffer,
-    consts_bind_group: wgpu::BindGroup,
 }
 
 impl ComputePass {
-    pub fn new_initial_spectra(
+    pub fn new(
+        bind_group_layouts: &[&wgpu::BindGroupLayout],
         renderer: &crate::renderer::Renderer,
-        cascade: &super::Cascade,
-        simdata: &crate::sim::util::SimData,
+        label: &str,
+        entry_point: &str,
     ) -> Self {
-        let mem_size = mem::size_of::<shared::Constants>()
-            + mem::size_of::<shared::SimConstants>()
-            + mem::size_of::<shared::ShaderConstants>();
-        let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: Some("Consts Buffer"),
-        });
-        let consts_layout =
-            renderer
-                .device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility:wgpu::ShaderStages::COMPUTE,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    }],
-                    label: None,
-                });
-        let consts_bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &consts_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: consts_buf.as_entire_binding(),
-                }],
-                label: Some("Consts Bind Group"),
-            });
-
         let pipeline_layout =
             renderer
                 .device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[
-                        &consts_layout,
-                        &simdata.layout,
-                        &cascade.layout,
-                    ],
+                    bind_group_layouts,
                     push_constant_ranges: &[],
-                    label: Some("Initial Spectra"),
+                    label: Some(label),
                 });
         let pipeline = renderer
             .device
             .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some("initial_spectra::main"),
+                entry_point: Some(entry_point),
                 layout: Some(&pipeline_layout),
                 module: &renderer.shader,
                 compilation_options: Default::default(),
                 cache: None,
-                label: Some("Initial Spectra"),
+                label: Some(label),
             });
 
-        Self {
-            consts_buf,
-            consts_bind_group,
-            pipeline,
-        }
+        Self { pipeline }
     }
-
-    pub fn compute_initial_spectra<'a>(
+    pub fn compute<'a>(
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,
-        queue: &wgpu::Queue,
-        consts: &Constants,
-        cascade: &super::Cascade,
-        simdata: &crate::sim::util::SimData,
+        label: &str,
+        scene: &crate::scene::Scene,
+        bind_groups: &[&wgpu::BindGroup],
     ) {
         let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
             timestamp_writes: None,
-            label: Some("Initial Spectra"),
+            label: Some(label),
         });
 
-        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
-        simdata
-            .gaussian_tex
-            .write(queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
         pass.set_pipeline(&self.pipeline);
-        pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &simdata.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.bind_group, &[]);
-        pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
-        drop(pass);
-    }
-
-    pub fn new_conjugates(renderer: &crate::renderer::Renderer, cascade: &super::Cascade) -> Self {
-        let mem_size = mem::size_of::<shared::Constants>()
-            + mem::size_of::<shared::SimConstants>()
-            + mem::size_of::<shared::ShaderConstants>();
-        let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
-        });
-        let consts_layout =
-            renderer
-                .device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::COMPUTE,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    }],
-                    label: None,
-                });
-        let consts_bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &consts_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: consts_buf.as_entire_binding(),
-                }],
-                label: None,
-            });
-
-        let pipeline_layout =
-            renderer
-                .device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[&consts_layout, &cascade.layout],
-                    push_constant_ranges: &[],
-                    label: None,
-                });
-        let pipeline = renderer
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some("initial_spectra::pack_conjugates"),
-                layout: Some(&pipeline_layout),
-                module: &renderer.shader,
-                compilation_options: Default::default(),
-                cache: None,
-                label: None,
-            });
-
-        Self {
-            consts_buf,
-            consts_bind_group,
-            pipeline,
+        for i in 0..bind_groups.len() {
+            pass.set_bind_group(i as u32, bind_groups[i], &[]);
         }
-    }
-
-    pub fn pack_conjugates<'a>(
-        &'a self,
-        encoder: &'a mut wgpu::CommandEncoder,
-        queue: &wgpu::Queue,
-        consts: &Constants,
-        cascade: &super::Cascade,
-    ) {
-        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-            timestamp_writes: None,
-            label: Some("Pack Conjugates"),
-        });
-        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
-        pass.set_pipeline(&self.pipeline);
-        pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.bind_group, &[]);
-        pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
-        drop(pass);
-    }
-
-    pub fn new_evolve_spectra(
-        renderer: &crate::renderer::Renderer,
-        cascade: &super::Cascade,
-    ) -> Self {
-        let mem_size = mem::size_of::<shared::Constants>()
-            + mem::size_of::<shared::SimConstants>()
-            + mem::size_of::<shared::ShaderConstants>();
-        let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: Some("Evolve Spectra"),
-        });
-        let consts_layout =
-            renderer
-                .device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::COMPUTE,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    }],
-                    label: None,
-                });
-        let consts_bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &consts_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: consts_buf.as_entire_binding(),
-                }],
-                label: None,
-            });
-
-        let pipeline_layout =
-            renderer
-                .device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[
-                        &consts_layout,
-                        &cascade.layout,
-                    ],
-                    push_constant_ranges: &[],
-                    label: None,
-                });
-        let pipeline = renderer
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some("evolve_spectra::main"),
-                layout: Some(&pipeline_layout),
-                module: &renderer.shader,
-                compilation_options: Default::default(),
-                cache: None,
-                label: None,
-            });
-
-        Self {
-            consts_buf,
-            consts_bind_group,
-            pipeline,
-        }
-    }
-
-    pub fn evolve_spectra<'a>(
-        &'a self,
-        encoder: &'a mut wgpu::CommandEncoder,
-        queue: &wgpu::Queue,
-        consts: &Constants,
-        cascade: &super::Cascade,
-    ) {
-        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-            timestamp_writes: None,
-            label: None,
-        });
-
-        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
-        pass.set_pipeline(&self.pipeline);
-        pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &cascade.bind_group, &[]);
-        pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
-    }
-
-    pub fn new_fourier(renderer: &crate::renderer::Renderer, cascade: &super::Cascade, simdata: &crate::sim::util::SimData) -> Self {
-        let mem_size = mem::size_of::<shared::Constants>()
-            + mem::size_of::<shared::SimConstants>()
-            + mem::size_of::<shared::ShaderConstants>();
-        let consts_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
-        });
-        let consts_layout =
-            renderer
-                .device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: wgpu::ShaderStages::COMPUTE,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: None,
-                        },
-                        count: None,
-                    }],
-                    label: None,
-                });
-        let consts_bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &consts_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: consts_buf.as_entire_binding(),
-                }],
-                label: None,
-            });
-
-        let pipeline_layout =
-            renderer
-                .device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts: &[
-                        &consts_layout,
-                        &simdata.layout,
-                        &cascade.layout,
-                    ],
-                    push_constant_ranges: &[],
-                    label: None,
-                });
-        let pipeline = renderer
-            .device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some("fourier_transform::main"),
-                layout: Some(&pipeline_layout),
-                module: &renderer.shader,
-                compilation_options: Default::default(),
-                cache: None,
-                label: None,
-            });
-
-        Self {
-            consts_buf,
-            consts_bind_group,
-            pipeline,
-        }
-    }
-
-    pub fn transform<'a>(
-        &'a self,
-        encoder: &'a mut wgpu::CommandEncoder,
-        queue: &wgpu::Queue,
-        consts: &Constants,
-        cascade: &super::Cascade,
-        simdata: &crate::sim::util::SimData,
-    ) {
-        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-            timestamp_writes: None,
-            label: Some("Fourier Transform"),
-        });
-
-        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[*consts]));
-        simdata
-            .butterfly_tex
-            .write(queue, cast_slice(&simdata.butterfly_data.clone()), 16);
-        pass.set_pipeline(&self.pipeline);
-        pass.set_bind_group(0, &self.consts_bind_group, &[]);
-        pass.set_bind_group(1, &simdata.bind_group, &[]);
-        pass.set_bind_group(2, &cascade.bind_group, &[]);
-        pass.dispatch_workgroups(consts.sim.size / 8, consts.sim.size / 8, 1);
+        pass.dispatch_workgroups(scene.consts.sim.size / 8, scene.consts.sim.size / 8, 1);
     }
 }

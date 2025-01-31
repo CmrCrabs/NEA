@@ -7,7 +7,7 @@ use crate::{
 use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
 use shared::Constants;
 use std::{f32::consts::PI, mem};
-use wgpu::{util::DeviceExt, BindGroup, Buffer, Device, Queue, RenderPipeline};
+use wgpu::{util::DeviceExt, Buffer, Device, Queue, RenderPipeline};
 use winit::{
     event::{MouseButton, MouseScrollDelta, WindowEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -18,8 +18,6 @@ pub struct UI {
     pub pipeline: RenderPipeline,
     pub vtx_buf: Buffer,
     pub idx_buf: Buffer,
-    pub scene_bind_group: BindGroup,
-    pub scene_buf: Buffer,
     pub context: imgui::Context,
     pub focused: bool,
     texture: Texture,
@@ -55,7 +53,7 @@ impl UI {
             font_texture.height,
             wgpu::TextureFormat::Rgba8UnormSrgb,
             &renderer,
-            "Font Atlas"
+            "Font Atlas",
         );
         texture.write(&renderer.queue, &font_texture.data, 4);
 
@@ -65,7 +63,7 @@ impl UI {
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: None,
                     bind_group_layouts: &[
-                        &scene.scene_layout,
+                        &scene.consts_layout,
                         texture.layout.as_ref().unwrap(),
                         &renderer.sampler_layout,
                     ],
@@ -115,22 +113,6 @@ impl UI {
             label: None,
         });
 
-        let scene_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
-            size: scene.mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
-        });
-        let scene_bind_group = renderer
-            .device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &scene.scene_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: scene_buf.as_entire_binding(),
-                }],
-                label: None,
-            });
         let focused = true;
 
         Self {
@@ -138,8 +120,6 @@ impl UI {
             vtx_buf,
             idx_buf,
             context,
-            scene_bind_group,
-            scene_buf,
             texture,
             focused,
         }
@@ -206,9 +186,9 @@ impl UI {
             queue.write_buffer(&self.vtx_buf, 0, cast_slice(&vertices));
         }
 
-        queue.write_buffer(&self.scene_buf, 0, cast_slice(&[scene.consts]));
+        queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
         renderpass.set_pipeline(&self.pipeline);
-        renderpass.set_bind_group(0, &self.scene_bind_group, &[]);
+        renderpass.set_bind_group(0, &scene.consts_bind_group, &[]);
         renderpass.set_bind_group(1, &self.texture.bind_group, &[]);
         renderpass.set_bind_group(2, sampler_bind_group, &[]);
         renderpass.set_vertex_buffer(0, self.vtx_buf.slice(..));
@@ -219,7 +199,6 @@ impl UI {
         for draw_list in draw_data.draw_lists() {
             for cmd in draw_list.commands() {
                 if let imgui::DrawCmd::Elements { count, cmd_params } = cmd {
-
                     renderpass.set_scissor_rect(
                         cmd_params.clip_rect[0].floor() as _,
                         cmd_params.clip_rect[1].floor() as _,
@@ -317,11 +296,21 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
-                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
+                ui.slider(
+                    "Lengthscale 0",
+                    0,
+                    consts.sim.size,
+                    &mut consts.sim.lengthscale,
+                );
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
-                ui.slider("Light Vector Angle", 0.0, 2.0 * PI, &mut consts.shader.light_rotation);
+                ui.slider(
+                    "Light Vector Angle",
+                    0.0,
+                    2.0 * PI,
+                    &mut consts.shader.light_rotation,
+                );
             }
             ui.separator();
             if ui.collapsing_header("Colors", TreeNodeFlags::SPAN_AVAIL_WIDTH) {

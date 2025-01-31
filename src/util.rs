@@ -9,7 +9,13 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(width: u32, height: u32, format: wgpu::TextureFormat, renderer: &Renderer, label: &str) -> Self {
+    pub fn new(
+        width: u32,
+        height: u32,
+        format: wgpu::TextureFormat,
+        renderer: &Renderer,
+        label: &str,
+    ) -> Self {
         let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,

@@ -2,37 +2,21 @@ use crate::renderer::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{OceanVertex, Scene};
 use crate::sim::Cascade;
 use std::mem;
-use wgpu::{BindGroup, Buffer, Device, RenderPipeline, ShaderModule, TextureView};
+use wgpu::{Device, RenderPipeline, ShaderModule, TextureView};
 
 pub struct StandardPipeline {
     pub pipeline: RenderPipeline,
-    pub scene_bind_group: BindGroup,
-    pub scene_buf: Buffer,
 }
 
 impl StandardPipeline {
-    pub fn new(device: &Device, shader: &ShaderModule, scene: &Scene, cascade: &Cascade) -> StandardPipeline {
-        let scene_buf = device.create_buffer(&wgpu::BufferDescriptor {
-            size: scene.mem_size as u64,
-            mapped_at_creation: false,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            label: None,
-        });
-
-        let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &scene.scene_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: scene_buf.as_entire_binding(),
-            }],
-            label: None,
-        });
-
+    pub fn new(
+        device: &Device,
+        shader: &ShaderModule,
+        scene: &Scene,
+        cascade: &Cascade,
+    ) -> StandardPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[
-                &scene.scene_layout, 
-                &cascade.layout
-            ],
+            bind_group_layouts: &[&scene.consts_layout, &cascade.layout],
             push_constant_ranges: &[],
             label: None,
         });
@@ -72,11 +56,7 @@ impl StandardPipeline {
             cache: None,
         });
 
-        StandardPipeline {
-            pipeline,
-            scene_bind_group,
-            scene_buf,
-        }
+        StandardPipeline { pipeline }
     }
 
     pub fn render<'a>(

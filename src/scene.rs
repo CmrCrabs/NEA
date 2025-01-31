@@ -9,11 +9,12 @@ use winit::{dpi::PhysicalPosition, event::MouseScrollDelta, window::Window};
 pub struct Scene {
     start_time: Instant,
     cursor_down: bool,
-    pub consts: Constants,
-    pub scene_layout: wgpu::BindGroupLayout,
     pub camera: Camera,
     pub mesh: Mesh,
-    pub mem_size: u64,
+    pub consts: Constants,
+    pub consts_layout: wgpu::BindGroupLayout,
+    pub consts_buf: wgpu::Buffer,
+    pub consts_bind_group: wgpu::BindGroup,
     pub consts_changed: bool,
 }
 
@@ -64,10 +65,10 @@ impl Scene {
         let mesh = Mesh::new(device, &consts);
         let start_time = Instant::now();
 
-        let scene_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        let consts_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
+                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT | wgpu::ShaderStages::COMPUTE,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
@@ -77,10 +78,23 @@ impl Scene {
             }],
             label: None,
         });
-
         let mem_size = (mem::size_of::<Constants>()
             + mem::size_of::<SimConstants>()
             + mem::size_of::<ShaderConstants>()) as u64;
+        let consts_buf = device.create_buffer(&wgpu::BufferDescriptor {
+            size: mem_size as u64,
+            mapped_at_creation: false,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            label: Some("Consts Buffer"),
+        });
+        let consts_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &consts_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: consts_buf.as_entire_binding(),
+            }],
+            label: Some("Consts Bind Group"),
+        });
 
         let consts_changed = true;
 
@@ -90,8 +104,9 @@ impl Scene {
             consts,
             camera,
             mesh,
-            scene_layout,
-            mem_size,
+            consts_layout,
+            consts_buf,
+            consts_bind_group,
             consts_changed,
         }
     }
@@ -105,7 +120,8 @@ impl Scene {
         self.consts.width = dimensions.width as f32;
         self.consts.height = dimensions.height as f32;
 
-        self.consts.shader.light = Mat4::from_rotation_y(self.consts.shader.light_rotation) * self.consts.shader.light;
+        self.consts.shader.light =
+            Mat4::from_rotation_y(self.consts.shader.light_rotation) * self.consts.shader.light;
     }
 
     pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {
@@ -136,13 +152,8 @@ impl Mesh {
         let mut vertices: Vec<OceanVertex> = vec![];
         for z in 0..scale {
             for x in 0..scale {
-                let pos = Vec4::new(
-                    x as f32 * step,
-                    0.0,
-                    z as f32 * step,
-                    1.0,
-                );
-                let uv = glam::UVec2::new(x,z);
+                let pos = Vec4::new(x as f32 * step, 0.0, z as f32 * step, 1.0);
+                let uv = glam::UVec2::new(x, z);
                 vertices.push(OceanVertex {
                     pos,
                     uv,

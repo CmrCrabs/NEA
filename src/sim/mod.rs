@@ -1,7 +1,11 @@
-use crate::{renderer::Renderer, util::{bind_group_descriptor, Texture}};
+use crate::{
+    renderer::Renderer,
+    util::{bind_group_descriptor, Texture},
+};
 use shared::Constants;
 
 pub mod compute;
+pub mod fft;
 pub mod util;
 
 pub struct Cascade {
@@ -16,35 +20,35 @@ impl Cascade {
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Waves"
+            "Waves",
         );
         let initial_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Spectrum"
+            "Spectrum",
         );
         let height_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Height Map"
+            "Height Map",
         );
         let tangent_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Tangents"
+            "Tangents",
         );
         let evolved_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Storage"
+            "Storage",
         );
 
         let layout = renderer
@@ -70,11 +74,15 @@ impl Cascade {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::TextureView(&initial_spectrum_texture.view),
+                        resource: wgpu::BindingResource::TextureView(
+                            &initial_spectrum_texture.view,
+                        ),
                     },
                     wgpu::BindGroupEntry {
                         binding: 2,
-                        resource: wgpu::BindingResource::TextureView(&evolved_spectrum_texture.view),
+                        resource: wgpu::BindingResource::TextureView(
+                            &evolved_spectrum_texture.view,
+                        ),
                     },
                     wgpu::BindGroupEntry {
                         binding: 3,
@@ -88,9 +96,6 @@ impl Cascade {
                 label: Some("Storage Textures"),
             });
 
-        Self {
-            layout,
-            bind_group,
-        }
+        Self { layout, bind_group }
     }
 }

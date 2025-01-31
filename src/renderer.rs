@@ -44,7 +44,7 @@ impl<'a> Renderer<'a> {
         required_limits.max_storage_textures_per_shader_stage = 5;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES 
+                required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
                     | wgpu::Features::VERTEX_WRITABLE_STORAGE,
                 required_limits,
                 memory_hints: wgpu::MemoryHints::Performance,
@@ -125,10 +125,31 @@ impl<'a> Renderer<'a> {
         let mut last_frame = Instant::now();
         let simdata = sim::util::SimData::new(&self, &scene.consts);
         let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade);
-        let initial_spectra_pass = ComputePass::new_initial_spectra(&self, &cascade, &simdata);
-        let conjugates_pass = ComputePass::new_conjugates(&self, &cascade);
-        let evolve_spectra_pass = ComputePass::new_evolve_spectra(&self, &cascade);
-        let fourier_pass = ComputePass::new_fourier(&self, &cascade, &simdata);
+
+        let initial_spectra_pass = ComputePass::new(
+            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
+            &self,
+            "Initial Spectra",
+            "initial_spectra::main",
+        );
+        let conjugates_pass = ComputePass::new(
+            &[&scene.consts_layout, &cascade.layout],
+            &self,
+            "Pack Conjugates",
+            "initial_spectra::pack_conjugates",
+        );
+        let evolve_spectra_pass = ComputePass::new(
+            &[&scene.consts_layout, &cascade.layout],
+            &self,
+            "Evolve Spectra",
+            "evolve_spectra::main",
+        );
+        let fourier_pass = ComputePass::new(
+            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
+            &self,
+            "Fourier Transform",
+            "fourier_transform::main",
+        );
 
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
@@ -153,44 +174,31 @@ impl<'a> Renderer<'a> {
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-                        // Initial Spectra Pass
-                        if true {
-                            initial_spectra_pass.compute_initial_spectra(
-                                &mut encoder,
-                                &self.queue,
-                                &scene.consts,
-                                &cascade,
-                                &simdata,
-                            );
-                            conjugates_pass.pack_conjugates(
-                                &mut encoder,
-                                &self.queue,
-                                &scene.consts,
-                                &cascade,
-                            );
+                        // Compute Initial spectrum on param change
+                        if scene.consts_changed {
+                            self.queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
+                            simdata
+                                .gaussian_tex
+                                .write(&self.queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
+                            initial_spectra_pass.compute(&mut encoder, "Initial Spectra", &scene, &[&scene.consts_bind_group, &simdata.bind_group, &cascade.bind_group]);
+
+                            self.queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
+                            conjugates_pass.compute(&mut encoder, "Pack Conjugates", &scene, &[&scene.consts_bind_group, &cascade.bind_group]);
+
                             scene.mesh = Mesh::new(&self.device, &scene.consts);
                         }
 
-                        // Evolve Spectra Pass
-                        evolve_spectra_pass.evolve_spectra(
-                            &mut encoder,
-                            &self.queue,
-                            &scene.consts,
-                            &cascade,
-                        );
-                        //// Fourier Transform
-                        fourier_pass.transform(&mut encoder, &self.queue, &scene.consts, &cascade, &simdata);
+                        // per frame computation
+                        evolve_spectra_pass.compute(&mut encoder, "Evolve Spectra", &scene, &[&scene.consts_bind_group, &cascade.bind_group]);
+                        fourier_pass.compute(&mut encoder, "Fourier Transform", &scene, &[&scene.consts_bind_group, &simdata.bind_group, &cascade.bind_group]);
 
                         // Standard Pass
-                        self.queue.write_buffer(
-                            &standard_pass.scene_buf,
-                            0,
-                            cast_slice(&[scene.consts]),
-                        );
+                        self.queue
+                            .write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
                         let mut pass =
                             standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pass.pipeline);
-                        pass.set_bind_group(0, &standard_pass.scene_bind_group, &[]);
+                        pass.set_bind_group(0, &scene.consts_bind_group, &[]);
                         pass.set_bind_group(1, &cascade.bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
