@@ -1,8 +1,7 @@
-// highly non exhaustive, purely for memories sake
-
-- [ ] combine cascade data into one bind group
-- [ ] combine simdata into one bind group
-- [X] move gaussian out of cascade and into startup?
+- [ ] collapse gaussian / butterfly into storage textures
+- [ ] compute pass impl
+- [ ] minify compute passes
+- [ ] twiddle factor & indices precompute pass
     - [ ] butterfly texture generate
     - [ ] gaussian prng
 

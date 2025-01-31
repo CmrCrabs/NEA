@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use glam::{Vec4, Vec2};
 use shared::Constants;
 use crate::{renderer::Renderer, util::Texture};
@@ -25,8 +27,8 @@ impl SimData {
         let gaussian_noise = Self::guassian_noise(consts);
 
         let butterfly_tex = Texture::new_storage(
-            consts.sim.size,
             consts.sim.size.ilog2(),
+            consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
             "Butterfly"
@@ -96,11 +98,18 @@ impl SimData {
 
     fn butterfly_data(consts: &Constants) -> Vec<Vec4> {
         let mut data = vec![];
+        let n: f32 = consts.sim.size as f32;
         for y in 0..consts.sim.size {
             for x in 0..consts.sim.size.ilog2() {
+                let k = (y as f32 * n / 2.0_f32.powf(x as f32 + 1.0)) % n;
+                let w_n = Vec2::new(
+                    ((2.0 * PI * k) / n).cos(),
+                    ((2.0 * PI * k) / n).sin(),
+                );
+                let top = y as f32 % 2.0_f32.powf(x as f32 + 1.0) < 2.0_f32.powf(x as f32);
                 data.push(Vec4::new(
-                    0.0,
-                    0.0,
+                    w_n.x,
+                    w_n.y,
                     0.0,
                     0.0,
                 ));
