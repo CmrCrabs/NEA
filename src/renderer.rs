@@ -188,7 +188,7 @@ impl<'a> Renderer<'a> {
                             "Precompute Butterfly",
                             &[&scene.consts_bind_group, &simdata.bind_group],
                             scene.consts.sim.size.ilog2(),
-                            scene.consts.sim.size / 2 / WG_SIZE,
+                            scene.consts.sim.size / WG_SIZE,
                         );
                         simdata.gaussian_tex.write(
                             &self.queue,

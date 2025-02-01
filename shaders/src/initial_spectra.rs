@@ -98,7 +98,7 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
     beta_s / (2.0 * (beta_s * PI).tanh()) * sech * sech
 }
 
-// explained in biebras -> explain
+// TODO: explained in biebras -> explain
 #[spirv(compute(threads(8,8)))]
 pub fn pack_conjugates(
     #[spirv(global_invocation_id)] id: UVec3,

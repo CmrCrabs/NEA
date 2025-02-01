@@ -48,6 +48,7 @@ pub struct SimConstants {
     pub wind_offset: f32,
     pub fetch: f32,
     pub choppiness: f32,
+    pub logsize: u32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
@@ -66,6 +67,7 @@ impl Default for SimConstants {
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
             choppiness: 0.2,
+            logsize: 0,
         }
     }
 }

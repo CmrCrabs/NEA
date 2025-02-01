@@ -122,6 +122,7 @@ impl Scene {
 
         self.consts.shader.light =
             Mat4::from_rotation_y(self.consts.shader.light_rotation) * self.consts.shader.light;
+        self.consts.sim.logsize = self.consts.sim.size.ilog2();
     }
 
     pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {

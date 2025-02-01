@@ -11,7 +11,7 @@ use crate::StorageImage;
 pub fn main(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] butterfly_tex: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 0)] _butterfly_tex: &StorageImage,
     #[spirv(descriptor_set = 2, binding = 0)] wave_tex: &StorageImage,
     #[spirv(descriptor_set = 2, binding = 2)] evolved_tex: &StorageImage,
     #[spirv(descriptor_set = 2, binding = 3)] height_map: &StorageImage,
