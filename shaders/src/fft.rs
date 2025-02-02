@@ -20,47 +20,26 @@ pub fn precompute_butterfly(
     let step = 2.0_f32.powf(id.x as f32);
     let wing = id.y as f32 % 2.0_f32.powf(id.x as f32 + 1.0) < step; //here
 
-    //let mut yt = id.y;
-    //let mut yb = id.y;
-    //if wing {
-    //    yb += step as u32;
-    //} else {
-    //    yt -= step as u32;
-    //}
-
-    //if id.x == 0 {
-    //    yt = bit_reverse(yt, consts.sim.logsize);
-    //    yb = bit_reverse(yb, consts.sim.logsize);
-    //}
-
-    //unsafe {
-    //    butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, yt as f32, yb as f32));
-    //}
+    let mut yt = id.y;
+    let mut yb = id.y;
     if id.x == 0 {
-        let yr = bit_reverse(id.y, consts.sim.logsize);
+        yt = bit_reverse(yt, consts.sim.logsize);
+        yb = bit_reverse(yb, consts.sim.logsize);
         if wing {
-            unsafe {
-                butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, yr as f32, (yr + 1) as f32));
-            }
-        }
-        else {
-            unsafe {
-                butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, (yr - 1) as f32, yr as f32));
-            }
+            yb += 1;
+        } else {
+            yt -= 1;
         }
     } else {
-        let yr = id.y;
         if wing {
-            unsafe {
-                butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, yr as f32, yr as f32 + step));
-            }
+            yb += step as u32;
+        } else {
+            yt -= step as u32;
         }
-        else {
-            unsafe {
-                butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, yr as f32 - step, yr as f32));
-            }
-        }
+    }
 
+    unsafe {
+        butterfly_tex.write(id.xy(), Vec4::new(twiddle.x, twiddle.y, yt as f32, yb as f32));
     }
 }
 
