@@ -72,9 +72,9 @@ impl Default for SimConstants {
             wind_speed: 30.0,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
-            choppiness: 0.2,
+            choppiness: 0.8,
             logsize: 0,
-            swell: 1.0,
+            swell: 0.6,
             integration_step: 0.01,
         }
     }

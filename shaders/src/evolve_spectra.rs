@@ -21,15 +21,15 @@ pub fn main(
     let h0 = spectrum.xy();
     let h0c = spectrum.zw();
     let phase = wave.w * consts.time;
-    let exponent = Vec2::new(phase.cos(), phase.sin());
+    let exponent = euler(phase);
     let negative_exponent = Vec2::new(exponent.x, -exponent.y);
 
     // Precalculating Amplitudes
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
     let y_d = h;
-    let x_d = -ih * wave.x * wave.z;
-    let z_d = -ih * wave.y * wave.z;
+    let x_d = ih * wave.x * wave.z;
+    let z_d = ih * wave.y * wave.z;
 
     unsafe {
         evolved_spectrum_tex.write(id.xy(), Vec4::new(y_d.x, y_d.y, 0.0, 1.0));
@@ -39,6 +39,10 @@ pub fn main(
 
 pub fn complex_mult(a: Vec2, b: Vec2) -> Vec2 {
     Vec2::new(a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x)
+}
+
+pub fn euler(exp: f32) -> Vec2 {
+    Vec2::new(exp.cos(), exp.sin())
 }
 
 pub fn complex_exp(a: Vec2) -> Vec2 {

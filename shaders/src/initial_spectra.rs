@@ -29,7 +29,8 @@ if k_length <= consts.sim.cutoff_high && k_length >= consts.sim.cutoff_low {
     let jonswap = jonswap(omega, omega_peak, &consts.sim);
     let depth_attenuation = depth_attenuation(omega, &consts.sim);
     let tma = jonswap * depth_attenuation;
-    let spectrum = 2.0 * tma * final_spread(omega, omega_peak, theta, &consts) * domega_dk.abs() * dk * dk / k_length;
+    let spread = final_spread(omega, omega_peak, theta, &consts);
+    let spectrum = 2.0 * tma * spread * domega_dk.abs() * dk * dk / k_length;
     let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()).xy() * spectrum.sqrt();
     
     unsafe {
