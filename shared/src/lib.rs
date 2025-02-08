@@ -37,6 +37,8 @@ impl Default for ShaderConstants {
 pub struct SimConstants {
     pub size: u32,
     pub lengthscale: u32,
+    pub cutoff_low: f32,
+    pub cutoff_high: f32,
     pub mesh_step: f32,
     pub standard_deviation: f32,
     pub mean: f32,
@@ -49,6 +51,8 @@ pub struct SimConstants {
     pub fetch: f32,
     pub choppiness: f32,
     pub logsize: u32,
+    pub swell: f32,
+    pub integration_step: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
@@ -56,6 +60,8 @@ impl Default for SimConstants {
         Self {
             size,
             lengthscale: 120,
+            cutoff_low: 0.00000001,
+            cutoff_high: 6.0,
             mesh_step: 0.1,
             standard_deviation: 1.0,
             mean: 0.0,
@@ -68,6 +74,8 @@ impl Default for SimConstants {
             fetch: 8000.0,
             choppiness: 0.2,
             logsize: 0,
+            swell: 1.0,
+            integration_step: 0.01,
         }
     }
 }

@@ -1,6 +1,6 @@
 use spirv_std::{
     spirv,
-num_traits::Float,
+    num_traits::Float,
 };
 use crate::StorageImage;
 use core::f32::consts::{self, PI};
@@ -21,15 +21,15 @@ let m = id.y as f32 - 0.5 *  consts.sim.size as f32;
 let k: Vec2 = Vec2::new(n, m) * dk;
 let k_length = k.length();
 
-if k_length <= 6.0 && k_length >= 0.000001 {
-    let theta = k.y.atan2(k.x) - consts.sim.wind_offset;
+if k_length <= consts.sim.cutoff_high && k_length >= consts.sim.cutoff_low {
+    let theta = angle(k, consts.sim.wind_offset);
     let omega = dispersion_relation(k_length, &consts.sim);
     let domega_dk = dispersion_derivative(k_length, &consts.sim); //Derivative
     let omega_peak = 22.0 * ((consts.sim.gravity * consts.sim.gravity) / (consts.sim.wind_speed * consts.sim.fetch)).powf(1.0 / 3.0);
     let jonswap = jonswap(omega, omega_peak, &consts.sim);
     let depth_attenuation = depth_attenuation(omega, &consts.sim);
     let tma = jonswap * depth_attenuation;
-    let spectrum = 2.0 * tma * donelan_banner(omega, omega_peak, theta) * domega_dk.abs() * dk * dk / k_length;
+    let spectrum = 2.0 * tma * final_spread(omega, omega_peak, theta, &consts) * domega_dk.abs() * dk * dk / k_length;
     let h0 = 1.0 / 2.0_f32.sqrt() * gaussian_tex.read(id.xy()).xy() * spectrum.sqrt();
     
     unsafe {
@@ -52,6 +52,19 @@ fn dispersion_derivative(k: f32, consts: &SimConstants) -> f32 {
     let tanh = (consts.depth * k).min(20.0).tanh();
     let sech = 1.0 / (consts.depth * k).cosh();
     (consts.gravity * (tanh + consts.depth * k * sech * sech)) / (2.0 * (consts.gravity * k * tanh).sqrt())
+}
+
+// from biebras TODO: credit
+fn angle(k: Vec2, offset: f32) -> f32 {
+    let mut angle: f32 = (k.y).atan2(k.x) - offset;
+    angle = fmod(angle + PI, 2.0 * PI);
+    if angle < 0.0 {
+        angle += 2.0 * PI;
+    }
+    angle - PI
+}
+fn fmod(a: f32, b: f32) -> f32 {
+    a - b * (a / b).floor()
 }
 
 fn jonswap(omega: f32,omega_p: f32, consts: &SimConstants) -> f32 {
@@ -96,6 +109,48 @@ fn donelan_banner(omega: f32,omega_p: f32, theta: f32) -> f32 {
     }
     let sech = 1.0 / (beta_s * theta).cosh();
     beta_s / (2.0 * (beta_s * PI).tanh()) * sech * sech
+}
+
+fn directional_spread(omega: f32, omega_p: f32, theta: f32, consts: &Constants) -> f32 {
+    let base = donelan_banner(omega, omega_p, theta);
+    let swell = d_epsilon(omega, omega_p, theta, consts);
+    base * swell
+}
+
+fn final_spread(omega: f32, omega_p: f32, theta: f32, consts: &Constants) -> f32 {
+    let spread = directional_spread(omega, omega_p, theta, consts);
+    let integral = integral(omega_p, omega, consts);
+    spread * integral
+
+}
+
+fn integral(omega_p: f32, omega: f32, consts: &Constants) -> f32 {
+    let mut sum = 0.0;
+    let steps = 2.0 * PI / consts.sim.integration_step;
+
+    for i in 0..steps as usize {
+        let angle = i as f32 * consts.sim.integration_step - PI;
+        sum += directional_spread(omega, omega_p, angle, consts) * consts.sim.integration_step;
+    }
+    1.0 / sum
+}
+
+fn d_epsilon(omega: f32, omega_p: f32, theta: f32, consts: &Constants) -> f32 {
+    let s = 16.0 * (omega_p / omega).tanh() * consts.sim.swell * consts.sim.swell;
+    normalisation_factor(s) * (theta / 2.0).cos().abs().powf(2.0 * s)
+}
+
+// from gasgiant
+fn normalisation_factor(s: f32) -> f32 {
+    let s2 = s * s;
+    let s3 = s2 * s;
+    let s4 = s3 * s;
+    
+    if s < 5.0 {
+        -0.000564 * s4 + 0.00776 * s3 - 0.044 * s2 + 0.192 * s + 0.163
+    } else {
+        -4.80e-08 * s4 + 1.07e-05 * s3 - 9.53e-04 * s2 + 5.90e-02 * s + 3.93e-01
+    }
 }
 
 // TODO: explained in biebras -> explain

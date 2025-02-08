@@ -295,12 +295,26 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Wind Offset", -PI, PI, &mut consts.sim.wind_offset);
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
+                ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
+                ui.slider("Integration Step", 0.0001, 0.02, &mut consts.sim.integration_step);
                 ui.slider(
                     "Lengthscale 0",
                     0,
                     consts.sim.size,
                     &mut consts.sim.lengthscale,
+                );
+                ui.slider(
+                    "Cutoff Low 0",
+                    0.0,
+                    0.00001,
+                    &mut consts.sim.cutoff_low,
+                );
+                ui.slider(
+                    "Cutoff High 0",
+                    0.0,
+                    10.0,
+                    &mut consts.sim.cutoff_high,
                 );
             }
             ui.separator();

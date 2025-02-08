@@ -1,19 +1,16 @@
 - [X] move consts buf to scene
 - [X] compute pass impl
 - [X] minify compute passes
-- [ ] twiddle factor & indices precompute pass
-    - [ ] butterfly texture generate
-    - [ ] gaussian prng
+- [X] twiddle factor & indices precompute pass
+    - [X] butterfly texture generate
 
 - [ ] implement swell per biebras
+- [ ] waves texture merger
+- [ ] spectrum wrapper
 
 - [ ] fn euler(exp) -> vec2
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
-
-
-credit bit reverse alg
-https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-from-msb-lsb-to-lsb-msb-in-c
 
 - [ ] update standardpass to handle render calls locally
 - [ ] compute pass impl
@@ -32,6 +29,7 @@ https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-
 - [ ] tiling
 - [ ] post processing
     - [X] add update constants fn, multiply light vector by matrix
+- [ ] gaussian prng?
 
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl (?)
