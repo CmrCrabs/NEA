@@ -64,7 +64,7 @@ impl UI {
                     label: None,
                     bind_group_layouts: &[
                         &scene.consts_layout,
-                        texture.layout.as_ref().unwrap(),
+                        &texture.layout,
                         &renderer.sampler_layout,
                     ],
                     push_constant_ranges: &[],
@@ -291,31 +291,26 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
-                ui.slider("Wind Speed", 0.1, 200.0, &mut consts.sim.wind_speed);
+                ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
                 ui.slider("Wind Offset", -PI, PI, &mut consts.sim.wind_offset);
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
-                ui.slider("Integration Step", 0.0001, 0.02, &mut consts.sim.integration_step);
+                ui.slider(
+                    "Integration Step",
+                    0.0001,
+                    0.02,
+                    &mut consts.sim.integration_step,
+                );
                 ui.slider(
                     "Lengthscale 0",
                     0,
                     consts.sim.size,
                     &mut consts.sim.lengthscale,
                 );
-                ui.slider(
-                    "Cutoff Low 0",
-                    0.0,
-                    0.00001,
-                    &mut consts.sim.cutoff_low,
-                );
-                ui.slider(
-                    "Cutoff High 0",
-                    0.0,
-                    10.0,
-                    &mut consts.sim.cutoff_high,
-                );
+                ui.slider("Cutoff Low 0", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
+                ui.slider("Cutoff High 0", 0.0, 10.0, &mut consts.sim.cutoff_high);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {

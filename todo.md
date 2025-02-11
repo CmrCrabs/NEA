@@ -1,14 +1,10 @@
-- [X] move consts buf to scene
-- [X] compute pass impl
-- [X] minify compute passes
-- [X] twiddle factor & indices precompute pass
-    - [X] butterfly texture generate
+- [ ] setup dwhatever maps in cascace
+- [ ] encode data into them
+- [ ] unpack fft data
+    - [ ] normal
+    - [ ] displacement
+    - [ ] foam
 
-- [ ] implement swell per biebras
-- [ ] waves texture merger
-- [ ] spectrum wrapper
-
-- [ ] fn euler(exp) -> vec2
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 
@@ -30,6 +26,7 @@ compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 - [ ] post processing
     - [X] add update constants fn, multiply light vector by matrix
 - [ ] gaussian prng?
+- [ ] move pingpong to seperate buf
 
 - [ ] move renderer to /gfx/ (?)
 - [ ] compute pass impl (?)

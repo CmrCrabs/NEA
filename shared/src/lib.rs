@@ -2,7 +2,7 @@
 
 use core::f32;
 
-use glam::Vec4;
+use glam::{Vec2, Vec4};
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -15,6 +15,7 @@ pub struct Constants {
     pub view: Vec4,
     pub shader: ShaderConstants,
     pub sim: SimConstants,
+    //TODO: abstract
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -53,15 +54,17 @@ pub struct SimConstants {
     pub logsize: u32,
     pub swell: f32,
     pub integration_step: f32,
+    pub pingpong: u32,
+    pub stage: u32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
         let size = 128;
         Self {
             size,
-            lengthscale: 120,
+            lengthscale: 50,
             cutoff_low: 0.00000001,
-            cutoff_high: 6.0,
+            cutoff_high: 15.0,
             mesh_step: 0.1,
             standard_deviation: 1.0,
             mean: 0.0,
@@ -69,13 +72,15 @@ impl Default for SimConstants {
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 30.0,
+            wind_speed: 10.0,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
             choppiness: 0.8,
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,
+            pingpong: 0,
+            stage: 0,
         }
     }
 }

@@ -18,6 +18,7 @@
 #set math.vec(delim: "[");
 
 // Title Page
+// disable justification
 #page(numbering: none, [
   #v(2fr)
   #align(center, [

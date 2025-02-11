@@ -16,7 +16,7 @@ impl StandardPipeline {
         cascade: &Cascade,
     ) -> StandardPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&scene.consts_layout, &cascade.layout],
+            bind_group_layouts: &[&scene.consts_layout, &cascade.stg_layout],
             push_constant_ranges: &[],
             label: None,
         });

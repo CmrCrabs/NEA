@@ -125,6 +125,10 @@ impl Scene {
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
     }
 
+    pub fn write(&self, queue: &wgpu::Queue) {
+        queue.write_buffer(&self.consts_buf, 0, cast_slice(&[self.consts]));
+    }
+
     pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {
         match event {
             WindowEvent::MouseInput { state, button, .. } => match button {

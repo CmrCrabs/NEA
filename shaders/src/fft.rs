@@ -3,10 +3,119 @@ use spirv_std::{
     num_traits::Float,
 };
 use core::f32::consts;
-use crate::StorageImage;
+use crate::{evolve_spectra::complex_mult, StorageImage};
 use shared::Constants;
-use spirv_std::glam::{UVec3, Vec3Swizzles, Vec2, Vec4};
+use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
 
+
+// algorithm referenced from GPGPU TODO: credit
+#[spirv(compute(threads(8,8)))]
+pub fn hstep_ifft(
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+    #[spirv(descriptor_set = 1, binding = 1)] butterfly_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] pingpong0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] pingpong1: &StorageImage,
+) {
+    let butterfly_data: Vec4 = butterfly_tex.read(UVec2::new(consts.sim.stage, id.x));
+    let twiddle: Vec2 = butterfly_data.xy();
+    let indices: UVec2 = UVec2::new(butterfly_data.z as u32, butterfly_data.w as u32);
+
+    if consts.sim.pingpong == 0 {
+        let top_signal1 = pingpong0.read(UVec2::new(indices.x, id.y)).xy();
+        let top_signal2 = pingpong0.read(UVec2::new(indices.x, id.y)).zw();
+        let bottom_signal1 = pingpong0.read(UVec2::new(indices.y, id.y)).xy();
+        let bottom_signal2 = pingpong0.read(UVec2::new(indices.y, id.y)).zw();
+        let h1 = top_signal1 + complex_mult(twiddle, bottom_signal1);
+        let h2 = top_signal2 + complex_mult(twiddle, bottom_signal2);
+
+        unsafe {
+            pingpong1.write(id.xy(), Vec4::new(h1.x, h1.y, h2.x, h2.y));
+        }
+    } else {
+        let top_signal1 = pingpong1.read(UVec2::new(indices.x, id.y)).xy();
+        let top_signal2 = pingpong1.read(UVec2::new(indices.x, id.y)).zw();
+        let bottom_signal1 = pingpong1.read(UVec2::new(indices.y, id.y)).xy();
+        let bottom_signal2 = pingpong1.read(UVec2::new(indices.y, id.y)).zw();
+        let h1 = top_signal1 + complex_mult(twiddle, bottom_signal1);
+        let h2 = top_signal2 + complex_mult(twiddle, bottom_signal2);
+
+        unsafe {
+            pingpong0.write(id.xy(), Vec4::new(h1.x, h1.y, h2.x, h2.y));
+        }
+    }
+}
+
+// algorithm referenced from GPGPU TODO: credit
+#[spirv(compute(threads(8,8)))]
+pub fn vstep_ifft(
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+    #[spirv(descriptor_set = 1, binding = 1)] butterfly_tex: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] pingpong0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] pingpong1: &StorageImage,
+) {
+    let butterfly_data: Vec4 = butterfly_tex.read(UVec2::new(consts.sim.stage, id.y));
+    let twiddle: Vec2 = butterfly_data.xy();
+    let indices: UVec2 = UVec2::new(butterfly_data.z as u32, butterfly_data.w as u32);
+
+    if consts.sim.pingpong == 0 {
+        let top_signal1 = pingpong0.read(UVec2::new(id.x, indices.x)).xy();
+        let top_signal2 = pingpong0.read(UVec2::new(id.x, indices.x)).zw();
+        let bottom_signal1 = pingpong0.read(UVec2::new(id.x, indices.y)).xy();
+        let bottom_signal2 = pingpong0.read(UVec2::new(id.x, indices.y)).zw();
+        let h1 = top_signal1 + complex_mult(twiddle, bottom_signal1);
+        let h2 = top_signal2 + complex_mult(twiddle, bottom_signal2);
+
+        unsafe {
+            pingpong1.write(id.xy(), Vec4::new(h1.x, h1.y, h2.x, h2.y));
+        }
+    } else {
+        let top_signal1 = pingpong1.read(UVec2::new(id.x, indices.x)).xy();
+        let top_signal2 = pingpong1.read(UVec2::new(id.x, indices.x)).zw();
+        let bottom_signal1 = pingpong1.read(UVec2::new(id.x, indices.y)).xy();
+        let bottom_signal2 = pingpong1.read(UVec2::new(id.x, indices.y)).zw();
+        let h1 = top_signal1 + complex_mult(twiddle, bottom_signal1);
+        let h2 = top_signal2 + complex_mult(twiddle, bottom_signal2);
+
+        unsafe {
+            pingpong0.write(id.xy(), Vec4::new(h1.x, h1.y, h2.x, h2.y));
+        }
+    }
+}
+
+// algorithm referenced from GPGPU TODO: credit
+#[spirv(compute(threads(8,8)))]
+pub fn copy_pingpong(
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(descriptor_set = 2, binding = 0)] pingpong0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] pingpong1: &StorageImage,
+) {
+    unsafe {
+        pingpong1.write(id.xy(), pingpong0.read(id.xy()));
+    }
+}
+
+// algorithm referenced from GPGPU TODO: credit
+#[spirv(compute(threads(8,8)))]
+pub fn permute_scale(
+    #[spirv(global_invocation_id)] id: UVec3,
+    #[spirv(descriptor_set = 2, binding = 0)] pingpong0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] pingpong1: &StorageImage,
+) {
+    let sign = match ((id.x + id.y) % 2) as f32 {
+        0.0 => -1.0,
+        1.0 => 1.0,
+        _ => 0.0,
+    };
+    let h1 = sign * pingpong1.read(id.xy()).x;
+    let h2 = sign * pingpong1.read(id.xy()).z;
+    unsafe {
+        pingpong0.write(id.xy(), Vec4::new(h1, h2, 0.0, 1.0));
+    }
+}
+
+// algorithm referenced from GPGPU TODO: credit
 #[spirv(compute(threads(1,8)))]
 pub fn precompute_butterfly(
     #[spirv(global_invocation_id)] id: UVec3,

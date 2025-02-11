@@ -6,6 +6,7 @@ pub mod evolve_spectra;
 pub mod fourier_transform;
 pub mod fft;
 pub mod ui;
+pub mod process_deltas;
 
 use spirv_std::glam::{Vec4,UVec2};
 use spirv_std::{spirv, image::Image};
@@ -18,13 +19,13 @@ pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 3)] height_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 3)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_h: &mut f32,
 ) {
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
-    let displacement = height_map.read(uv);
+    let displacement = displacement_map.read(uv);
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;

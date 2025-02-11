@@ -1,7 +1,7 @@
 use crate::{
     cast_slice,
     scene::{Mesh, Scene},
-    sim::{self, compute::ComputePass, Cascade},
+    sim::{self, compute::ComputePass, fft::FourierTransform, Cascade},
     standardpass::StandardPipeline,
     ui::{build, UI},
     Result,
@@ -14,7 +14,7 @@ use winit::{
     keyboard::PhysicalKey,
 };
 
-const WG_SIZE: u32 = 8;
+pub const WG_SIZE: u32 = 8;
 
 pub struct Renderer<'a> {
     pub surface: wgpu::Surface<'a>,
@@ -23,7 +23,7 @@ pub struct Renderer<'a> {
     pub config: wgpu::SurfaceConfiguration,
     pub window: &'a winit::window::Window,
     pub shader: wgpu::ShaderModule,
-    pub sampler_bind_group: wgpu::BindGroup, //TEMP MOVE
+    pub sampler_bind_group: wgpu::BindGroup,
     pub sampler_layout: wgpu::BindGroupLayout,
     pub depth_view: wgpu::TextureView,
 }
@@ -43,7 +43,8 @@ impl<'a> Renderer<'a> {
         .unwrap();
 
         let mut required_limits = wgpu::Limits::default();
-        required_limits.max_storage_textures_per_shader_stage = 5;
+        required_limits.max_storage_textures_per_shader_stage = 6;
+        required_limits.max_bind_groups = 6;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
@@ -130,7 +131,7 @@ impl<'a> Renderer<'a> {
         let workgroup_size = scene.consts.sim.size / WG_SIZE;
 
         let initial_spectra_pass = ComputePass::new(
-            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
+            &[&scene.consts_layout, &simdata.layout, &cascade.stg_layout],
             &self,
             "Initial Spectra",
             "initial_spectra::main",
@@ -142,23 +143,42 @@ impl<'a> Renderer<'a> {
             "fft::precompute_butterfly",
         );
         let conjugates_pass = ComputePass::new(
-            &[&scene.consts_layout, &cascade.layout],
+            &[&scene.consts_layout, &cascade.stg_layout],
             &self,
             "Pack Conjugates",
             "initial_spectra::pack_conjugates",
         );
         let evolve_spectra_pass = ComputePass::new(
-            &[&scene.consts_layout, &cascade.layout],
+            &[
+                &scene.consts_layout,
+                &cascade.stg_layout,
+                &cascade.dx_dz.layout,
+                &cascade.dy_dxz.layout,
+                &cascade.dyx_dyz.layout,
+                &cascade.dxx_dzz.layout,
+            ],
             &self,
             "Evolve Spectra",
             "evolve_spectra::main",
         );
-        let fourier_pass = ComputePass::new(
-            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
+        let process_deltas_pass = ComputePass::new(
+            &[
+                &scene.consts_layout,
+                &cascade.dx_dz.layout,
+                &cascade.dy_dxz.layout,
+                &cascade.dyx_dyz.layout,
+                &cascade.dxx_dzz.layout,
+                &cascade.stg_layout,
+            ],
             &self,
-            "Fourier Transform",
-            "fourier_transform::main",
+            "Process Deltas",
+            "process_deltas::main",
         );
+        let fft = FourierTransform::new(&scene, &simdata, &self);
+        
+        simdata
+            .gaussian_tex
+            .write(&self.queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
 
         event_loop.run(move |event, elwt| match event {
             Event::AboutToWait => self.window.request_redraw(),
@@ -183,6 +203,7 @@ impl<'a> Renderer<'a> {
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
+                        // TODO: move out of frame by frame
                         butterfly_precompute_pass.compute(
                             &mut encoder,
                             "Precompute Butterfly",
@@ -190,20 +211,12 @@ impl<'a> Renderer<'a> {
                             scene.consts.sim.size.ilog2(),
                             scene.consts.sim.size / WG_SIZE,
                         );
-                        simdata.gaussian_tex.write(
-                            &self.queue,
-                            cast_slice(&simdata.gaussian_noise.clone()),
-                            16,
-                        );
+
 
                         // Compute Initial spectrum on param change
                         // TODO: change to consts changed
-                        if true {
-                            self.queue.write_buffer(
-                                &scene.consts_buf,
-                                0,
-                                cast_slice(&[scene.consts]),
-                            );
+                        if scene.consts_changed {
+                            scene.write(&self.queue);
 
                             initial_spectra_pass.compute(
                                 &mut encoder,
@@ -211,7 +224,7 @@ impl<'a> Renderer<'a> {
                                 &[
                                     &scene.consts_bind_group,
                                     &simdata.bind_group,
-                                    &cascade.bind_group,
+                                    &cascade.stg_bind_group,
                                 ],
                                 workgroup_size,
                                 workgroup_size,
@@ -220,7 +233,7 @@ impl<'a> Renderer<'a> {
                             conjugates_pass.compute(
                                 &mut encoder,
                                 "Pack Conjugates",
-                                &[&scene.consts_bind_group, &cascade.bind_group],
+                                &[&scene.consts_bind_group, &cascade.stg_bind_group],
                                 workgroup_size,
                                 workgroup_size,
                             );
@@ -232,21 +245,37 @@ impl<'a> Renderer<'a> {
                         evolve_spectra_pass.compute(
                             &mut encoder,
                             "Evolve Spectra",
-                            &[&scene.consts_bind_group, &cascade.bind_group],
-                            workgroup_size,
-                            workgroup_size,
-                        );
-                        fourier_pass.compute(
-                            &mut encoder,
-                            "Fourier Transform",
                             &[
                                 &scene.consts_bind_group,
-                                &simdata.bind_group,
-                                &cascade.bind_group,
+                                &cascade.stg_bind_group,
+                                &cascade.dx_dz.bind_group,
+                                &cascade.dy_dxz.bind_group,
+                                &cascade.dyx_dyz.bind_group,
+                                &cascade.dxx_dzz.bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
                         );
+
+                        fft.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dx_dz);
+                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dy_dxz);
+                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dyx_dyz);
+                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dxx_dzz);
+
+                        //process_deltas_pass.compute(
+                        //    &mut encoder,
+                        //    "Process Deltas",
+                        //    &[
+                        //        &scene.consts_bind_group,
+                        //        &cascade.dx_dz.bind_group,
+                        //        &cascade.dy_dxz.bind_group,
+                        //        &cascade.dyx_dyz.bind_group,
+                        //        &cascade.dxx_dzz.bind_group,
+                        //        &cascade.stg_bind_group,
+                        //    ],
+                        //    workgroup_size,
+                        //    workgroup_size,
+                        //);
 
                         // Standard Pass
                         self.queue
@@ -255,7 +284,7 @@ impl<'a> Renderer<'a> {
                             standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
-                        pass.set_bind_group(1, &cascade.bind_group, &[]);
+                        pass.set_bind_group(1, &cascade.stg_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),
