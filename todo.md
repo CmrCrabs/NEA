@@ -10,6 +10,7 @@
     - [ ] displacement
     - [ ] foam
 - [ ] optimise maps
+- [ ] update permute scale to permute
 
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc

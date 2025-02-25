@@ -125,8 +125,6 @@ pub fn precompute_butterfly(
     let mut yb: u32 = id.y;
 
     if id.x == 0 {
-        //yt = bit_reverse(yt, consts.sim.logsize);
-        //yb = bit_reverse(yb, consts.sim.logsize);
         if wing {
             yb += 1;
         } else {

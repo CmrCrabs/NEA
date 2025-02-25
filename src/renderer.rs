@@ -154,10 +154,8 @@ impl<'a> Renderer<'a> {
             &[
                 &scene.consts_layout,
                 &cascade.stg_layout,
-                &cascade.dx_dz.layout,
-                &cascade.dy_dxz.layout,
-                &cascade.dyx_dyz.layout,
-                &cascade.dxx_dzz.layout,
+                &cascade.h_displacement.layout,
+                &cascade.h_slope.layout,
             ],
             &self,
             "Evolve Spectra",
@@ -166,10 +164,8 @@ impl<'a> Renderer<'a> {
         let process_deltas_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.dx_dz.layout,
-                &cascade.dy_dxz.layout,
-                &cascade.dyx_dyz.layout,
-                &cascade.dxx_dzz.layout,
+                &cascade.h_displacement.layout,
+                &cascade.h_slope.layout,
                 &cascade.stg_layout,
             ],
             &self,
@@ -249,29 +245,23 @@ impl<'a> Renderer<'a> {
                             &[
                                 &scene.consts_bind_group,
                                 &cascade.stg_bind_group,
-                                &cascade.dx_dz.bind_group,
-                                &cascade.dy_dxz.bind_group,
-                                &cascade.dyx_dyz.bind_group,
-                                &cascade.dxx_dzz.bind_group,
+                                &cascade.h_displacement.bind_group,
+                                &cascade.h_slope.bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
                         );
 
-                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dx_dz);
-                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dy_dxz);
-                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dyx_dyz);
-                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dxx_dzz);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.h_displacement);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.h_slope);
 
                         process_deltas_pass.compute(
                             &mut encoder,
                             "Process Deltas",
                             &[
                                 &scene.consts_bind_group,
-                                &cascade.dx_dz.bind_group,
-                                &cascade.dy_dxz.bind_group,
-                                &cascade.dyx_dyz.bind_group,
-                                &cascade.dxx_dzz.bind_group,
+                                &cascade.h_displacement.bind_group,
+                                &cascade.h_slope.bind_group,
                                 &cascade.stg_bind_group,
                             ],
                             workgroup_size,

@@ -12,10 +12,8 @@ pub mod fft;
 pub struct Cascade {
     pub stg_bind_group: wgpu::BindGroup,
     pub stg_layout: wgpu::BindGroupLayout,
-    pub dx_dz: Texture,
-    pub dy_dxz: Texture,
-    pub dyx_dyz: Texture,
-    pub dxx_dzz: Texture,
+    pub h_displacement: Texture,
+    pub h_slope: Texture,
 }
 
 impl Cascade {
@@ -115,42 +113,26 @@ impl Cascade {
             });
 
         //TODO: optimise into 2 per rola
-        let dx_dz = Texture::new_fourier(
+        let h_displacement = Texture::new_fourier(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "dx_dz",
+            "h_displacement",
         );
-        let dy_dxz = Texture::new_fourier(
+        let h_slope = Texture::new_fourier(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "dy_dxz",
-        );
-        let dyx_dyz = Texture::new_fourier(
-            consts.sim.size,
-            consts.sim.size,
-            wgpu::TextureFormat::Rgba32Float,
-            &renderer,
-            "dyx_dyz",
-        );
-        let dxx_dzz = Texture::new_fourier(
-            consts.sim.size,
-            consts.sim.size,
-            wgpu::TextureFormat::Rgba32Float,
-            &renderer,
-            "dxx_dzz",
+            "h_slope",
         );
 
         Self {
             stg_layout,
             stg_bind_group,
-            dx_dz,
-            dy_dxz,
-            dyx_dyz,
-            dxx_dzz,
+            h_slope,
+            h_displacement,
         }
     }
 }

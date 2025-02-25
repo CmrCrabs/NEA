@@ -59,13 +59,13 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 256;
+        let size = 512;
         Self {
             size,
             lengthscale: 50,
             cutoff_low: 0.00000001,
-            cutoff_high: 15.0,
-            mesh_step: 0.1,
+            cutoff_high: 6.0,
+            mesh_step: 0.05,
             standard_deviation: 1.0,
             mean: 0.0,
             depth: 500.0,
@@ -75,7 +75,7 @@ impl Default for SimConstants {
             wind_speed: 10.0,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
-            choppiness: 0.8,
+            choppiness: 0.5,
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,

@@ -12,10 +12,8 @@ pub fn main(
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] wave_tex: &StorageImage,
     #[spirv(descriptor_set = 1, binding = 1)] initial_spectrum_tex: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 0)] dx_dz: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] dy_dxz: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] dyx_dyz: &StorageImage,
-    #[spirv(descriptor_set = 5, binding = 0)] dxx_dzz: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] h_displacement: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] h_slope: &StorageImage,
 ) {
     // Evolving spectra
     let wave = wave_tex.read(id.xy());
@@ -30,24 +28,13 @@ pub fn main(
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
 
-    let dx = ih * wave.x * wave.z;
+    let dx = -ih * wave.x * wave.z;
     let dy = h;
-    let dz = ih * wave.y * wave.z;
-
-    let dx_dx = -h * wave.x * wave.x * wave.z;
-    let dy_dx = ih * wave.x;
-    let dz_dx = -h * wave.y * wave.y * wave.z;
-
-    let dy_dz = ih * wave.y;
-    let dz_dz = -h * wave.y * wave.y * wave.z;
+    let dz = -ih * wave.y * wave.z;
 
     unsafe {
-        // portially adapted from gasgiant TODO: proper credit
-        // TODO: optimise into 2
-        dx_dz.write(id.xy(), Vec4::new(dx.x - dz.y, dx.y + dz.x, 0.0, 1.0));
-        dy_dxz.write(id.xy(), Vec4::new(dy.x - dz_dx.y, dy.y + dz_dx.x, 0.0, 1.0));
-        dyx_dyz.write(id.xy(), Vec4::new(dy_dx.x - dy_dz.y, dy_dx.y + dy_dz.x, 0.0, 1.0));
-        dxx_dzz.write(id.xy(), Vec4::new(dx_dx.x - dz_dz.y, dx_dx.y + dz_dz.x, 0.0, 1.0));
+        h_displacement.write(id.xy(), Vec4::new(dy.x, dy.y, dx.x, dx.y));
+        h_slope.write(id.xy(), Vec4::new(dz.x, dz.y, 0.0, 0.0));
     }
 }
 
