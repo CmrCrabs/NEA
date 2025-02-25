@@ -3,7 +3,6 @@
 //#![deny(warnings)]
 pub mod initial_spectra;
 pub mod evolve_spectra;
-pub mod fourier_transform;
 pub mod fft;
 pub mod ui;
 pub mod process_deltas;

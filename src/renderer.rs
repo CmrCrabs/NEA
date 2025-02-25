@@ -45,10 +45,12 @@ impl<'a> Renderer<'a> {
         let mut required_limits = wgpu::Limits::default();
         required_limits.max_storage_textures_per_shader_stage = 6;
         required_limits.max_bind_groups = 6;
+        required_limits.max_push_constant_size = 8;
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
-                    | wgpu::Features::VERTEX_WRITABLE_STORAGE,
+                    | wgpu::Features::VERTEX_WRITABLE_STORAGE
+                    | wgpu::Features::PUSH_CONSTANTS,
                 required_limits,
                 memory_hints: wgpu::MemoryHints::Performance,
                 label: None,
@@ -175,7 +177,7 @@ impl<'a> Renderer<'a> {
             "process_deltas::main",
         );
         let fft = FourierTransform::new(&scene, &simdata, &self);
-        
+
         simdata
             .gaussian_tex
             .write(&self.queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
@@ -211,7 +213,6 @@ impl<'a> Renderer<'a> {
                             scene.consts.sim.size.ilog2(),
                             scene.consts.sim.size / WG_SIZE,
                         );
-
 
                         // Compute Initial spectrum on param change
                         // TODO: change to consts changed
@@ -257,25 +258,25 @@ impl<'a> Renderer<'a> {
                             workgroup_size,
                         );
 
-                        fft.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dx_dz);
-                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dy_dxz);
-                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dyx_dyz);
-                        //fourier.ifft2d(&self, &mut encoder, &mut scene, &simdata, &cascade.dxx_dzz);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dx_dz);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dy_dxz);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dyx_dyz);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.dxx_dzz);
 
-                        //process_deltas_pass.compute(
-                        //    &mut encoder,
-                        //    "Process Deltas",
-                        //    &[
-                        //        &scene.consts_bind_group,
-                        //        &cascade.dx_dz.bind_group,
-                        //        &cascade.dy_dxz.bind_group,
-                        //        &cascade.dyx_dyz.bind_group,
-                        //        &cascade.dxx_dzz.bind_group,
-                        //        &cascade.stg_bind_group,
-                        //    ],
-                        //    workgroup_size,
-                        //    workgroup_size,
-                        //);
+                        process_deltas_pass.compute(
+                            &mut encoder,
+                            "Process Deltas",
+                            &[
+                                &scene.consts_bind_group,
+                                &cascade.dx_dz.bind_group,
+                                &cascade.dy_dxz.bind_group,
+                                &cascade.dyx_dyz.bind_group,
+                                &cascade.dxx_dzz.bind_group,
+                                &cascade.stg_bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
 
                         // Standard Pass
                         self.queue

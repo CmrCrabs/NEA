@@ -1,6 +1,6 @@
 use crate::{
     renderer::Renderer,
-    util::{bind_group_descriptor, Texture, StorageTexture},
+    util::{bind_group_descriptor, StorageTexture, Texture},
 };
 use glam::{Vec2, Vec4};
 use rand::prelude::*;

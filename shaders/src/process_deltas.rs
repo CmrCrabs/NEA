@@ -24,7 +24,10 @@ pub fn main(
     let dxxdzz = dxx_dzz.read(id.xy());
     unsafe {
         displacement_map.write(id.xy(), Vec4::new(
-            consts.sim.choppiness * dxdz.x, dydxz.x, consts.sim.choppiness * dxdz.y, 1.0
+            -consts.sim.choppiness * dxdz.x,
+            dydxz.x, 
+            -consts.sim.choppiness * dxdz.y, 
+            1.0
         ));
     }
 }

@@ -172,10 +172,7 @@ impl StorageTexture {
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        Self {
-            texture,
-            view,
-        }
+        Self { texture, view }
     }
     pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
         queue.write_texture(
@@ -195,7 +192,6 @@ impl StorageTexture {
         );
     }
 }
-
 
 pub fn bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {

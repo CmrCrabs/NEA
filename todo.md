@@ -1,13 +1,20 @@
+- [ ] fft data 6 1 instead of correct
+- [ ] pingpong textures all 0
+
+- [ ] debug fft
+    - [ ] pingpong data lost
 - [ ] setup dwhatever maps in cascace
 - [ ] encode data into them
 - [ ] unpack fft data
     - [ ] normal
     - [ ] displacement
     - [ ] foam
+- [ ] optimise maps
 
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 
+- [ ] factor lengthscale render calls into seperate function?
 - [ ] update standardpass to handle render calls locally
 - [ ] compute pass impl
 - [ ] 5th compute pass, prep fft
@@ -27,12 +34,11 @@ compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
     - [X] add update constants fn, multiply light vector by matrix
 - [ ] gaussian prng?
 - [ ] move pingpong to seperate buf
+- [ ] debug all shader warnings
+- [ ] cargo clippy?
 
 - [ ] move renderer to /gfx/ (?)
-- [ ] compute pass impl (?)
-- [ ] optimise compute pass
 - [ ] optimise ui
-- [ ] update ui code to not hardcode and isntead use enum val
 - [ ] move all textures to one bind group per cascade, remove limit
 - [ ] fix hidpi
 - [ ] go through and add labels to everything
@@ -46,7 +52,7 @@ compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 - [ ] credit gasgiant fftocean if not alreaey
 - [ ] mention nyquist theorem for bounds
 - [ ] add section and explain complex mult, ih
-- [ ] credit biebras
+- [ ] credit biebras  using actual name
 
 
 ### future improvements

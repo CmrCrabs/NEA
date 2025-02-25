@@ -59,7 +59,7 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 128;
+        let size = 256;
         Self {
             size,
             lengthscale: 50,
@@ -83,4 +83,10 @@ impl Default for SimConstants {
             stage: 0,
         }
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct FFTData {
+    pub stage: u32,
+    pub pingpong: u32,
 }

@@ -299,7 +299,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider(
                     "Integration Step",
-                    0.0001,
+                    0.001,
                     0.02,
                     &mut consts.sim.integration_step,
                 );
