@@ -12,6 +12,7 @@
 - [ ] optimise maps
 - [ ] update permute scale to permute
 
+- [ ] eventualyl convolve foam with a texture
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 

@@ -8,7 +8,7 @@ use glam::{Vec2, Vec4};
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Constants {
     pub time: f32,
-    pub frametime: f32,
+    pub deltatime: f32,
     pub width: f32,
     pub height: f32,
     pub camera_proj: glam::Mat4,
@@ -54,21 +54,22 @@ pub struct SimConstants {
     pub logsize: u32,
     pub swell: f32,
     pub integration_step: f32,
-    pub pingpong: u32,
-    pub stage: u32,
+    pub foam_decay: f32,
+    pub foam_bias: f32,
+    pub foam_rate: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 512;
+        let size = 256;
         Self {
             size,
             lengthscale: 50,
             cutoff_low: 0.00000001,
             cutoff_high: 6.0,
-            mesh_step: 0.05,
+            mesh_step: 0.1 * 128.0 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
-            depth: 500.0,
+            depth: 10.0,
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
@@ -79,8 +80,9 @@ impl Default for SimConstants {
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,
-            pingpong: 0,
-            stage: 0,
+            foam_decay: 0.055,
+            foam_bias: 0.81,
+            foam_rate: 1.0,
         }
     }
 }

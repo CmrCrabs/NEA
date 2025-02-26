@@ -54,7 +54,7 @@ impl Scene {
         let camera = Camera::new(window);
         let consts = Constants {
             time: 0.0,
-            frametime: 0.0,
+            deltatime: 0.0,
             width: 0.0,
             height: 0.0,
             camera_proj: camera.proj * camera.view,
@@ -113,7 +113,7 @@ impl Scene {
 
     pub fn update_redraw(&mut self, window: &Window) {
         let duration = self.start_time.elapsed().as_secs_f32();
-        self.consts.frametime = duration - self.consts.time;
+        self.consts.deltatime = duration - self.consts.time;
         self.consts.time = duration;
 
         let dimensions = window.inner_size();

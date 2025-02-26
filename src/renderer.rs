@@ -155,7 +155,9 @@ impl<'a> Renderer<'a> {
                 &scene.consts_layout,
                 &cascade.stg_layout,
                 &cascade.h_displacement.layout,
+                &cascade.v_displacement.layout,
                 &cascade.h_slope.layout,
+                &cascade.jacobian.layout,
             ],
             &self,
             "Evolve Spectra",
@@ -165,7 +167,9 @@ impl<'a> Renderer<'a> {
             &[
                 &scene.consts_layout,
                 &cascade.h_displacement.layout,
+                &cascade.v_displacement.layout,
                 &cascade.h_slope.layout,
+                &cascade.jacobian.layout,
                 &cascade.stg_layout,
             ],
             &self,
@@ -246,14 +250,18 @@ impl<'a> Renderer<'a> {
                                 &scene.consts_bind_group,
                                 &cascade.stg_bind_group,
                                 &cascade.h_displacement.bind_group,
+                                &cascade.v_displacement.bind_group,
                                 &cascade.h_slope.bind_group,
+                                &cascade.jacobian.bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
                         );
 
                         fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.h_displacement);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.v_displacement);
                         fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.h_slope);
+                        fft.ifft2d(&mut encoder, &mut scene, &simdata, &cascade.jacobian);
 
                         process_deltas_pass.compute(
                             &mut encoder,
@@ -261,7 +269,9 @@ impl<'a> Renderer<'a> {
                             &[
                                 &scene.consts_bind_group,
                                 &cascade.h_displacement.bind_group,
+                                &cascade.v_displacement.bind_group,
                                 &cascade.h_slope.bind_group,
+                                &cascade.jacobian.bind_group,
                                 &cascade.stg_bind_group,
                             ],
                             workgroup_size,

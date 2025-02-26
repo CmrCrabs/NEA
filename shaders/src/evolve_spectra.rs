@@ -13,7 +13,9 @@ pub fn main(
     #[spirv(descriptor_set = 1, binding = 0)] wave_tex: &StorageImage,
     #[spirv(descriptor_set = 1, binding = 1)] initial_spectrum_tex: &StorageImage,
     #[spirv(descriptor_set = 2, binding = 0)] h_displacement: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 0)] h_slope: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] v_displacement: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 0)] h_slope: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 0)] jacobian: &StorageImage,
 ) {
     // Evolving spectra
     let wave = wave_tex.read(id.xy());
@@ -28,13 +30,25 @@ pub fn main(
     let h = complex_mult(h0, exponent) + complex_mult(h0c, negative_exponent);
     let ih = Vec2::new(-h.y, h.x);
 
+    // Displacement in x,y,z
     let dx = -ih * wave.x * wave.z;
     let dy = h;
     let dz = -ih * wave.y * wave.z;
 
+    // normal
+    let nx = ih * wave.x;
+    let nz = ih * wave.y;
+
+    // jacobian
+    let j_xx = -h * wave.x * wave.x * wave.z;
+    let j_zz = -h * wave.y * wave.y * wave.z;
+    let j_xz = -h * wave.x * wave.y * wave.z;
+
     unsafe {
-        h_displacement.write(id.xy(), Vec4::new(dy.x, dy.y, dx.x, dx.y));
-        h_slope.write(id.xy(), Vec4::new(dz.x, dz.y, 0.0, 0.0));
+        h_displacement.write(id.xy(), Vec4::new(dx.x, dx.y, dz.x, dz.y));
+        v_displacement.write(id.xy(), Vec4::new(dy.x, dy.y, j_xz.x, j_xz.y));
+        h_slope.write(id.xy(), Vec4::new(nx.x, nx.y, nz.x, nz.y));
+        jacobian.write(id.xy(), Vec4::new(j_xx.x, j_xx.y, j_zz.x, j_zz.y));
     }
 }
 

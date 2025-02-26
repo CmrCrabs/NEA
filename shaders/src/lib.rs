@@ -21,6 +21,7 @@ pub fn main_vs(
     #[spirv(descriptor_set = 1, binding = 3)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_h: &mut f32,
+    out_uv: &mut UVec2,
 ) {
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
@@ -29,16 +30,20 @@ pub fn main_vs(
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;
     *out_h = resultant_pos.y;
+    *out_uv = uv;
 }
 
 #[inline(never)]
 #[spirv(fragment)]
 pub fn main_fs(
     h: f32,
+    #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
+    #[spirv(descriptor_set = 1, binding = 5)] foam_map: &StorageImage,
     output: &mut Vec4,
 ) { 
-    let mut c = consts.shader.base_color * h.abs(); 
+    //let mut c = consts.shader.base_color * h.abs(); 
+    let mut c = foam_map.read(uv);
     c.w = 1.0;
     *output = c;
 }

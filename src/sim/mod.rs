@@ -14,6 +14,8 @@ pub struct Cascade {
     pub stg_layout: wgpu::BindGroupLayout,
     pub h_displacement: Texture,
     pub h_slope: Texture,
+    pub v_displacement: Texture,
+    pub jacobian: Texture,
 }
 
 impl Cascade {
@@ -51,7 +53,7 @@ impl Cascade {
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             &renderer,
-            "Derivatives",
+            "Normal Map",
         );
         let foam_map = StorageTexture::new(
             consts.sim.size,
@@ -127,12 +129,28 @@ impl Cascade {
             &renderer,
             "h_slope",
         );
+        let jacobian = Texture::new_fourier(
+            consts.sim.size,
+            consts.sim.size,
+            wgpu::TextureFormat::Rgba32Float,
+            &renderer,
+            "jacobian",
+        );
+        let v_displacement = Texture::new_fourier(
+            consts.sim.size,
+            consts.sim.size,
+            wgpu::TextureFormat::Rgba32Float,
+            &renderer,
+            "v_displacment",
+        );
 
         Self {
             stg_layout,
             stg_bind_group,
             h_slope,
             h_displacement,
+            v_displacement,
+            jacobian
         }
     }
 }

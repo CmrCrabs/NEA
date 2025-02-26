@@ -289,13 +289,15 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
             ui.text(format!("{} fps", ui.io().framerate));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
-                ui.slider("Depth", 1.0, 500.0, &mut consts.sim.depth);
+                ui.slider("Depth", 1.0, 10.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
                 ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
                 ui.slider("Wind Offset", -PI, PI, &mut consts.sim.wind_offset);
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
+                ui.slider("Foam Decay", 0.01, 1.0, &mut consts.sim.foam_decay);
+                ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider(
                     "Integration Step",
