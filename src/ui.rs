@@ -296,7 +296,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
-                ui.slider("Foam Decay", 0.01, 1.0, &mut consts.sim.foam_decay);
+                ui.slider("Foam Decay", 0.01, 0.1, &mut consts.sim.foam_decay);
                 ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider(
@@ -316,6 +316,15 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.slider("Water Refractive Index", 0.0, 2.0, &mut consts.shader.water_ri);
+                ui.slider("Air Refractive Index", 0.0, 2.0, &mut consts.shader.air_ri);
+                ui.slider("Water Roughness", 0.0, 1.0, &mut consts.shader.roughness);
+                ui.slider("Foam Max Roughness", 0.0, 1.0, &mut consts.shader.foam_roughness);
+                ui.slider("Subsurface Scattering Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
+                ui.slider("Subsurface Scattering Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
+                ui.slider("Subsurface Scattering Lambert's Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
+                ui.slider("Subsurface Scattering Ambient Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
+                ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
                 ui.slider(
                     "Light Vector Angle",
                     0.0,
@@ -324,8 +333,17 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 );
             }
             ui.separator();
-            if ui.collapsing_header("Colors", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Base Color", consts.shader.base_color.as_mut());
+            if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker3("Sun Color", consts.shader.sun_color.as_mut());
+            }
+            if ui.collapsing_header("Scatter Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker3("Scatter Color", consts.shader.scatter_color.as_mut());
+            }
+            if ui.collapsing_header("Bubble Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker3("Bubble Color", consts.shader.bubble_color.as_mut());
+            }
+            if ui.collapsing_header("Foam Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker3("Foam Color", consts.shader.foam_color.as_mut());
             }
             focused = ui.is_window_focused();
         });

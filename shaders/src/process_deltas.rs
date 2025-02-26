@@ -31,7 +31,7 @@ pub fn main(
     let jzz = 1.0_f32 + consts.sim.choppiness * jacobian.read(id.xy()).y;
     let jxz = consts.sim.choppiness * v_displacement.read(id.xy()).y;
     let jacobian = -(jxx * jzz - jxz * jxz) + consts.sim.foam_bias;
-    let mut accumulation = foam_map.read(id.xy()).x - consts.deltatime * consts.sim.foam_decay / jacobian.max(0.5);
+    let mut accumulation = foam_map.read(id.xy()).x + consts.deltatime * consts.sim.foam_decay / jacobian.max(0.5);
     if jacobian <= 0.0 {
         accumulation += jacobian;
     }

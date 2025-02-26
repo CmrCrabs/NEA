@@ -2,7 +2,7 @@
 
 use core::f32;
 
-use glam::{Vec2, Vec4};
+use glam::{Vec3, Vec4};
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -21,15 +21,40 @@ pub struct Constants {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ShaderConstants {
     pub light: Vec4,
-    pub base_color: Vec4,
+    pub foam_color: Vec3,
     pub light_rotation: f32,
+    pub water_ri: f32,
+    pub air_ri: f32,
+    pub roughness: f32,
+    pub foam_roughness: f32,
+    pub ss_height: f32,
+    pub ss_reflected: f32,
+    pub ss_lambert: f32,
+    pub ss_ambient: f32,
+    pub bubble_density: f32,
+    pub bubble_color: Vec3,
+    pub scatter_color: Vec3,
+    pub sun_color: Vec3,
+
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,1.0,1.0,1.0),
             light_rotation: 0.0,
-            base_color: Vec4::new(0.0,0.1,0.3,1.0),
+            foam_color: Vec3::new(0.79,0.92,0.96),
+            water_ri: 1.33,
+            air_ri: 1.003,
+            roughness: 0.1,
+            foam_roughness: 0.5,
+            ss_height: 1.0,
+            ss_reflected: 1.0,
+            ss_lambert: 1.0,
+            ss_ambient: 1.0,
+            bubble_density: 1.0,
+            bubble_color: Vec3::new(0.85, 0.88, 0.88),
+            scatter_color: Vec3::new(0.37, 0.82, 0.78),
+            sun_color: Vec3::new(0.98, 0.88, 0.69),
         }
     }
 }
@@ -56,7 +81,6 @@ pub struct SimConstants {
     pub integration_step: f32,
     pub foam_decay: f32,
     pub foam_bias: f32,
-    pub foam_rate: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
@@ -82,7 +106,6 @@ impl Default for SimConstants {
             integration_step: 0.01,
             foam_decay: 0.055,
             foam_bias: 0.81,
-            foam_rate: 1.0,
         }
     }
 }
