@@ -76,7 +76,7 @@ impl<'a> Renderer<'a> {
         let sampler_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
                 binding: 0,
-                visibility: wgpu::ShaderStages::FRAGMENT,
+                visibility: wgpu::ShaderStages::VERTEX_FRAGMENT,
                 ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
                 count: None,
             }],
@@ -129,7 +129,7 @@ impl<'a> Renderer<'a> {
     ) -> Result {
         let mut last_frame = Instant::now();
         let simdata = sim::SimData::new(&self, &scene.consts);
-        let standard_pass = StandardPipeline::new(&self.device, &self.shader, &scene, &cascade);
+        let standard_pass = StandardPipeline::new(&self, &scene, &cascade);
         let workgroup_size = scene.consts.sim.size / WG_SIZE;
 
         let initial_spectra_pass = ComputePass::new(
@@ -285,7 +285,8 @@ impl<'a> Renderer<'a> {
                             standard_pass.render(&mut encoder, &surface_view, &self.depth_view);
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
-                        pass.set_bind_group(1, &cascade.stg_bind_group, &[]);
+                        pass.set_bind_group(1, &self.sampler_bind_group, &[]);
+                        pass.set_bind_group(2, &cascade.stg_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),

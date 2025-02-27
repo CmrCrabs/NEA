@@ -21,8 +21,9 @@ pub struct Constants {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ShaderConstants {
     pub light: Vec4,
-    pub foam_color: Vec3,
-    pub light_rotation: f32,
+    pub light_rotation_v: f32,
+    pub light_rotation_h: f32,
+    pub foam_color: Vec4,
     pub water_ri: f32,
     pub air_ri: f32,
     pub roughness: f32,
@@ -32,17 +33,18 @@ pub struct ShaderConstants {
     pub ss_lambert: f32,
     pub ss_ambient: f32,
     pub bubble_density: f32,
-    pub bubble_color: Vec3,
-    pub scatter_color: Vec3,
-    pub sun_color: Vec3,
+    pub bubble_color: Vec4,
+    pub scatter_color: Vec4,
+    pub sun_color: Vec4,
 
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
-            light: Vec4::new(0.0,1.0,1.0,1.0),
-            light_rotation: 0.0,
-            foam_color: Vec3::new(0.79,0.92,0.96),
+            light: Vec4::new(0.0,10.0,1.0,1.0),
+            light_rotation_v: 0.0,
+            light_rotation_h: 0.0,
+            foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
             water_ri: 1.33,
             air_ri: 1.003,
             roughness: 0.1,
@@ -52,9 +54,9 @@ impl Default for ShaderConstants {
             ss_lambert: 1.0,
             ss_ambient: 1.0,
             bubble_density: 1.0,
-            bubble_color: Vec3::new(0.85, 0.88, 0.88),
-            scatter_color: Vec3::new(0.37, 0.82, 0.78),
-            sun_color: Vec3::new(0.98, 0.88, 0.69),
+            bubble_color: Vec4::new(0.02, 0.38, 0.51, 1.0),
+            scatter_color: Vec4::new(0.19, 0.21, 0.27, 1.0),
+            sun_color: Vec4::new(0.69, 0.52, 0.41, 1.0),
         }
     }
 }
@@ -89,15 +91,15 @@ impl Default for SimConstants {
             size,
             lengthscale: 50,
             cutoff_low: 0.00000001,
-            cutoff_high: 6.0,
-            mesh_step: 0.1 * 128.0 / size as f32,
+            cutoff_high: 10.0,
+            mesh_step: 0.2 * 128.0 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
             depth: 10.0,
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 10.0,
+            wind_speed: 5.0,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 8000.0,
             choppiness: 0.5,

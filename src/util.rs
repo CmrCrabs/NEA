@@ -35,16 +35,7 @@ impl Texture {
         let layout = renderer
             .device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
-                    },
-                    count: None,
-                }],
+                entries: &[sampled_bind_group_descriptor(0)],
                 label: Some(label),
             });
         let bind_group = renderer
@@ -110,16 +101,7 @@ impl Texture {
         let layout = renderer
             .device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::VERTEX_FRAGMENT,
-                    ty: wgpu::BindingType::StorageTexture {
-                        access: wgpu::StorageTextureAccess::ReadWrite,
-                        format: wgpu::TextureFormat::Rgba32Float,
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                    },
-                    count: None,
-                }],
+                entries: &[bind_group_descriptor(0)],
                 label: Some(label),
             });
         let bind_group = renderer
@@ -139,15 +121,7 @@ impl Texture {
             layout,
         }
     }
-}
-
-pub struct StorageTexture {
-    pub texture: wgpu::Texture,
-    pub view: wgpu::TextureView,
-}
-
-impl StorageTexture {
-    pub fn new(
+    pub fn new_storage(
         width: u32,
         height: u32,
         format: wgpu::TextureFormat,
@@ -171,25 +145,29 @@ impl StorageTexture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[sampled_bind_group_descriptor(0)],
+                label: Some(label),
+            });
+        let bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                }],
+                label: Some(label),
+            });
 
-        Self { texture, view }
-    }
-    pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
-        queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            data,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(size * self.texture.width()),
-                rows_per_image: Some(self.texture.height()),
-            },
-            self.texture.size(),
-        );
+        Self { 
+            texture, 
+            view,
+            bind_group,
+            layout,
+        }
     }
 }
 
@@ -201,6 +179,19 @@ pub fn bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry {
             access: wgpu::StorageTextureAccess::ReadWrite,
             format: wgpu::TextureFormat::Rgba32Float,
             view_dimension: wgpu::TextureViewDimension::D2,
+        },
+        count: None,
+    }
+}
+
+pub fn sampled_bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Texture {
+            sample_type: wgpu::TextureSampleType::Float { filterable: false },
+            view_dimension: wgpu::TextureViewDimension::D2,
+            multisampled: false,
         },
         count: None,
     }

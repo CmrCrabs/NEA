@@ -9,25 +9,27 @@ pub mod process_deltas;
 
 use core::f32::consts;
 
-use spirv_std::glam::{Vec4, Vec3, UVec2};
+use spirv_std::glam::{Vec4, Vec3, UVec2, Vec2};
+use spirv_std::Sampler;
 use spirv_std::{spirv, image::Image};
 use spirv_std::num_traits::Float;
 use shared::Constants;
 
 type StorageImage = Image!(2D, format = rgba32f, sampled = false);
+type SampledStorageImage = Image!(2D, format = rgba32f, sampled = false);
 
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 3)] displacement_map: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 3)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_uv: &mut UVec2,
 ) {
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
-    let displacement = displacement_map.read(uv);
+    let displacement = displacement_map.read(UVec2::new(uv.x as u32, uv.y as u32));
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_proj * resultant_pos;
@@ -40,11 +42,13 @@ pub fn main_fs(
     #[spirv(position)] pos: Vec4,
     #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 4)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 1, binding = 5)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
+    #[spirv(descriptor_set = 2, binding = 4)] normal_map: &SampledStorageImage,
+    #[spirv(descriptor_set = 2, binding = 5)] foam_map: &SampledStorageImage,
     output: &mut Vec4,
     ) {
-    let n = normal_map.read(uv).truncate();
+    let n = normal_map.read(UVec2::new(uv.x as u32, uv.y as u32)).truncate();
+    //let n = normal_map.sample(*sampler, uv).truncate();
     let l = (consts.shader.light - pos).truncate().normalize();
     let v = (consts.view - pos).truncate().normalize();
     let h = (l + v).normalize();
@@ -71,13 +75,14 @@ fn fresnel(h: Vec3, v: Vec3, consts: &Constants) -> f32 {
 }
 
 fn subsurface_scattering(l: Vec3, v: Vec3, n: Vec3, h: f32, roughness: f32, consts: &Constants) -> Vec3 {
+    // TODO: make v -
     let height_factor = consts.shader.ss_height * h.max(0.0) * l.dot(v).max(0.0).powf(4.0)
         * (0.5 - 0.5 * l.dot(n)).powf(3.0);
     let reflection_factor = consts.shader.ss_reflected * v.dot(n).max(0.0).powf(2.0);
-    let lambert_factor = consts.shader.ss_lambert * l.dot(n).max(0.0) * consts.shader.scatter_color * consts.shader.sun_color;
-    let ambient_factor = consts.shader.ss_ambient * consts.shader.bubble_density * consts.shader.bubble_color * consts.shader.sun_color;
+    let lambert_factor = consts.shader.ss_lambert * l.dot(n).max(0.0) * consts.shader.scatter_color.truncate() * consts.shader.sun_color.truncate();
+    let ambient_factor = consts.shader.ss_ambient * consts.shader.bubble_density * consts.shader.bubble_color.truncate() * consts.shader.sun_color.truncate();
 
-    ((height_factor + reflection_factor) * consts.shader.scatter_color * consts.shader.sun_color) / (1.0 + lambda_ggx(roughness))
+    ((height_factor + reflection_factor) * consts.shader.scatter_color.truncate() * consts.shader.sun_color.truncate()) / (1.0 + lambda_ggx(roughness))
         + lambert_factor + ambient_factor
 }
 

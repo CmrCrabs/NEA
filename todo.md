@@ -1,18 +1,11 @@
-- [ ] fft data 6 1 instead of correct
-- [ ] pingpong textures all 0
-
-- [ ] debug fft
-    - [ ] pingpong data lost
-- [ ] setup dwhatever maps in cascace
-- [ ] encode data into them
-- [ ] unpack fft data
-    - [ ] normal
-    - [ ] displacement
-    - [ ] foam
-- [ ] optimise maps
 - [ ] update permute scale to permute
-
 - [ ] eventualyl convolve foam with a texture
+
+- [ ] update fragment tex map reads to use sampler
+    - [ ] bind same texture multiple ways
+
+- [ ] sampled layout stg textures bulk
+- [ ] sampled layout fourier textures for ui
 
 compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
 

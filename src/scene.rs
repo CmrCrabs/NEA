@@ -121,7 +121,9 @@ impl Scene {
         self.consts.height = dimensions.height as f32;
 
         self.consts.shader.light =
-            Mat4::from_rotation_y(self.consts.shader.light_rotation) * self.consts.shader.light;
+            Mat4::from_rotation_y(self.consts.shader.light_rotation_v) * self.consts.shader.light;
+        self.consts.shader.light =
+            Mat4::from_rotation_x(self.consts.shader.light_rotation_v) * self.consts.shader.light;
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
     }
 

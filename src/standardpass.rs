@@ -1,8 +1,8 @@
-use crate::renderer::{DEPTH_FORMAT, FORMAT};
+use crate::renderer::{Renderer, DEPTH_FORMAT, FORMAT};
 use crate::scene::{OceanVertex, Scene};
 use crate::sim::Cascade;
 use std::mem;
-use wgpu::{Device, RenderPipeline, ShaderModule, TextureView};
+use wgpu::{RenderPipeline, TextureView};
 
 pub struct StandardPipeline {
     pub pipeline: RenderPipeline,
@@ -10,20 +10,19 @@ pub struct StandardPipeline {
 
 impl StandardPipeline {
     pub fn new(
-        device: &Device,
-        shader: &ShaderModule,
+        renderer: &Renderer,
         scene: &Scene,
         cascade: &Cascade,
     ) -> StandardPipeline {
-        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&scene.consts_layout, &cascade.stg_layout],
+        let pipeline_layout = renderer.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts: &[&scene.consts_layout, &renderer.sampler_layout, &cascade.stg_layout],
             push_constant_ranges: &[],
             label: None,
         });
-        let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        let pipeline = renderer.device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
-                module: shader,
+                module: &renderer.shader,
                 entry_point: Some("main_vs"),
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: mem::size_of::<OceanVertex>() as _,
@@ -33,7 +32,7 @@ impl StandardPipeline {
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
-                module: shader,
+                module: &renderer.shader,
                 entry_point: Some("main_fs"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: FORMAT,

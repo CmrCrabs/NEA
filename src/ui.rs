@@ -322,28 +322,24 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Foam Max Roughness", 0.0, 1.0, &mut consts.shader.foam_roughness);
                 ui.slider("Subsurface Scattering Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
                 ui.slider("Subsurface Scattering Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
-                ui.slider("Subsurface Scattering Lambert's Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
-                ui.slider("Subsurface Scattering Ambient Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
+                ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
+                ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
                 ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
-                ui.slider(
-                    "Light Vector Angle",
-                    0.0,
-                    2.0 * PI,
-                    &mut consts.shader.light_rotation,
-                );
+                ui.slider( "Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.light_rotation_h);
+                ui.slider( "Sun Height", 0.0, 2.0 * PI, &mut consts.shader.light_rotation_v);
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker3("Sun Color", consts.shader.sun_color.as_mut());
+                ui.color_picker4("Sun Color", consts.shader.sun_color.as_mut());
             }
             if ui.collapsing_header("Scatter Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker3("Scatter Color", consts.shader.scatter_color.as_mut());
+                ui.color_picker4("Scatter Color", consts.shader.scatter_color.as_mut());
             }
             if ui.collapsing_header("Bubble Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker3("Bubble Color", consts.shader.bubble_color.as_mut());
+                ui.color_picker4("Bubble Color", consts.shader.bubble_color.as_mut());
             }
             if ui.collapsing_header("Foam Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker3("Foam Color", consts.shader.foam_color.as_mut());
+                ui.color_picker4("Foam Color", consts.shader.foam_color.as_mut());
             }
             focused = ui.is_window_focused();
         });
