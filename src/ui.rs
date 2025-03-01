@@ -64,7 +64,7 @@ impl UI {
                     label: None,
                     bind_group_layouts: &[
                         &scene.consts_layout,
-                        &texture.layout,
+                        &texture.smp_layout,
                         &renderer.sampler_layout,
                     ],
                     push_constant_ranges: &[],
@@ -189,7 +189,7 @@ impl UI {
         queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
         renderpass.set_pipeline(&self.pipeline);
         renderpass.set_bind_group(0, &scene.consts_bind_group, &[]);
-        renderpass.set_bind_group(1, &self.texture.bind_group, &[]);
+        renderpass.set_bind_group(1, &self.texture.smp_bind_group, &[]);
         renderpass.set_bind_group(2, sampler_bind_group, &[]);
         renderpass.set_vertex_buffer(0, self.vtx_buf.slice(..));
         renderpass.set_index_buffer(self.idx_buf.slice(..), wgpu::IndexFormat::Uint16);
@@ -296,8 +296,10 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
-                ui.slider("Foam Decay", 0.01, 0.1, &mut consts.sim.foam_decay);
+                ui.slider("Foam Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
                 ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
+                ui.slider("Foam Injection Threshold", 0.00, 1.0, &mut consts.sim.injection_threshold);
+                ui.slider("Foam Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider(
                     "Integration Step",

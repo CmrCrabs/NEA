@@ -90,7 +90,7 @@ pub fn vstep_ifft(
 
 // algorithm referenced from biebras: credit
 #[spirv(compute(threads(8,8)))]
-pub fn permute_scale(
+pub fn permute(
     #[spirv(global_invocation_id)] id: UVec3,
     #[spirv(descriptor_set = 1, binding = 0)] pingpong0: &StorageImage,
 ) {

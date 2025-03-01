@@ -8,15 +8,17 @@ pub mod ui;
 pub mod process_deltas;
 
 use core::f32::consts;
+use core::ops::{Add,Mul};
 
 use spirv_std::glam::{Vec4, Vec3, UVec2, Vec2};
+use spirv_std::image::Image2d;
 use spirv_std::Sampler;
 use spirv_std::{spirv, image::Image};
 use spirv_std::num_traits::Float;
 use shared::Constants;
 
 type StorageImage = Image!(2D, format = rgba32f, sampled = false);
-type SampledStorageImage = Image!(2D, format = rgba32f, sampled = false);
+type SampledStorageImage = Image!(2D, format = rgba32f, sampled = true);
 
 #[spirv(vertex)]
 pub fn main_vs(
@@ -26,8 +28,7 @@ pub fn main_vs(
     #[spirv(descriptor_set = 2, binding = 3)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_uv: &mut UVec2,
-) {
-    let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
+) { let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
     let displacement = displacement_map.read(UVec2::new(uv.x as u32, uv.y as u32));
     let mut resultant_pos = pos + displacement - offset;
@@ -43,35 +44,40 @@ pub fn main_fs(
     #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
-    #[spirv(descriptor_set = 2, binding = 4)] normal_map: &SampledStorageImage,
-    #[spirv(descriptor_set = 2, binding = 5)] foam_map: &SampledStorageImage,
+    #[spirv(descriptor_set = 2, binding = 4)] normal_map: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 5)] foam_map: &StorageImage,
     output: &mut Vec4,
     ) {
+    // TODO: fix vectors
     let n = normal_map.read(UVec2::new(uv.x as u32, uv.y as u32)).truncate();
-    //let n = normal_map.sample(*sampler, uv).truncate();
+    //let n = normal_map.sample(*sampler, Vec2::new(uv.x as _, uv.y as _)).truncate();
     let l = (consts.shader.light - pos).truncate().normalize();
-    let v = (consts.view - pos).truncate().normalize();
+    let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
-   
-    // TODO: adjust roughness based on foam density
-    let roughness = consts.shader.roughness * consts.shader.roughness;
+ 
+    // normalise 0-1
+    //let foam = foam_map.sample(*sampler, Vec2::new(uv.x as _, uv.y as _)).x;
+    let foam = foam_map.read(UVec2::new(uv.x as _, uv.y as _)).x;
+    
+    let water_roughness = consts.shader.roughness * consts.shader.roughness;
+    let foam_roughness = consts.shader.foam_roughness * consts.shader.foam_roughness;
+    let roughness = lerp(water_roughness, foam_roughness, foam);
 
-    let l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
-    //let l_scatter = Vec3::ZERO;
+    let mut l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
+    l_scatter = lerp(l_scatter, consts.shader.foam_color.truncate(), foam);
     let l_specular = Vec3::ZERO;
     let l_env_reflected = Vec3::ZERO;
     let fresnel = fresnel(h, v, &consts);
    
-    // TODO: lerp foam
     let l_eye = (1.0 - fresnel) * l_scatter + l_specular + fresnel * l_env_reflected;
 
     *output = l_eye.extend(1.0);
 }
 
-fn fresnel(h: Vec3, v: Vec3, consts: &Constants) -> f32 {
+fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {
     let f0 = ((consts.shader.air_ri - consts.shader.water_ri)
         / (consts.shader.air_ri + consts.shader.water_ri)).powf(2.0);
-    f0 + (1.0 - f0) * (1.0 - h.dot(v)).powf(5.0)
+    f0 + (1.0 - f0) * (1.0 - n.dot(v)).powf(5.0)
 }
 
 fn subsurface_scattering(l: Vec3, v: Vec3, n: Vec3, h: f32, roughness: f32, consts: &Constants) -> Vec3 {
@@ -94,4 +100,8 @@ fn geometric_attenuation(n: Vec3, h: Vec3, a: f32) -> f32 {
     let a2 = a * a;
     let nh = n.dot(h);
     a2 / (consts::PI * ((a2 - 1.0) * nh * nh + 1.0).powf(2.0))
+}
+
+fn lerp<T: Add<Output = T> + Mul<f32, Output = T>>(a: T, b: T, t: f32) -> T { 
+    a * (1.0 - t) + b * t
 }

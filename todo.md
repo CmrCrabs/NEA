@@ -1,27 +1,34 @@
 - [ ] update permute scale to permute
 - [ ] eventualyl convolve foam with a texture
 
+- [ ] focus foam first
+- [ ] vectors
+- [ ] sampler
+- [ ] foam lerp
+- [ ] full pbr
+- [ ] sun pos
+
+- [ ] windows compile link1889
+
+- [ ] frametime graph
+
+- [ ] move bind group descs into impl
+
 - [ ] update fragment tex map reads to use sampler
     - [ ] bind same texture multiple ways
 
 - [ ] sampled layout stg textures bulk
 - [ ] sampled layout fourier textures for ui
 
-compute pass -> ifft -> normal map -> lighting -> foam -> lengthscales -> misc
+- [ ] create impl RenderPass and use that instead of StandardPipeline
+
+- [ ] explain padding and alignment
+- [ ] foam accumulation change to exponential decay
 
 - [ ] factor lengthscale render calls into seperate function?
 - [ ] update standardpass to handle render calls locally
-- [ ] compute pass impl
-- [ ] 5th compute pass, prep fft
-- [ ] fft
-    - [ ] impl
-    - [ ] cpu alg
-    - [ ] 1d ifft gpu
 - [ ] swell
 - [ ] lengthscales
-- [ ] derivatvies
-- [ ] normal map
-- [ ] foam
 - [ ] lighting
 - [ ] skybox
 - [ ] tiling

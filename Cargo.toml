@@ -21,3 +21,7 @@ shared = { path = "./shared" }
 
 [build-dependencies]
 spirv-builder = { git="https://github.com/Rust-GPU/rust-gpu", default-features = false, features = ["use-installed-tools"]}
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
+rustflags = ["-Zshare-generics=off"]

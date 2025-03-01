@@ -58,7 +58,7 @@ impl Scene {
             width: 0.0,
             height: 0.0,
             camera_proj: camera.proj * camera.view,
-            view: camera.eye.extend(1.0),
+            eye: camera.eye.extend(1.0),
             shader: ShaderConstants::default(),
             sim: SimConstants::default(),
         };
@@ -119,6 +119,8 @@ impl Scene {
         let dimensions = window.inner_size();
         self.consts.width = dimensions.width as f32;
         self.consts.height = dimensions.height as f32;
+
+        self.consts.eye = self.camera.eye.extend(1.0);
 
         self.consts.shader.light =
             Mat4::from_rotation_y(self.consts.shader.light_rotation_v) * self.consts.shader.light;

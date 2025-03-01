@@ -30,12 +30,13 @@ pub fn main(
     let jxx = 1.0_f32 + consts.sim.choppiness * jacobian.read(id.xy()).x;
     let jzz = 1.0_f32 + consts.sim.choppiness * jacobian.read(id.xy()).y;
     let jxz = consts.sim.choppiness * v_displacement.read(id.xy()).y;
-    let jacobian = -(jxx * jzz - jxz * jxz) + consts.sim.foam_bias;
-    let mut accumulation = foam_map.read(id.xy()).x + consts.deltatime * consts.sim.foam_decay / jacobian.max(0.5);
-    if jacobian <= 0.0 {
-        accumulation += jacobian;
+
+    let jacobian = (-(jxx * jzz - jxz * jxz) + consts.sim.foam_bias).max(0.0).min(1.0);
+    let mut accumulation = foam_map.read(id.xy()).x * (-consts.sim.foam_decay).exp();
+    if jacobian >= consts.sim.injection_threshold {
+        accumulation += jacobian * consts.sim.injection_amount;
     }
-    let foam = Vec3::splat(jacobian.max(accumulation)).extend(1.0);
+    let foam = Vec3::splat(accumulation.max(0.0).min(1.0)).extend(1.0);
 
     unsafe {
         displacement_map.write(id.xy(), displacement);

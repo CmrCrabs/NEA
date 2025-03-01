@@ -154,10 +154,10 @@ impl<'a> Renderer<'a> {
             &[
                 &scene.consts_layout,
                 &cascade.stg_layout,
-                &cascade.h_displacement.layout,
-                &cascade.v_displacement.layout,
-                &cascade.h_slope.layout,
-                &cascade.jacobian.layout,
+                &cascade.h_displacement.stg_layout,
+                &cascade.v_displacement.stg_layout,
+                &cascade.h_slope.stg_layout,
+                &cascade.jacobian.stg_layout,
             ],
             &self,
             "Evolve Spectra",
@@ -166,10 +166,10 @@ impl<'a> Renderer<'a> {
         let process_deltas_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.h_displacement.layout,
-                &cascade.v_displacement.layout,
-                &cascade.h_slope.layout,
-                &cascade.jacobian.layout,
+                &cascade.h_displacement.stg_layout,
+                &cascade.v_displacement.stg_layout,
+                &cascade.h_slope.stg_layout,
+                &cascade.jacobian.stg_layout,
                 &cascade.stg_layout,
             ],
             &self,
@@ -197,6 +197,7 @@ impl<'a> Renderer<'a> {
                 match event {
                     WindowEvent::RedrawRequested => {
                         scene.update_redraw(&self.window);
+
                         let surface = self.surface.get_current_texture().unwrap();
                         let surface_view = surface
                             .texture
@@ -244,15 +245,13 @@ impl<'a> Renderer<'a> {
 
                         // per frame computation
                         evolve_spectra_pass.compute(
-                            &mut encoder,
-                            "Evolve Spectra",
-                            &[
-                                &scene.consts_bind_group,
-                                &cascade.stg_bind_group,
-                                &cascade.h_displacement.bind_group,
-                                &cascade.v_displacement.bind_group,
-                                &cascade.h_slope.bind_group,
-                                &cascade.jacobian.bind_group,
+                            &mut encoder, "Evolve Spectra", &[ 
+                                &scene.consts_bind_group, 
+                                &cascade.stg_bind_group, 
+                                &cascade.h_displacement.stg_bind_group, 
+                                &cascade.v_displacement.stg_bind_group,
+                                &cascade.h_slope.stg_bind_group,
+                                &cascade.jacobian.stg_bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
@@ -268,10 +267,10 @@ impl<'a> Renderer<'a> {
                             "Process Deltas",
                             &[
                                 &scene.consts_bind_group,
-                                &cascade.h_displacement.bind_group,
-                                &cascade.v_displacement.bind_group,
-                                &cascade.h_slope.bind_group,
-                                &cascade.jacobian.bind_group,
+                                &cascade.h_displacement.stg_bind_group,
+                                &cascade.v_displacement.stg_bind_group,
+                                &cascade.h_slope.stg_bind_group,
+                                &cascade.jacobian.stg_bind_group,
                                 &cascade.stg_bind_group,
                             ],
                             workgroup_size,
@@ -287,6 +286,8 @@ impl<'a> Renderer<'a> {
                         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
                         pass.set_bind_group(1, &self.sampler_bind_group, &[]);
                         pass.set_bind_group(2, &cascade.stg_bind_group, &[]);
+                        pass.set_bind_group(3, &cascade.normal_map.stg_bind_group, &[]);
+                        pass.set_bind_group(4, &cascade.displacement_map.stg_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),

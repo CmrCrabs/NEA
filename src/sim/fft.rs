@@ -1,4 +1,4 @@
-use super::{SimData, Texture};
+use super::{SimData, Texture, StorageTexture};
 use crate::{cast_slice, renderer::WG_SIZE, scene::Scene};
 use shared::FFTData;
 use std::mem;
@@ -6,21 +6,21 @@ use std::mem;
 pub struct FourierTransform {
     h_ifft: PipelineFFT,
     v_ifft: PipelineFFT,
-    permute_scale: PipelineFFT,
-    pingpong1: super::Texture,
+    permute: PipelineFFT,
+    pingpong1: super::StorageTexture,
 }
 
 impl FourierTransform {
     pub fn new(scene: &Scene, simdata: &SimData, renderer: &crate::renderer::Renderer) -> Self {
         //TODO: potentially optimise
-        let pingpong1 = Texture::new_fourier(
+        let pingpong1 = StorageTexture::new(
             scene.consts.sim.size,
             scene.consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             renderer,
             "PingPong 1",
         );
-        let bind_group_layouts = &[&simdata.layout, &pingpong1.layout, &pingpong1.layout]; // layout is same for 0 and 1
+        let bind_group_layouts = &[&simdata.layout, &pingpong1.stg_layout, &pingpong1.stg_layout]; // layout is same for 0 and 1
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
             range: 0..mem::size_of::<FFTData>() as u32,
@@ -40,18 +40,18 @@ impl FourierTransform {
             "V-Step IFFT",
             "fft::vstep_ifft",
         );
-        let permute_scale = PipelineFFT::new(
+        let permute = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
             renderer,
-            "Permute Scale",
-            "fft::permute_scale",
+            "Permute",
+            "fft::permute",
         );
 
         Self {
             h_ifft,
             v_ifft,
-            permute_scale,
+            permute,
             pingpong1,
         }
     }
@@ -62,12 +62,12 @@ impl FourierTransform {
         encoder: &'a mut wgpu::CommandEncoder,
         scene: &Scene,
         simdata: &SimData,
-        pingpong0: &Texture,
+        pingpong0: &StorageTexture,
     ) {
         let bind_groups = &[
             &simdata.bind_group,
-            &pingpong0.bind_group,
-            &self.pingpong1.bind_group,
+            &pingpong0.stg_bind_group,
+            &self.pingpong1.stg_bind_group,
         ];
         let wg_size = scene.consts.sim.size / WG_SIZE;
         let mut data = FFTData {
@@ -101,11 +101,11 @@ impl FourierTransform {
             data.pingpong = (data.pingpong + 1) % 2;
         }
 
-        self.permute_scale.compute(
+        self.permute.compute(
             encoder,
             bind_groups,
             cast_slice(&[data]),
-            "Permute Scale",
+            "Permute",
             wg_size,
             wg_size,
         );
