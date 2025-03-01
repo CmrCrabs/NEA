@@ -20,8 +20,9 @@ pub struct Constants {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ShaderConstants {
     pub light: Vec4,
-    pub light_rotation_v: f32,
-    pub light_rotation_h: f32,
+    pub sun_height: f32,
+    pub sun_distance: f32,
+    pub sun_angle: f32,
     pub foam_color: Vec4,
     pub water_ri: f32,
     pub air_ri: f32,
@@ -35,14 +36,17 @@ pub struct ShaderConstants {
     pub bubble_color: Vec4,
     pub scatter_color: Vec4,
     pub sun_color: Vec4,
+    pub shininess: f32,
+    pub distance_factor: f32,
 
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
-            light: Vec4::new(0.0,20.0,0.0,1.0),
-            light_rotation_v: 0.0,
-            light_rotation_h: 0.0,
+            light: Vec4::new(0.0,0.0,0.0,1.0),
+            sun_height: 25.0,
+            sun_distance: 20.0,
+            sun_angle: 0.0,
             foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
             water_ri: 1.33,
             air_ri: 1.003,
@@ -56,6 +60,8 @@ impl Default for ShaderConstants {
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
             sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
+            shininess: 10.0,
+            distance_factor: 50.0,
         }
     }
 }
@@ -87,7 +93,7 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 256;
+        let size = 512;
         Self {
             size,
             lengthscale: 50,

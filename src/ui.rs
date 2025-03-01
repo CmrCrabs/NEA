@@ -285,11 +285,12 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     ui.window("NEA Ocean Simulation")
         .always_auto_resize(true)
         .build(|| {
+            ui.text("Parameters marked with (*) generally should not be changed");
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
             ui.text(format!("{} fps", ui.io().framerate));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
-                ui.slider("Depth", 1.0, 10.0, &mut consts.sim.depth);
+                ui.slider("Depth", 1.0, 50.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
                 ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
                 ui.slider("Wind Offset", -PI, PI, &mut consts.sim.wind_offset);
@@ -313,13 +314,13 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     consts.sim.size,
                     &mut consts.sim.lengthscale,
                 );
-                ui.slider("Cutoff Low 0", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
+                ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
                 ui.slider("Cutoff High 0", 0.0, 10.0, &mut consts.sim.cutoff_high);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.slider("Water Refractive Index", 0.0, 2.0, &mut consts.shader.water_ri);
-                ui.slider("Air Refractive Index", 0.0, 2.0, &mut consts.shader.air_ri);
+                ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
                 ui.slider("Water Roughness", 0.0, 1.0, &mut consts.shader.roughness);
                 ui.slider("Foam Max Roughness", 0.0, 1.0, &mut consts.shader.foam_roughness);
                 ui.slider("Subsurface Scattering Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
@@ -327,8 +328,11 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
                 ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
                 ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
-                ui.slider( "Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.light_rotation_h);
-                ui.slider( "Sun Height", 0.0, 2.0 * PI, &mut consts.shader.light_rotation_v);
+                ui.slider( "Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
+                ui.slider( "Sun Height", -10.0, 50.0, &mut consts.shader.sun_height);
+                ui.slider( "Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
+                ui.slider( "Distance Factor", 1.0, 50.0, &mut consts.shader.distance_factor);
+                ui.slider( "Shininess", 0.0, 50.0, &mut consts.shader.shininess);
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {

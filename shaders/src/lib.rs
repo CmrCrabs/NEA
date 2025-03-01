@@ -64,6 +64,7 @@ pub fn main_fs(
 
     let mut l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
     l_scatter = lerp(l_scatter, consts.shader.foam_color.truncate(), foam);
+    //let l_specular = blinn_phong(n, h, consts);
     let l_specular = Vec3::ZERO;
     let l_env_reflected = Vec3::ZERO;
     let fresnel = fresnel(h, v, &consts);
@@ -103,4 +104,8 @@ fn geometric_attenuation(n: Vec3, h: Vec3, a: f32) -> f32 {
 
 fn lerp<T: Add<Output = T> + Mul<f32, Output = T>>(a: T, b: T, t: f32) -> T { 
     a * (1.0 - t) + b * t
+}
+
+fn blinn_phong(n: Vec3, h: Vec3, consts: &Constants) -> Vec3 {
+    n.dot(-h).powf(consts.shader.shininess) * consts.shader.sun_color.truncate()
 }

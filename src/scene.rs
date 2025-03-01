@@ -122,10 +122,10 @@ impl Scene {
 
         self.consts.eye = self.camera.eye.extend(1.0);
 
+        let w = self.consts.sim.size as f32 * self.consts.sim.mesh_step * self.consts.shader.distance_factor;
+        self.consts.shader.light = Vec4::new(self.consts.shader.sun_distance, self.consts.shader.sun_height, self.consts.shader.sun_distance, 1.0 / w) * w;
         self.consts.shader.light =
-            Mat4::from_rotation_y(self.consts.shader.light_rotation_v) * self.consts.shader.light;
-        self.consts.shader.light =
-            Mat4::from_rotation_x(self.consts.shader.light_rotation_v) * self.consts.shader.light;
+            Mat4::from_rotation_x(self.consts.shader.sun_angle) * self.consts.shader.light;
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
     }
 
