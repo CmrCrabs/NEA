@@ -12,3 +12,15 @@ crate-type = ["dylib"]
 [dependencies]
 spirv-std = { git = "https://github.com/Rust-GPU/rust-gpu" }
 shared = { path = "../shared" }
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
+rustflags = ["-Zshare-generics=off"]
+
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
