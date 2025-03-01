@@ -114,7 +114,7 @@ impl Default for SimConstants {
             swell: 0.6,
             integration_step: 0.01,
             foam_bias: 0.77,
-            foam_decay: 0.09,
+            foam_decay: 0.19,
             injection_threshold: 0.13,
             injection_amount: 0.5,
         }

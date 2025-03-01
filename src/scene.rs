@@ -112,13 +112,10 @@ impl Scene {
     }
 
     pub fn update_redraw(&mut self, window: &Window) {
+        // Update (consts)
         let duration = self.start_time.elapsed().as_secs_f32();
         self.consts.deltatime = duration - self.consts.time;
         self.consts.time = duration;
-
-        let dimensions = window.inner_size();
-        self.consts.width = dimensions.width as f32;
-        self.consts.height = dimensions.height as f32;
 
         self.consts.eye = self.camera.eye.extend(1.0);
 
@@ -127,6 +124,11 @@ impl Scene {
         self.consts.shader.light =
             Mat4::from_rotation_x(self.consts.shader.sun_angle) * self.consts.shader.light;
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
+
+        // "Redraw"
+        let dimensions = window.inner_size();
+        self.consts.width = dimensions.width as f32;
+        self.consts.height = dimensions.height as f32;
     }
 
     pub fn write(&self, queue: &wgpu::Queue) {
