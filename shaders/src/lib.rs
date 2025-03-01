@@ -25,7 +25,7 @@ pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 2, binding = 3)] displacement_map: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_uv: &mut UVec2,
 ) { let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
@@ -44,8 +44,8 @@ pub fn main_fs(
     #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
-    #[spirv(descriptor_set = 2, binding = 4)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 2, binding = 5)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] normal_map: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 0)] foam_map: &StorageImage,
     output: &mut Vec4,
     ) {
     // TODO: fix vectors
@@ -55,7 +55,6 @@ pub fn main_fs(
     let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
  
-    // normalise 0-1
     //let foam = foam_map.sample(*sampler, Vec2::new(uv.x as _, uv.y as _)).x;
     let foam = foam_map.read(UVec2::new(uv.x as _, uv.y as _)).x;
     

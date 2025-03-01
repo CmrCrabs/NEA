@@ -40,7 +40,7 @@ pub struct ShaderConstants {
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
-            light: Vec4::new(10.0,20.0,10.0,1.0),
+            light: Vec4::new(0.0,20.0,0.0,1.0),
             light_rotation_v: 0.0,
             light_rotation_h: 0.0,
             foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
@@ -53,9 +53,9 @@ impl Default for ShaderConstants {
             ss_lambert: 1.0,
             ss_ambient: 0.9,
             bubble_density: 0.5,
-            bubble_color: Vec4::new(0.02, 0.38, 0.51, 1.0),
-            scatter_color: Vec4::new(0.19, 0.21, 0.27, 1.0),
-            sun_color: Vec4::new(0.69, 0.52, 0.41, 1.0),
+            bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
+            scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
+            sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
         }
     }
 }
@@ -100,17 +100,17 @@ impl Default for SimConstants {
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 15.0,
+            wind_speed: 30.0,
             wind_offset: f32::consts::FRAC_PI_4,
-            fetch: 8000.0,
+            fetch: 9500.0,
             choppiness: 0.5,
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,
-            foam_bias: 0.75,
-            foam_decay: 0.12,
-            injection_threshold: 0.0,
-            injection_amount: 0.4,
+            foam_bias: 0.77,
+            foam_decay: 0.09,
+            injection_threshold: 0.13,
+            injection_amount: 0.5,
         }
     }
 }

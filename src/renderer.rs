@@ -285,9 +285,9 @@ impl<'a> Renderer<'a> {
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
                         pass.set_bind_group(1, &self.sampler_bind_group, &[]);
-                        pass.set_bind_group(2, &cascade.stg_bind_group, &[]);
+                        pass.set_bind_group(2, &cascade.displacement_map.stg_bind_group, &[]);
                         pass.set_bind_group(3, &cascade.normal_map.stg_bind_group, &[]);
-                        pass.set_bind_group(4, &cascade.displacement_map.stg_bind_group, &[]);
+                        pass.set_bind_group(4, &cascade.foam_map.stg_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),

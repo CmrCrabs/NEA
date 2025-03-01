@@ -9,6 +9,11 @@
 - [ ] sun pos
 
 - [ ] windows compile link1889
+- [ ] compile binaries
+- [ ] follow https://bevyengine.org/learn/quick-start/getting-started/setup/#compile-with-performance-optimizations for opts
+
+- [ ] better camera!!!
+- [ ] remake camera struct to not be bad
 
 - [ ] frametime graph
 
