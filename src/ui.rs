@@ -282,6 +282,10 @@ impl UI {
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     let mut focused = false;
+    let mut pbr_bool = match consts.shader.pbr {
+        0 => false,
+        _ => true,
+    };
     ui.window("NEA Ocean Simulation")
         .always_auto_resize(true)
         .build(|| {
@@ -302,37 +306,28 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Foam Injection Threshold", 0.00, 1.0, &mut consts.sim.injection_threshold);
                 ui.slider("Foam Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
-                ui.slider(
-                    "Integration Step",
-                    0.001,
-                    0.02,
-                    &mut consts.sim.integration_step,
-                );
-                ui.slider(
-                    "Lengthscale 0",
-                    0,
-                    consts.sim.size,
-                    &mut consts.sim.lengthscale,
-                );
+                ui.slider("Integration Step*", 0.001, 0.02, &mut consts.sim.integration_step);
+                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
                 ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
                 ui.slider("Cutoff High 0", 0.0, 10.0, &mut consts.sim.cutoff_high);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.checkbox("PBR", &mut pbr_bool);
                 ui.slider("Water Refractive Index", 0.0, 2.0, &mut consts.shader.water_ri);
                 ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
-                ui.slider("Water Roughness", 0.0, 1.0, &mut consts.shader.roughness);
-                ui.slider("Foam Max Roughness", 0.0, 1.0, &mut consts.shader.foam_roughness);
+                ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
+                ui.slider("Foam Roughness Modifier", 0.0, 2.0, &mut consts.shader.foam_roughness);
                 ui.slider("Subsurface Scattering Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
                 ui.slider("Subsurface Scattering Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
                 ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
                 ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
-                ui.slider( "Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
-                ui.slider( "Sun Height", -10.0, 50.0, &mut consts.shader.sun_height);
-                ui.slider( "Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
-                ui.slider( "Distance Factor", 1.0, 50.0, &mut consts.shader.distance_factor);
-                ui.slider( "Shininess", 0.0, 50.0, &mut consts.shader.shininess);
+                ui.slider("Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
+                ui.slider("Sun Height", -10.0, 50.0, &mut consts.shader.sun_height);
+                ui.slider("Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
+                ui.slider("Distance Factor", 1.0, 3.0, &mut consts.shader.distance_factor);
+                ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
@@ -348,6 +343,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.color_picker4("Foam Color", consts.shader.foam_color.as_mut());
             }
             focused = ui.is_window_focused();
+            consts.shader.pbr = pbr_bool as u32;
         });
     focused
 }

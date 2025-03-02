@@ -1,3 +1,12 @@
+- [ ] PBR SPECULAR
+- [ ] VECTORS
+- [ ] CUBEMAP LOAD
+- [ ] EQUIRECTANGULAR SAMPLE
+- [ ] REFLECTIONS
+- [ ] CAMERA
+- [ ] TILING?
+- [ ] LENGTHSCALES?
+
 - [ ] update permute scale to permute
 - [ ] eventualyl convolve foam with a texture
 
@@ -60,6 +69,7 @@
 - [ ] mention nyquist theorem for bounds
 - [ ] add section and explain complex mult, ih
 - [ ] credit biebras  using actual name
+- [ ] talk about equirectangular sampling for an "alg"
 
 
 ### future improvements

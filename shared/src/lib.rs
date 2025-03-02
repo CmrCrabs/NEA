@@ -38,6 +38,7 @@ pub struct ShaderConstants {
     pub sun_color: Vec4,
     pub shininess: f32,
     pub distance_factor: f32,
+    pub pbr: u32,
 
 }
 impl Default for ShaderConstants {
@@ -56,12 +57,13 @@ impl Default for ShaderConstants {
             ss_reflected: 1.0,
             ss_lambert: 1.0,
             ss_ambient: 0.9,
-            bubble_density: 0.5,
+            bubble_density: 0.25,
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
             sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
-            shininess: 10.0,
-            distance_factor: 50.0,
+            shininess: 2.0,
+            distance_factor: 1.0,
+            pbr: 0,
         }
     }
 }
@@ -106,15 +108,15 @@ impl Default for SimConstants {
             gravity: 9.81,
             beta: 5.0 / 4.0,
             gamma: 3.3,
-            wind_speed: 30.0,
+            wind_speed: 40.0,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 9500.0,
-            choppiness: 0.5,
+            choppiness: 0.6,
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,
-            foam_bias: 0.77,
-            foam_decay: 0.19,
+            foam_bias: 0.71,
+            foam_decay: 0.3,
             injection_threshold: 0.13,
             injection_amount: 0.5,
         }
