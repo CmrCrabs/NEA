@@ -1,4 +1,10 @@
 use crate::renderer::Renderer;
+use image::io::Reader;
+use wgpu::util::DeviceExt;
+use std::fs::File;
+use std::io::Read;
+use image::GenericImageView;
+use std::io::Cursor;
 use wgpu::Queue;
 
 pub struct Texture {
@@ -56,8 +62,6 @@ impl Texture {
         }
     }
 
-
-
     pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
         queue.write_texture(
             wgpu::ImageCopyTexture {
@@ -74,6 +78,68 @@ impl Texture {
             },
             self.texture.size(),
         );
+    }
+
+
+    pub fn from_file(renderer: &Renderer, label: &str, file: &str) -> Self {
+        let mut file_data = Vec::new();
+        File::open(&file)
+                .expect("failed to open file")
+                .read_to_end(&mut file_data)
+                .expect("failed to read file");
+
+        let diffuse_image = Reader::new(Cursor::new(file_data))
+            .with_guessed_format()
+            .expect("failed to guess format")
+            .decode()
+            .expect("failed to decode image");
+        let diffuse_rgba = diffuse_image.to_rgba32f();
+        let dimensions = diffuse_image.dimensions();
+        let texture_size = wgpu::Extent3d {
+            width: dimensions.0,
+            height: dimensions.1,
+            depth_or_array_layers: 1,
+        };
+
+        // TEXTURE
+        let texture = renderer.device.create_texture_with_data(
+            &renderer.queue,
+            &wgpu::TextureDescriptor {
+                size: texture_size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba32Float,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                label: None,
+                view_formats: &[],
+            },
+            wgpu::util::TextureDataOrder::default(),
+            super::cast_slice(&diffuse_rgba.as_raw()),
+        );
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let smp_layout = renderer
+            .device
+            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[sampled_bind_group_descriptor(0)],
+                label: Some(label),
+            });
+        let smp_bind_group = renderer
+            .device
+            .create_bind_group(&wgpu::BindGroupDescriptor {
+                layout: &smp_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                }],
+                label: Some(label),
+            });
+        Self {
+            texture,
+            view,
+            smp_layout,
+            smp_bind_group
+        }
     }
 }
 
@@ -198,3 +264,4 @@ pub fn sampled_bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry
         count: None,
     }
 }
+

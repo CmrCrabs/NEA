@@ -11,6 +11,7 @@ use core::f32::consts;
 use core::ops::{Add,Mul};
 
 use spirv_std::glam::{Vec4, Vec3, UVec2, Vec2};
+use spirv_std::image::Image2d;
 use spirv_std::Sampler;
 use spirv_std::{spirv, image::Image};
 use spirv_std::num_traits::Float;
@@ -24,7 +25,7 @@ pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 2, binding = 0)] displacement_map: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
     out_uv: &mut UVec2,
 ) { let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
@@ -43,8 +44,9 @@ pub fn main_fs(
     #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
-    #[spirv(descriptor_set = 3, binding = 0)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
+    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &StorageImage,
     output: &mut Vec4,
     ) {
     // TODO: fix vectors
@@ -61,11 +63,11 @@ pub fn main_fs(
 
     let fresnel = fresnel(h, v, &consts);
     let l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
-    let l_env_reflected = Vec3::ZERO;
+    let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, v))).truncate() * consts.shader.reflection_sf;
     // TODO check h as microfacet normal vs halfway
     let l_specular = match consts.shader.pbr {
         1 => pbr_specular(l, h, n, v, consts, roughness),
-        _ => blinn_phong(n, h, consts),
+        _ => blinn_phong(n, h, consts) * fresnel,
     };
 
     let l_eye = lerp(
@@ -74,7 +76,8 @@ pub fn main_fs(
         foam,
     );
 
-    *output = l_eye.extend(1.0);
+    *output = unreal_tonemap(l_eye).extend(1.0);
+    //*output = (l_env_reflected * fresnel).extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {
@@ -133,4 +136,25 @@ fn lerp<T: Add<Output = T> + Mul<f32, Output = T>>(a: T, b: T, t: f32) -> T {
 
 fn blinn_phong(n: Vec3, h: Vec3, consts: &Constants) -> Vec3 {
     n.dot(h).max(0.0).powf(consts.shader.shininess) * consts.shader.sun_color.truncate()
+}
+
+fn reflect(n: Vec3, v: Vec3) -> Vec3 {
+    2.0 * n * n.dot(v) - v
+}
+
+fn equirectangular_to_uv(v: Vec3) -> Vec2 {
+    Vec2::new(
+        (v.z.atan2(v.x) + consts::PI) / consts::TAU,
+        v.y.acos() / consts::PI,
+    )
+}
+
+fn unreal_tonemap(c: Vec3) -> Vec3 {
+    //let a = 2.51;
+    //let b = 0.03;
+    //let c = 2.43;
+    //let d = 0.59;
+    //let e = 0.14;
+    //(c * (a * c + Vec3::splat(b))) / (c * (c * c + Vec3::splat(d)) + Vec3::splat(e))
+    c
 }

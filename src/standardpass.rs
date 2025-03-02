@@ -13,11 +13,13 @@ impl StandardPipeline {
         renderer: &Renderer,
         scene: &Scene,
         cascade: &Cascade,
+        hdri: &super::util::Texture,
     ) -> StandardPipeline {
         let pipeline_layout = renderer.device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             bind_group_layouts: &[
                 &scene.consts_layout, 
                 &renderer.sampler_layout, 
+                &hdri.smp_layout,
                 &cascade.displacement_map.stg_layout, 
                 &cascade.normal_map.stg_layout, 
                 &cascade.foam_map.stg_layout,

@@ -1,11 +1,13 @@
-- [ ] PBR SPECULAR
-- [ ] VECTORS
 - [ ] CUBEMAP LOAD
 - [ ] EQUIRECTANGULAR SAMPLE
 - [ ] REFLECTIONS
 - [ ] CAMERA
+- [ ] VECTORS
+- [ ] PBR SPECULAR
 - [ ] TILING?
 - [ ] LENGTHSCALES?
+
+- [ ] bevy runtime for faster texture loading
 
 - [ ] update permute scale to permute
 - [ ] eventualyl convolve foam with a texture

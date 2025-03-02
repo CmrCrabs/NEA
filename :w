@@ -39,7 +39,6 @@ pub struct ShaderConstants {
     pub shininess: f32,
     pub distance_factor: f32,
     pub pbr: u32,
-    pub reflection_sf: f32,
 
 }
 impl Default for ShaderConstants {
@@ -58,14 +57,13 @@ impl Default for ShaderConstants {
             ss_reflected: 1.0,
             ss_lambert: 1.0,
             ss_ambient: 0.9,
-            bubble_density: 0.2,
+            bubble_density: 0.25,
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
             sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
             shininess: 2.0,
-            distance_factor: 1.13,
+            distance_factor: 1.0,
             pbr: 0,
-            reflection_sf: 2.8,
         }
     }
 }

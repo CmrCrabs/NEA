@@ -1,10 +1,5 @@
 use crate::{
-    cast_slice,
-    scene::{Mesh, Scene},
-    sim::{self, compute::ComputePass, fft::FourierTransform, Cascade},
-    standardpass::StandardPipeline,
-    ui::{build, UI},
-    Result,
+    cast_slice, scene::{Mesh, Scene}, sim::{self, compute::ComputePass, fft::FourierTransform, Cascade}, standardpass::StandardPipeline, ui::{build, UI}, util::Texture, Result
 };
 use std::time::Instant;
 use winit::keyboard::KeyCode;
@@ -129,7 +124,8 @@ impl<'a> Renderer<'a> {
     ) -> Result {
         let mut last_frame = Instant::now();
         let simdata = sim::SimData::new(&self, &scene.consts);
-        let standard_pass = StandardPipeline::new(&self, &scene, &cascade);
+        let hdri = Texture::from_file(&self, "HDRI", "./assets/hdris/kloofendal.exr");
+        let standard_pass = StandardPipeline::new(&self, &scene, &cascade, &hdri);
         let workgroup_size = scene.consts.sim.size / WG_SIZE;
 
         let initial_spectra_pass = ComputePass::new(
@@ -285,9 +281,10 @@ impl<'a> Renderer<'a> {
                         pass.set_pipeline(&standard_pass.pipeline);
                         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
                         pass.set_bind_group(1, &self.sampler_bind_group, &[]);
-                        pass.set_bind_group(2, &cascade.displacement_map.stg_bind_group, &[]);
-                        pass.set_bind_group(3, &cascade.normal_map.stg_bind_group, &[]);
-                        pass.set_bind_group(4, &cascade.foam_map.stg_bind_group, &[]);
+                        pass.set_bind_group(2, &hdri.smp_bind_group, &[]);
+                        pass.set_bind_group(3, &cascade.displacement_map.stg_bind_group, &[]);
+                        pass.set_bind_group(4, &cascade.normal_map.stg_bind_group, &[]);
+                        pass.set_bind_group(5, &cascade.foam_map.stg_bind_group, &[]);
                         pass.set_vertex_buffer(0, scene.mesh.vtx_buf.slice(..));
                         pass.set_index_buffer(
                             scene.mesh.idx_buf.slice(..),

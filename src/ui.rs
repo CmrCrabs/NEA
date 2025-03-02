@@ -328,6 +328,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
                 ui.slider("Distance Factor", 1.0, 3.0, &mut consts.shader.distance_factor);
                 ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
+                ui.slider("Reflections Strength", 0.0, 10.0, &mut consts.shader.reflection_sf);
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
