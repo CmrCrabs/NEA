@@ -9,6 +9,7 @@ mod renderer;
 mod scene;
 mod sim;
 mod standardpass;
+mod renderpass;
 mod ui;
 mod util;
 

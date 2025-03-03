@@ -63,7 +63,7 @@ pub fn main_fs(
 
     let fresnel = fresnel(h, v, &consts);
     let l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
-    let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, v))).truncate() * consts.shader.reflection_sf;
+    let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, -v))).truncate() * consts.shader.reflection_sf;
     // TODO check h as microfacet normal vs halfway
     let l_specular = match consts.shader.pbr {
         1 => pbr_specular(l, h, n, v, consts, roughness),

@@ -7,6 +7,8 @@
 - [ ] TILING?
 - [ ] LENGTHSCALES?
 
+- [ ] cubemap load pass
+
 - [ ] bevy runtime for faster texture loading
 
 - [ ] update permute scale to permute
