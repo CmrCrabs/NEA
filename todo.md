@@ -7,6 +7,8 @@
 - [ ] TILING?
 - [ ] LENGTHSCALES?
 
+- [ ] move computepass to gfx
+
 - [ ] cubemap load pass
 
 - [ ] bevy runtime for faster texture loading

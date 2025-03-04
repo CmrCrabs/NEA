@@ -34,7 +34,7 @@ pub struct Camera {
 }
 
 pub struct Mesh {
-    pub _vertices: Vec<OceanVertex>,
+    pub _vertices: Vec<Vertex>,
     pub idx_buf: Buffer,
     pub vtx_buf: Buffer,
     pub length: usize,
@@ -42,14 +42,13 @@ pub struct Mesh {
 
 //TODO: maybe remove if normal sampled directly from texture
 #[repr(C, align(16))]
-pub struct OceanVertex {
+pub struct Vertex {
     pos: Vec4,
     uv: glam::UVec2,
-    normal: Vec4,
 }
 
 impl Scene {
-    pub fn new(window: &Window, device: &wgpu::Device) -> Self {
+    pub fn new(device: &wgpu::Device, window: &Window) -> Self {
         let cursor_down = false;
         let camera = Camera::new(window);
         let consts = Constants {
@@ -160,15 +159,14 @@ impl Mesh {
     pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
         let scale = consts.sim.size;
         let step = consts.sim.mesh_step;
-        let mut vertices: Vec<OceanVertex> = vec![];
+        let mut vertices: Vec<Vertex> = vec![];
         for z in 0..scale {
             for x in 0..scale {
                 let pos = Vec4::new(x as f32 * step, 0.0, z as f32 * step, 1.0);
                 let uv = glam::UVec2::new(x, z);
-                vertices.push(OceanVertex {
+                vertices.push(Vertex {
                     pos,
                     uv,
-                    normal: Vec4::ZERO,
                 });
             }
         }

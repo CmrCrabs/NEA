@@ -1,5 +1,5 @@
 use super::{SimData, Texture, StorageTexture};
-use crate::{cast_slice, renderer::WG_SIZE, scene::Scene};
+use crate::{cast_slice, WG_SIZE, scene::Scene};
 use shared::FFTData;
 use std::mem;
 
@@ -11,13 +11,13 @@ pub struct FourierTransform {
 }
 
 impl FourierTransform {
-    pub fn new(scene: &Scene, simdata: &SimData, renderer: &crate::renderer::Renderer) -> Self {
+    pub fn new(device: &wgpu::Device, shader: &wgpu::ShaderModule, scene: &Scene, simdata: &SimData) -> Self {
         //TODO: potentially optimise
         let pingpong1 = StorageTexture::new(
             scene.consts.sim.size,
             scene.consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            renderer,
+            &device,
             "PingPong 1",
         );
         let bind_group_layouts = &[&simdata.layout, &pingpong1.stg_layout, &pingpong1.stg_layout]; // layout is same for 0 and 1
@@ -29,21 +29,24 @@ impl FourierTransform {
         let h_ifft = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            renderer,
+            &device,
+            &shader,
             "H-Step IFFT",
             "fft::hstep_ifft",
         );
         let v_ifft = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            renderer,
+            &device,
+            &shader,
             "V-Step IFFT",
             "fft::vstep_ifft",
         );
         let permute = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            renderer,
+            &device,
+            &shader,
             "Permute",
             "fft::permute",
         );
@@ -120,24 +123,22 @@ impl PipelineFFT {
     pub fn new(
         bind_group_layouts: &[&wgpu::BindGroupLayout],
         push_constant_ranges: &[wgpu::PushConstantRange],
-        renderer: &crate::renderer::Renderer,
+        device: &wgpu::Device,
+        shader: &wgpu::ShaderModule,
         label: &str,
         entry_point: &str,
     ) -> Self {
-        let pipeline_layout =
-            renderer
-                .device
+        let pipeline_layout = device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts,
                     push_constant_ranges,
                     label: Some(label),
                 });
-        let pipeline = renderer
-            .device
+        let pipeline = device
             .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                 entry_point: Some(entry_point),
                 layout: Some(&pipeline_layout),
-                module: &renderer.shader,
+                module: &shader,
                 compilation_options: Default::default(),
                 cache: None,
                 label: Some(label),

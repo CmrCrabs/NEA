@@ -22,53 +22,51 @@ pub struct Cascade {
 }
 
 impl Cascade {
-    pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
+    pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
         let wave_texture = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Waves",
         );
         let initial_spectrum_texture = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Initial Spectrum",
         );
         let evolved_spectrum_texture = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Evolved Spectrum",
         );
         let displacement_map = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Displacement Map",
         );
         let normal_map = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Normal Map",
         );
         let foam_map = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Foam",
         );
 
-        let stg_layout =
-            renderer
-                .device
+        let stg_layout = device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                     entries: &[
                         bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float),
@@ -80,8 +78,7 @@ impl Cascade {
                     ],
                     label: Some("Storage Textures Layout"),
                 });
-        let stg_bind_group = renderer
-            .device
+        let stg_bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &stg_layout,
                 entries: &[
@@ -122,28 +119,28 @@ impl Cascade {
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "h_displacement",
         );
         let h_slope = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "h_slope",
         );
         let jacobian = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "jacobian",
         );
         let v_displacement = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "v_displacment",
         );
 
@@ -170,12 +167,12 @@ pub struct SimData {
 }
 
 impl SimData {
-    pub fn new(renderer: &Renderer, consts: &Constants) -> Self {
+    pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
         let gaussian_tex = StorageTexture::new(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Gaussian",
         );
         let gaussian_noise = Self::guassian_noise(consts);
@@ -184,18 +181,16 @@ impl SimData {
             consts.sim.size.ilog2(),
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &renderer,
+            &device,
             "Butterfly",
         );
 
-        let layout = renderer
-            .device
+        let layout = device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float), bind_group_descriptor(1, wgpu::TextureFormat::Rgba32Float)],
                 label: Some("Sim Data Layout"),
             });
-        let bind_group = renderer
-            .device
+        let bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &layout,
                 entries: &[

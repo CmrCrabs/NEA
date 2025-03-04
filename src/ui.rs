@@ -1,6 +1,7 @@
 use crate::{
     cast_slice,
-    renderer::{Renderer, FORMAT},
+    renderer::Renderer,
+    FORMAT,
     scene::Scene,
     util::Texture,
 };
@@ -24,12 +25,12 @@ pub struct UI {
 }
 
 impl UI {
-    pub fn new(renderer: &Renderer, scene: &Scene) -> Self {
+    pub fn new(device: &Device, queue: &Queue, window: &Window, shader: &wgpu::ShaderModule, renderer: &Renderer, scene: &Scene) -> Self {
         let mut context = imgui::Context::create();
         context.set_ini_filename(None);
 
-        let hidpi_factor = renderer.window.scale_factor();
-        let dimensions = renderer.window.inner_size();
+        let hidpi_factor = window.scale_factor();
+        let dimensions = window.inner_size();
 
         let io = context.io_mut();
         io.backend_flags.insert(BackendFlags::HAS_MOUSE_CURSORS);
@@ -52,14 +53,12 @@ impl UI {
             font_texture.width,
             font_texture.height,
             wgpu::TextureFormat::Rgba8UnormSrgb,
-            &renderer,
+            &device,
             "Font Atlas",
         );
-        texture.write(&renderer.queue, &font_texture.data, 4);
+        texture.write(&queue, &font_texture.data, 4);
 
-        let pipeline_layout =
-            renderer
-                .device
+        let pipeline_layout = device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     label: None,
                     bind_group_layouts: &[
@@ -69,12 +68,11 @@ impl UI {
                     ],
                     push_constant_ranges: &[],
                 });
-        let pipeline = renderer
-            .device
+        let pipeline = device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
-                    module: &renderer.shader,
+                    module: &shader,
                     entry_point: Some("ui::ui_vs"),
                     buffers: &[wgpu::VertexBufferLayout {
                         array_stride: mem::size_of::<DrawVert>() as _,
@@ -84,7 +82,7 @@ impl UI {
                     compilation_options: Default::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
-                    module: &renderer.shader,
+                    module: &shader,
                     entry_point: Some("ui::ui_fs"),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: FORMAT,
@@ -100,13 +98,13 @@ impl UI {
                 cache: None,
                 label: None,
             });
-        let vtx_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
+        let vtx_buf = device.create_buffer(&wgpu::BufferDescriptor {
             size: 0,
             usage: wgpu::BufferUsages::VERTEX,
             mapped_at_creation: false,
             label: None,
         });
-        let idx_buf = renderer.device.create_buffer(&wgpu::BufferDescriptor {
+        let idx_buf = device.create_buffer(&wgpu::BufferDescriptor {
             size: 0,
             usage: wgpu::BufferUsages::INDEX,
             mapped_at_creation: false,
@@ -292,7 +290,8 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Parameters marked with (*) generally should not be changed");
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
-            ui.text(format!("{} fps", ui.io().framerate));
+            ui.text(format!("{}x{} Simulation", consts.sim.size, consts.sim.size));
+            ui.text(format!("Running at {} fps", ui.io().framerate));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.slider("Depth", 1.0, 50.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);

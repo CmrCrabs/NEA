@@ -1,4 +1,3 @@
-use crate::renderer::Renderer;
 use image::io::Reader;
 use wgpu::util::DeviceExt;
 use std::fs::File;
@@ -19,10 +18,10 @@ impl Texture {
         width: u32,
         height: u32,
         format: wgpu::TextureFormat,
-        renderer: &Renderer,
+        device: &wgpu::Device,
         label: &str,
     ) -> Self {
-        let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
                 height,
@@ -37,14 +36,12 @@ impl Texture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = renderer
-            .device
+        let smp_layout = device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[sampled_bind_group_descriptor(0)],
                 label: Some(label),
             });
-        let smp_bind_group = renderer
-            .device
+        let smp_bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &smp_layout,
                 entries: &[wgpu::BindGroupEntry {
@@ -81,7 +78,7 @@ impl Texture {
     }
 
 
-    pub fn from_file(renderer: &Renderer, label: &str, file: &str) -> Self {
+    pub fn from_file(device: &wgpu::Device, queue: &Queue, label: &str, file: &str) -> Self {
         let mut file_data = Vec::new();
         File::open(&file)
                 .expect("failed to open file")
@@ -102,8 +99,8 @@ impl Texture {
         };
 
         // TEXTURE
-        let texture = renderer.device.create_texture_with_data(
-            &renderer.queue,
+        let texture = device.create_texture_with_data(
+            &queue,
             &wgpu::TextureDescriptor {
                 size: texture_size,
                 mip_level_count: 1,
@@ -118,14 +115,12 @@ impl Texture {
             super::cast_slice(&diffuse_rgba.as_raw()),
         );
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = renderer
-            .device
+        let smp_layout = device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[sampled_bind_group_descriptor(0)],
                 label: Some(label),
             });
-        let smp_bind_group = renderer
-            .device
+        let smp_bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &smp_layout,
                 entries: &[wgpu::BindGroupEntry {
@@ -157,10 +152,10 @@ impl StorageTexture {
         width: u32,
         height: u32,
         format: wgpu::TextureFormat,
-        renderer: &Renderer,
+        device: &wgpu::Device,
         label: &str,
     ) -> Self {
-        let texture = renderer.device.create_texture(&wgpu::TextureDescriptor {
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
             size: wgpu::Extent3d {
                 width,
                 height,
@@ -177,14 +172,12 @@ impl StorageTexture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let stg_layout = renderer
-            .device
+        let stg_layout = device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[bind_group_descriptor(0, format)],
                 label: Some(label),
             });
-        let stg_bind_group = renderer
-            .device
+        let stg_bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &stg_layout,
                 entries: &[wgpu::BindGroupEntry {
@@ -193,14 +186,12 @@ impl StorageTexture {
                 }],
                 label: Some(label),
             });
-        let smp_layout = renderer
-            .device
+        let smp_layout = device
             .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[sampled_bind_group_descriptor(0)],
                 label: Some(label),
             });
-        let smp_bind_group = renderer
-            .device
+        let smp_bind_group = device
             .create_bind_group(&wgpu::BindGroupDescriptor {
                 layout: &smp_layout,
                 entries: &[wgpu::BindGroupEntry {

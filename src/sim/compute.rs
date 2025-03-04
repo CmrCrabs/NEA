@@ -5,24 +5,22 @@ pub struct ComputePass {
 impl ComputePass {
     pub fn new(
         bind_group_layouts: &[&wgpu::BindGroupLayout],
-        renderer: &crate::renderer::Renderer,
+        device: &wgpu::Device,
+        shader: &wgpu::ShaderModule,
         label: &str,
         entry_point: &str,
     ) -> Self {
-        let pipeline_layout =
-            renderer
-                .device
+        let pipeline_layout = device
                 .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                     bind_group_layouts,
                     push_constant_ranges: &[],
                     label: Some(label),
                 });
-        let pipeline = renderer
-            .device
+        let pipeline = device
             .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
                 entry_point: Some(entry_point),
                 layout: Some(&pipeline_layout),
-                module: &renderer.shader,
+                module: &shader,
                 compilation_options: Default::default(),
                 cache: None,
                 label: Some(label),
