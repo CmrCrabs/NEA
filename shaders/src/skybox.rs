@@ -3,7 +3,7 @@ use spirv_std::{spirv,image::Image2d, Sampler};
 use spirv_std::num_traits::Float;
 use core::f32::consts;
 use shared::Constants;
-use crate::equirectangular_to_uv;
+use crate::{equirectangular_to_uv, reinhard_tonemap};
 
 #[inline(never)]
 #[spirv(vertex)]
@@ -39,8 +39,8 @@ pub fn skybox_fs(
     let target_transform = (target.truncate() / target.w).normalize().extend(0.0);
     let ray_dir = view_inverse * target_transform;
 
-    *out_color = hdri.sample(
+    *out_color = reinhard_tonemap(hdri.sample(
         *sampler, 
         equirectangular_to_uv(ray_dir.truncate()),
-    );
+    ).truncate()).extend(1.0);
 }

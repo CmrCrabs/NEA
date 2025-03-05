@@ -19,17 +19,17 @@ use spirv_std::num_traits::Float;
 use shared::Constants;
 
 type StorageImage = Image!(2D, format = rgba32f, sampled = false);
-type SampledStorageImage = Image!(2D, format = rgba32f, sampled = true);
 
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec4,
-    uv: UVec2,
+    uv: Vec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
-    out_uv: &mut UVec2,
-) { let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
+    out_uv: &mut Vec2,
+) { 
+    let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
     let displacement = displacement_map.read(UVec2::new(uv.x as _, uv.y as _));
     let mut resultant_pos = pos + displacement - offset;
@@ -42,23 +42,21 @@ pub fn main_vs(
 #[spirv(fragment)]
 pub fn main_fs(
     #[spirv(position)] pos: Vec4,
-    #[spirv(flat)] uv: UVec2,
+    uv: Vec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
-    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &Image2d,
+    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &Image2d,
     output: &mut Vec4,
     ) {
     // TODO: fix vectors
-    let n = normal_map.read(UVec2::new(uv.x as u32, uv.y as u32)).truncate();
-    //let n = normal_map.sample(*sampler, Vec2::new(uv.x as _, uv.y as _)).truncate();
+    let n = normal_map.sample(*sampler, uv).truncate();
     let l = (consts.shader.light - pos).truncate().normalize();
     let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
  
-    //let foam = foam_map.sample(*sampler, Vec2::new(uv.x as _, uv.y as _)).x;
-    let foam = foam_map.read(UVec2::new(uv.x as _, uv.y as _)).x;
+    let foam = foam_map.sample(*sampler, uv).x;
     
     let roughness = consts.shader.roughness + foam * consts.shader.foam_roughness;
 
@@ -77,7 +75,8 @@ pub fn main_fs(
         foam,
     );
 
-    *output = unreal_tonemap(l_eye).extend(1.0);
+    *output = reinhard_tonemap(l_eye).extend(1.0);
+    //*output = n.extend(1.0);
     //*output = l_env_reflected.extend(1.0);
 }
 
@@ -140,7 +139,7 @@ fn blinn_phong(n: Vec3, h: Vec3, consts: &Constants) -> Vec3 {
 }
 
 fn reflect(n: Vec3, v: Vec3) -> Vec3 {
-    2.0 * n * n.dot(v) - v
+    2.0 * (n * n.dot(v)) - v
 }
 
 fn equirectangular_to_uv(v: Vec3) -> Vec2 {
@@ -150,12 +149,11 @@ fn equirectangular_to_uv(v: Vec3) -> Vec2 {
     )
 }
 
-fn unreal_tonemap(c: Vec3) -> Vec3 {
-    //let a = 2.51;
-    //let b = 0.03;
-    //let c = 2.43;
-    //let d = 0.59;
-    //let e = 0.14;
-    //(c * (a * c + Vec3::splat(b))) / (c * (c * c + Vec3::splat(d)) + Vec3::splat(e))
-    c
+fn reinhard_tonemap(c: Vec3) -> Vec3 {
+    c / (c + Vec3::splat(1.0))
 }
+
+fn unreal_tonemap(c: Vec3) -> Vec3 {
+    c / (c + Vec3::splat(0.155)) * 1.019
+}
+

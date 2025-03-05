@@ -9,23 +9,22 @@
 
 - [ ] move computepass to gfx
 
-- [ ] cubemap load pass
-
-- [ ] bevy runtime for faster texture loading
-
 - [ ] update permute scale to permute
 - [ ] eventualyl convolve foam with a texture
 
-- [ ] focus foam first
 - [ ] vectors
 - [ ] sampler
 - [ ] foam lerp
 - [ ] full pbr
 - [ ] sun pos
 
+- [ ] still fix reflections
+
 - [ ] windows compile link1889
 - [ ] compile binaries
 - [ ] follow https://bevyengine.org/learn/quick-start/getting-started/setup/#compile-with-performance-optimizations for opts
+
+- [ ] upgrade to 16k textures for hdri
 
 - [ ] prove everything works
 
