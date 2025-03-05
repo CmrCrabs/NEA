@@ -10,21 +10,19 @@ impl ComputePass {
         label: &str,
         entry_point: &str,
     ) -> Self {
-        let pipeline_layout = device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts,
-                    push_constant_ranges: &[],
-                    label: Some(label),
-                });
-        let pipeline = device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some(entry_point),
-                layout: Some(&pipeline_layout),
-                module: &shader,
-                compilation_options: Default::default(),
-                cache: None,
-                label: Some(label),
-            });
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts,
+            push_constant_ranges: &[],
+            label: Some(label),
+        });
+        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            entry_point: Some(entry_point),
+            layout: Some(&pipeline_layout),
+            module: &shader,
+            compilation_options: Default::default(),
+            cache: None,
+            label: Some(label),
+        });
 
         Self { pipeline }
     }

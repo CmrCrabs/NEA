@@ -1,5 +1,5 @@
-use super::{SimData, Texture, StorageTexture};
-use crate::{cast_slice, WG_SIZE, scene::Scene};
+use super::{SimData, StorageTexture, Texture};
+use crate::{cast_slice, scene::Scene, WG_SIZE};
 use shared::FFTData;
 use std::mem;
 
@@ -11,7 +11,12 @@ pub struct FourierTransform {
 }
 
 impl FourierTransform {
-    pub fn new(device: &wgpu::Device, shader: &wgpu::ShaderModule, scene: &Scene, simdata: &SimData) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        shader: &wgpu::ShaderModule,
+        scene: &Scene,
+        simdata: &SimData,
+    ) -> Self {
         //TODO: potentially optimise
         let pingpong1 = StorageTexture::new(
             scene.consts.sim.size,
@@ -20,7 +25,11 @@ impl FourierTransform {
             &device,
             "PingPong 1",
         );
-        let bind_group_layouts = &[&simdata.layout, &pingpong1.stg_layout, &pingpong1.stg_layout]; // layout is same for 0 and 1
+        let bind_group_layouts = &[
+            &simdata.layout,
+            &pingpong1.stg_layout,
+            &pingpong1.stg_layout,
+        ]; // layout is same for 0 and 1
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
             range: 0..mem::size_of::<FFTData>() as u32,
@@ -128,21 +137,19 @@ impl PipelineFFT {
         label: &str,
         entry_point: &str,
     ) -> Self {
-        let pipeline_layout = device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    bind_group_layouts,
-                    push_constant_ranges,
-                    label: Some(label),
-                });
-        let pipeline = device
-            .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
-                entry_point: Some(entry_point),
-                layout: Some(&pipeline_layout),
-                module: &shader,
-                compilation_options: Default::default(),
-                cache: None,
-                label: Some(label),
-            });
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts,
+            push_constant_ranges,
+            label: Some(label),
+        });
+        let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+            entry_point: Some(entry_point),
+            layout: Some(&pipeline_layout),
+            module: &shader,
+            compilation_options: Default::default(),
+            cache: None,
+            label: Some(label),
+        });
         Self { pipeline }
     }
 

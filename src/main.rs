@@ -3,11 +3,11 @@ use log::LevelFilter;
 use std::{mem, slice};
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
+mod engine;
 mod renderer;
 mod scene;
 mod sim;
-mod engine;
-mod game;
+mod simulation;
 mod ui;
 mod util;
 
@@ -20,8 +20,8 @@ pub const WG_SIZE: u32 = 8;
 fn main() -> Result {
     env_logger::builder().filter_level(LevelFilter::Info).init();
     std::env::remove_var("WAYLAND_DISPLAY");
-    let event_loop = EventLoop::new().unwrap();
-    let window = WindowBuilder::new().with_title("NEA").build(&event_loop).unwrap();
+    let event_loop = EventLoop::new()?;
+    let window = WindowBuilder::new().with_title("NEA").build(&event_loop)?;
 
     let mut engine = Engine::new(&window);
 

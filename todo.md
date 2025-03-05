@@ -27,6 +27,8 @@
 - [ ] compile binaries
 - [ ] follow https://bevyengine.org/learn/quick-start/getting-started/setup/#compile-with-performance-optimizations for opts
 
+- [ ] prove everything works
+
 - [ ] better camera!!!
 - [ ] remake camera struct to not be bad
 

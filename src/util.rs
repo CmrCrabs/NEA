@@ -1,9 +1,9 @@
 use image::io::Reader;
-use wgpu::util::DeviceExt;
-use std::fs::File;
-use std::io::Read;
 use image::GenericImageView;
+use std::fs::File;
 use std::io::Cursor;
+use std::io::Read;
+use wgpu::util::DeviceExt;
 use wgpu::Queue;
 
 pub struct Texture {
@@ -36,20 +36,18 @@ impl Texture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[sampled_bind_group_descriptor(0)],
-                label: Some(label),
-            });
-        let smp_bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &smp_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                }],
-                label: Some(label),
-            });
+        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[sampled_bind_group_descriptor(0)],
+            label: Some(label),
+        });
+        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &smp_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+            label: Some(label),
+        });
 
         Self {
             texture,
@@ -77,13 +75,12 @@ impl Texture {
         );
     }
 
-
     pub fn from_file(device: &wgpu::Device, queue: &Queue, label: &str, file: &str) -> Self {
         let mut file_data = Vec::new();
         File::open(&file)
-                .expect("failed to open file")
-                .read_to_end(&mut file_data)
-                .expect("failed to read file");
+            .expect("failed to open file")
+            .read_to_end(&mut file_data)
+            .expect("failed to read file");
 
         let diffuse_image = Reader::new(Cursor::new(file_data))
             .with_guessed_format()
@@ -115,25 +112,23 @@ impl Texture {
             super::cast_slice(&diffuse_rgba.as_raw()),
         );
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[sampled_bind_group_descriptor(0)],
-                label: Some(label),
-            });
-        let smp_bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &smp_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                }],
-                label: Some(label),
-            });
+        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[sampled_bind_group_descriptor(0)],
+            label: Some(label),
+        });
+        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &smp_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+            label: Some(label),
+        });
         Self {
             texture,
             view,
             smp_layout,
-            smp_bind_group
+            smp_bind_group,
         }
     }
 }
@@ -172,37 +167,33 @@ impl StorageTexture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let stg_layout = device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[bind_group_descriptor(0, format)],
-                label: Some(label),
-            });
-        let stg_bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &stg_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                }],
-                label: Some(label),
-            });
-        let smp_layout = device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[sampled_bind_group_descriptor(0)],
-                label: Some(label),
-            });
-        let smp_bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &smp_layout,
-                entries: &[wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: wgpu::BindingResource::TextureView(&view),
-                }],
-                label: Some(label),
-            });
+        let stg_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[bind_group_descriptor(0, format)],
+            label: Some(label),
+        });
+        let stg_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &stg_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+            label: Some(label),
+        });
+        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[sampled_bind_group_descriptor(0)],
+            label: Some(label),
+        });
+        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &smp_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+            label: Some(label),
+        });
 
-        Self { 
-            texture, 
+        Self {
+            texture,
             view,
             stg_bind_group,
             stg_layout,
@@ -230,7 +221,10 @@ impl StorageTexture {
     }
 }
 
-pub fn bind_group_descriptor(binding: u32, format: wgpu::TextureFormat) -> wgpu::BindGroupLayoutEntry {
+pub fn bind_group_descriptor(
+    binding: u32,
+    format: wgpu::TextureFormat,
+) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::COMPUTE | wgpu::ShaderStages::VERTEX_FRAGMENT,
@@ -255,4 +249,3 @@ pub fn sampled_bind_group_descriptor(binding: u32) -> wgpu::BindGroupLayoutEntry
         count: None,
     }
 }
-

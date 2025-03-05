@@ -56,7 +56,7 @@ impl Scene {
             deltatime: 0.0,
             width: 0.0,
             height: 0.0,
-            camera_proj: camera.proj * camera.view,
+            camera_viewproj: camera.proj * camera.view,
             eye: camera.eye.extend(1.0),
             shader: ShaderConstants::default(),
             sim: SimConstants::default(),
@@ -117,9 +117,18 @@ impl Scene {
         self.consts.time = duration;
 
         self.consts.eye = self.camera.eye.extend(1.0);
+        self.consts.shader.proj_mat = self.camera.proj;
+        self.consts.shader.view_mat = self.camera.view;
 
-        let w = self.consts.sim.size as f32 * self.consts.sim.mesh_step * self.consts.shader.distance_factor;
-        self.consts.shader.light = Vec4::new(self.consts.shader.sun_distance, self.consts.shader.sun_height, self.consts.shader.sun_distance, 1.0 / w) * w;
+        let w = self.consts.sim.size as f32
+            * self.consts.sim.mesh_step
+            * self.consts.shader.distance_factor;
+        self.consts.shader.light = Vec4::new(
+            self.consts.shader.sun_distance,
+            self.consts.shader.sun_height,
+            self.consts.shader.sun_distance,
+            1.0 / w,
+        ) * w;
         self.consts.shader.light =
             Mat4::from_rotation_y(self.consts.shader.sun_angle) * self.consts.shader.light;
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
@@ -142,12 +151,12 @@ impl Scene {
             },
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera.zoom(*delta);
-                self.consts.camera_proj = self.camera.proj * self.camera.view;
+                self.consts.camera_viewproj = self.camera.proj * self.camera.view;
             }
             WindowEvent::CursorMoved { position, .. } => {
                 if self.cursor_down {
                     self.camera.pan(*position, window);
-                    self.consts.camera_proj = self.camera.proj * self.camera.view;
+                    self.consts.camera_viewproj = self.camera.proj * self.camera.view;
                 }
             }
             _ => {}
@@ -164,10 +173,7 @@ impl Mesh {
             for x in 0..scale {
                 let pos = Vec4::new(x as f32 * step, 0.0, z as f32 * step, 1.0);
                 let uv = glam::UVec2::new(x, z);
-                vertices.push(Vertex {
-                    pos,
-                    uv,
-                });
+                vertices.push(Vertex { pos, uv });
             }
         }
         let vtx_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -222,7 +228,7 @@ impl Camera {
             target: Vec3::new(0.0, 0.0, 0.0),
             up: Vec3::new(0.0, 1.0, 0.0),
             aspect: window.inner_size().width as f32 / window.inner_size().height as f32,
-            fovy: 45.0,
+            fovy: PI / 4.0,
             znear: 0.1,
             zfar: 100.0,
             proj: Mat4::ZERO,
@@ -230,7 +236,7 @@ impl Camera {
         };
 
         camera.proj = Mat4::perspective_rh(
-            camera.fovy.to_radians(),
+            camera.fovy,
             camera.aspect,
             camera.znear,
             camera.zfar,
@@ -276,6 +282,6 @@ impl Camera {
     pub fn update_fov(&mut self, window: &Window) {
         self.aspect = window.inner_size().width as f32 / window.inner_size().height as f32;
         self.proj =
-            Mat4::perspective_rh(self.fovy.to_radians(), self.aspect, self.znear, self.zfar);
+            Mat4::perspective_rh(self.fovy, self.aspect, self.znear, self.zfar);
     }
 }

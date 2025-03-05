@@ -1,10 +1,4 @@
-use crate::{
-    cast_slice,
-    renderer::Renderer,
-    FORMAT,
-    scene::Scene,
-    util::Texture,
-};
+use crate::{cast_slice, renderer::Renderer, scene::Scene, util::Texture, FORMAT};
 use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
 use shared::Constants;
 use std::{f32::consts::PI, mem};
@@ -25,7 +19,14 @@ pub struct UI {
 }
 
 impl UI {
-    pub fn new(device: &Device, queue: &Queue, window: &Window, shader: &wgpu::ShaderModule, renderer: &Renderer, scene: &Scene) -> Self {
+    pub fn new(
+        device: &Device,
+        queue: &Queue,
+        window: &Window,
+        shader: &wgpu::ShaderModule,
+        renderer: &Renderer,
+        scene: &Scene,
+    ) -> Self {
         let mut context = imgui::Context::create();
         context.set_ini_filename(None);
 
@@ -58,16 +59,15 @@ impl UI {
         );
         texture.write(&queue, &font_texture.data, 4);
 
-        let pipeline_layout = device
-                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                    label: None,
-                    bind_group_layouts: &[
-                        &scene.consts_layout,
-                        &texture.smp_layout,
-                        &renderer.sampler_layout,
-                    ],
-                    push_constant_ranges: &[],
-                });
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: None,
+            bind_group_layouts: &[
+                &scene.consts_layout,
+                &texture.smp_layout,
+                &renderer.sampler_layout,
+            ],
+            push_constant_ranges: &[],
+        });
         let pipeline = device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 layout: Some(&pipeline_layout),
@@ -290,7 +290,10 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Parameters marked with (*) generally should not be changed");
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
-            ui.text(format!("{}x{} Simulation", consts.sim.size, consts.sim.size));
+            ui.text(format!(
+                "{}x{} Simulation",
+                consts.sim.size, consts.sim.size
+            ));
             ui.text(format!("Running at {} fps", ui.io().framerate));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.slider("Depth", 1.0, 50.0, &mut consts.sim.depth);
@@ -302,32 +305,102 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
                 ui.slider("Foam Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
                 ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
-                ui.slider("Foam Injection Threshold", 0.00, 1.0, &mut consts.sim.injection_threshold);
-                ui.slider("Foam Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
+                ui.slider(
+                    "Foam Injection Threshold",
+                    0.00,
+                    1.0,
+                    &mut consts.sim.injection_threshold,
+                );
+                ui.slider(
+                    "Foam Injection Amount",
+                    0.00,
+                    2.0,
+                    &mut consts.sim.injection_amount,
+                );
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
-                ui.slider("Integration Step*", 0.001, 0.02, &mut consts.sim.integration_step);
-                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
-                ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
+                ui.slider(
+                    "Integration Step*",
+                    0.001,
+                    0.02,
+                    &mut consts.sim.integration_step,
+                );
+                ui.slider(
+                    "Lengthscale 0",
+                    0,
+                    consts.sim.size,
+                    &mut consts.sim.lengthscale,
+                );
+                ui.slider(
+                    "Cutoff Low 0*",
+                    0.00000,
+                    0.00001,
+                    &mut consts.sim.cutoff_low,
+                );
                 ui.slider("Cutoff High 0", 0.0, 10.0, &mut consts.sim.cutoff_high);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.checkbox("PBR", &mut pbr_bool);
-                ui.slider("Water Refractive Index", 0.0, 2.0, &mut consts.shader.water_ri);
+                ui.slider(
+                    "Water Refractive Index",
+                    0.0,
+                    2.0,
+                    &mut consts.shader.water_ri,
+                );
                 ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
                 ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
-                ui.slider("Foam Roughness Modifier", 0.0, 2.0, &mut consts.shader.foam_roughness);
-                ui.slider("Subsurface Scattering Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
-                ui.slider("Subsurface Scattering Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
+                ui.slider(
+                    "Foam Roughness Modifier",
+                    0.0,
+                    2.0,
+                    &mut consts.shader.foam_roughness,
+                );
+                ui.slider(
+                    "Subsurface Scattering Height Attenuation",
+                    0.0,
+                    1.0,
+                    &mut consts.shader.ss_height,
+                );
+                ui.slider(
+                    "Subsurface Scattering Reflection Strength",
+                    0.0,
+                    1.0,
+                    &mut consts.shader.ss_reflected,
+                );
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
-                ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
-                ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
+                ui.slider(
+                    "Ambient Light Strength",
+                    0.0,
+                    1.0,
+                    &mut consts.shader.ss_ambient,
+                );
+                ui.slider(
+                    "Air Bubble Density",
+                    0.0,
+                    1.0,
+                    &mut consts.shader.bubble_density,
+                );
                 ui.slider("Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
                 ui.slider("Sun Height", -10.0, 50.0, &mut consts.shader.sun_height);
                 ui.slider("Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
-                ui.slider("Distance Factor", 1.0, 3.0, &mut consts.shader.distance_factor);
-                ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
-                ui.slider("Reflections Strength", 0.0, 10.0, &mut consts.shader.reflection_sf);
+                ui.slider(
+                    "Distance Factor",
+                    1.0,
+                    3.0,
+                    &mut consts.shader.distance_factor,
+                );
+                ui.slider(
+                    "Blinn Phong Shininess",
+                    0.0,
+                    50.0,
+                    &mut consts.shader.shininess,
+                );
+                ui.slider(
+                    "Reflections Strength",
+                    0.0,
+                    10.0,
+                    &mut consts.shader.reflection_sf,
+                );
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {

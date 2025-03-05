@@ -66,53 +66,47 @@ impl Cascade {
             "Foam",
         );
 
-        let stg_layout = device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    entries: &[
-                        bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float),
-                        bind_group_descriptor(1, wgpu::TextureFormat::Rgba32Float),
-                        bind_group_descriptor(2, wgpu::TextureFormat::Rgba32Float),
-                        bind_group_descriptor(3, wgpu::TextureFormat::Rgba32Float),
-                        bind_group_descriptor(4, wgpu::TextureFormat::Rgba32Float),
-                        bind_group_descriptor(5, wgpu::TextureFormat::Rgba32Float),
-                    ],
-                    label: Some("Storage Textures Layout"),
-                });
-        let stg_bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &stg_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&wave_texture.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::TextureView(
-                            &initial_spectrum_texture.view,
-                        ),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 2,
-                        resource: wgpu::BindingResource::TextureView(
-                            &evolved_spectrum_texture.view,
-                        ),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 3,
-                        resource: wgpu::BindingResource::TextureView(&displacement_map.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 4,
-                        resource: wgpu::BindingResource::TextureView(&normal_map.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 5,
-                        resource: wgpu::BindingResource::TextureView(&foam_map.view),
-                    },
-                ],
-                label: Some("Storage Textures"),
-            });
+        let stg_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(1, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(2, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(3, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(4, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(5, wgpu::TextureFormat::Rgba32Float),
+            ],
+            label: Some("Storage Textures Layout"),
+        });
+        let stg_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &stg_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&wave_texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&initial_spectrum_texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::TextureView(&evolved_spectrum_texture.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: wgpu::BindingResource::TextureView(&displacement_map.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: wgpu::BindingResource::TextureView(&normal_map.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 5,
+                    resource: wgpu::BindingResource::TextureView(&foam_map.view),
+                },
+            ],
+            label: Some("Storage Textures"),
+        });
 
         //TODO: optimise into 2 per rola
         let h_displacement = StorageTexture::new(
@@ -144,7 +138,6 @@ impl Cascade {
             "v_displacment",
         );
 
-
         Self {
             stg_layout,
             stg_bind_group,
@@ -154,7 +147,7 @@ impl Cascade {
             h_slope,
             h_displacement,
             v_displacement,
-            jacobian
+            jacobian,
         }
     }
 }
@@ -185,26 +178,27 @@ impl SimData {
             "Butterfly",
         );
 
-        let layout = device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                entries: &[bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float), bind_group_descriptor(1, wgpu::TextureFormat::Rgba32Float)],
-                label: Some("Sim Data Layout"),
-            });
-        let bind_group = device
-            .create_bind_group(&wgpu::BindGroupDescriptor {
-                layout: &layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::TextureView(&gaussian_tex.view),
-                    },
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::TextureView(&butterfly_tex.view),
-                    },
-                ],
-                label: Some("Sim Data Textures"),
-            });
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[
+                bind_group_descriptor(0, wgpu::TextureFormat::Rgba32Float),
+                bind_group_descriptor(1, wgpu::TextureFormat::Rgba32Float),
+            ],
+            label: Some("Sim Data Layout"),
+        });
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&gaussian_tex.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&butterfly_tex.view),
+                },
+            ],
+            label: Some("Sim Data Textures"),
+        });
 
         Self {
             gaussian_tex,

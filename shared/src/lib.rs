@@ -1,7 +1,7 @@
 #![no_std]
 
 use core::f32;
-use glam::Vec4;
+use glam::{Vec4, Mat4};
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -10,11 +10,10 @@ pub struct Constants {
     pub deltatime: f32,
     pub width: f32,
     pub height: f32,
-    pub camera_proj: glam::Mat4,
+    pub camera_viewproj: Mat4,
     pub eye: Vec4,
     pub shader: ShaderConstants,
     pub sim: SimConstants,
-    //TODO: abstract
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -40,6 +39,8 @@ pub struct ShaderConstants {
     pub distance_factor: f32,
     pub pbr: u32,
     pub reflection_sf: f32,
+    pub view_mat: Mat4,
+    pub proj_mat: Mat4,
 
 }
 impl Default for ShaderConstants {
@@ -63,9 +64,11 @@ impl Default for ShaderConstants {
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
             sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
             shininess: 2.0,
-            distance_factor: 1.13,
+            distance_factor: 10.0,
             pbr: 0,
-            reflection_sf: 2.8,
+            reflection_sf: 0.8,
+            view_mat: Mat4::ZERO,
+            proj_mat: Mat4::ZERO,
         }
     }
 }
@@ -117,7 +120,7 @@ impl Default for SimConstants {
             logsize: 0,
             swell: 0.6,
             integration_step: 0.01,
-            foam_bias: 0.71,
+            foam_bias: 0.76,
             foam_decay: 0.3,
             injection_threshold: 0.13,
             injection_amount: 0.5,

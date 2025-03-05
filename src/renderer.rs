@@ -1,8 +1,6 @@
-use wgpu::util::RenderEncoder;
-
-use super::{DEPTH_FORMAT, FORMAT};
 use super::util::Texture;
-use crate::scene::Mesh;
+use super::{DEPTH_FORMAT, FORMAT};
+use crate::scene::{Mesh, Scene};
 
 pub struct Renderer {
     pub sampler_bind_group: wgpu::BindGroup,
@@ -10,11 +8,18 @@ pub struct Renderer {
     pub depth_view: wgpu::TextureView,
     pub std_pipeline: wgpu::RenderPipeline,
     pub hdri: Texture,
-    //pub hdri_pipeline: wgpu::RenderPipeline,
+    pub skybox_pipeline: wgpu::RenderPipeline,
 }
 
 impl Renderer {
-    pub fn new(device: &wgpu::Device,queue: &wgpu::Queue, shader: &wgpu::ShaderModule, window: &winit::window::Window, game: &super::game::Game, scene: &super::scene::Scene) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        shader: &wgpu::ShaderModule,
+        window: &winit::window::Window,
+        game: &super::simulation::Simulation,
+        scene: &super::scene::Scene,
+    ) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
         let sampler_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[wgpu::BindGroupLayoutEntry {
@@ -52,13 +57,51 @@ impl Renderer {
         });
         let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
+        let skybox_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                bind_group_layouts: &[&scene.consts_layout, &hdri.smp_layout, &sampler_layout],
+                push_constant_ranges: &[],
+                label: None,
+            });
+        let skybox_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            layout: Some(&skybox_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("skybox::skybox_vs"),
+                buffers: &[],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("skybox::skybox_fs"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: FORMAT,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            label: None,
+            cache: None,
+        });
+
         let std_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             bind_group_layouts: &[
-                &scene.consts_layout, 
-                &sampler_layout, 
+                &scene.consts_layout,
+                &sampler_layout,
                 &hdri.smp_layout,
-                &game.cascade.displacement_map.stg_layout, 
-                &game.cascade.normal_map.stg_layout, 
+                &game.cascade.displacement_map.stg_layout,
+                &game.cascade.normal_map.stg_layout,
                 &game.cascade.foam_map.stg_layout,
             ],
             push_constant_ranges: &[],
@@ -72,7 +115,7 @@ impl Renderer {
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: std::mem::size_of::<super::scene::Vertex>() as _,
                     step_mode: wgpu::VertexStepMode::Vertex,
-                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Uint32x2, 2=> Float32x4],
+                    attributes: &wgpu::vertex_attr_array![0 => Float32x4, 1=> Uint32x2],
                 }],
                 compilation_options: Default::default(),
             },
@@ -106,6 +149,7 @@ impl Renderer {
             depth_view,
             std_pipeline,
             hdri,
+            skybox_pipeline,
         }
     }
 
@@ -127,25 +171,18 @@ impl Renderer {
         self.depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default())
     }
 
-    pub fn render<'a>(
-        &'a self, 
-        encoder: &'a mut wgpu::CommandEncoder, 
-        bind_groups: &[&wgpu::BindGroup],
+    pub fn render_skybox<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
         surface_view: &wgpu::TextureView,
-        mesh: &Mesh,
+        scene: &Scene,
     ) {
-        // TODO: move to render
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.0,
-                        g: 0.0,
-                        b: 0.0,
-                        a: 1.0,
-                    }),
+                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -161,15 +198,50 @@ impl Renderer {
             occlusion_query_set: None,
             label: None,
         });
-        pass.set_pipeline(&self.std_pipeline);
+        pass.set_pipeline(&self.skybox_pipeline);
+        pass.set_bind_group(0, &scene.consts_bind_group, &[]);
+        pass.set_bind_group(1, &self.hdri.smp_bind_group, &[]);
+        pass.set_bind_group(2, &self.sampler_bind_group, &[]);
+        pass.draw(0..3, 0..1);
+    }
+
+    pub fn render_standard<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        pipeline: &wgpu::RenderPipeline,
+        bind_groups: &[&wgpu::BindGroup],
+        load_op: wgpu::LoadOp<wgpu::Color>,
+        surface_view: &wgpu::TextureView,
+        mesh: &Mesh,
+    ) {
+        // TODO: move to render
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view: surface_view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: load_op,
+                    store: wgpu::StoreOp::Store,
+                },
+            })],
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                view: &self.depth_view,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: wgpu::StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            label: None,
+        });
+        pass.set_pipeline(&pipeline);
         for i in 0..bind_groups.len() {
             pass.set_bind_group(i as _, bind_groups[i], &[]);
         }
         pass.set_vertex_buffer(0, mesh.vtx_buf.slice(..));
-        pass.set_index_buffer(
-            mesh.idx_buf.slice(..),
-            wgpu::IndexFormat::Uint32,
-        );
+        pass.set_index_buffer(mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
         pass.draw_indexed(0..(mesh.length as _), 0, 0..1);
     }
 }

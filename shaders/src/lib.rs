@@ -5,6 +5,7 @@ pub mod initial_spectra;
 pub mod evolve_spectra;
 pub mod fft;
 pub mod ui;
+pub mod skybox;
 pub mod process_deltas;
 
 use core::f32::consts;
@@ -33,7 +34,7 @@ pub fn main_vs(
     let displacement = displacement_map.read(UVec2::new(uv.x as _, uv.y as _));
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
-    *out_pos = consts.camera_proj * resultant_pos;
+    *out_pos = consts.camera_viewproj * resultant_pos;
     *out_uv = uv;
 }
 
@@ -77,7 +78,7 @@ pub fn main_fs(
     );
 
     *output = unreal_tonemap(l_eye).extend(1.0);
-    //*output = (l_env_reflected * fresnel).extend(1.0);
+    //*output = l_env_reflected.extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {

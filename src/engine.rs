@@ -1,8 +1,13 @@
 use super::{FORMAT, WG_SIZE};
-use crate::{game::Game, renderer::Renderer, scene::{Scene, Mesh}, ui::UI};
-use crate::{Result, cast_slice};
-use winit::event_loop::EventLoop;
+use crate::{cast_slice, Result};
+use crate::{
+    renderer::Renderer,
+    scene::{Mesh, Scene},
+    simulation::Simulation,
+    ui::UI,
+};
 use winit::event::{Event, WindowEvent};
+use winit::event_loop::EventLoop;
 use winit::keyboard::{KeyCode, PhysicalKey};
 
 pub struct Engine<'a> {
@@ -11,8 +16,7 @@ pub struct Engine<'a> {
     pub config: wgpu::SurfaceConfiguration,
     pub window: &'a winit::window::Window,
     pub surface: wgpu::Surface<'a>,
-    pub shader: wgpu::ShaderModule,
-    pub game: Game,
+    pub simulation: Simulation,
     pub renderer: Renderer,
     pub scene: Scene,
     pub ui: UI,
@@ -27,7 +31,7 @@ impl<'a> Engine<'a> {
             force_fallback_adapter: false,
             compatible_surface: Some(&surface),
         }))
-        .unwrap();
+        .expect("failed to create adapter");
 
         let mut required_limits = wgpu::Limits::default();
         required_limits.max_storage_textures_per_shader_stage = 6;
@@ -44,7 +48,7 @@ impl<'a> Engine<'a> {
             },
             None,
         ))
-        .unwrap();
+        .expect("failed to create device & queue");
 
         let shader = device.create_shader_module(wgpu::include_spirv!(env!("shaders.spv")));
 
@@ -61,28 +65,24 @@ impl<'a> Engine<'a> {
         surface.configure(&device, &config);
 
         let scene = Scene::new(&device, &window);
-        let game = Game::new(&device, &queue, &shader, &scene);
-        let renderer = Renderer::new(&device, &queue, &shader, &window, &game, &scene);
-        let ui = UI::new(&device, &queue, &window,&shader, &renderer, &scene);
+        let simulation = Simulation::new(&device, &queue, &shader, &scene);
+        let renderer = Renderer::new(&device, &queue, &shader, &window, &simulation, &scene);
+        let ui = UI::new(&device, &queue, &window, &shader, &renderer, &scene);
 
         Self {
             config,
             device,
             queue,
-            shader,
             surface,
             window: &window,
-            game,
+            simulation,
             scene,
             renderer,
             ui,
         }
     }
-    
-    pub fn run(
-        &mut self,
-        event_loop: EventLoop<()>,
-    ) -> Result {
+
+    pub fn run(&mut self, event_loop: EventLoop<()>) -> Result {
         let mut last_frame = std::time::Instant::now();
         let mut first_frame = true;
         let workgroup_size = self.scene.consts.sim.size / WG_SIZE;
@@ -103,7 +103,10 @@ impl<'a> Engine<'a> {
                     WindowEvent::RedrawRequested => {
                         self.scene.update_redraw(&self.window);
 
-                        let surface = self.surface.get_current_texture().unwrap();
+                        let surface = self
+                            .surface
+                            .get_current_texture()
+                            .expect("failed to get surface");
                         let surface_view = surface
                             .texture
                             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -111,31 +114,42 @@ impl<'a> Engine<'a> {
                             .device
                             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
-                        // TODO: move out of frame by frame
                         if first_frame {
-                            self.game.butterfly_precompute_pass.compute(
+                            self.simulation.butterfly_precompute_pass.compute(
                                 &mut encoder,
                                 "Precompute Butterfly",
-                                &[&self.scene.consts_bind_group, &self.game.simdata.bind_group],
+                                &[
+                                    &self.scene.consts_bind_group,
+                                    &self.simulation.simdata.bind_group,
+                                ],
                                 self.scene.consts.sim.size.ilog2(),
                                 self.scene.consts.sim.size / WG_SIZE,
                             );
                         }
 
                         // Compute Initial spectrum on param change
-                        // TODO: change to consts changed
                         if self.scene.consts_changed {
                             self.scene.write(&self.queue);
 
-                            self.game.initial_spectra_pass.compute(
+                            self.simulation.initial_spectra_pass.compute(
                                 &mut encoder,
                                 "Initial Spectra",
-                                &[ &self.scene.consts_bind_group, &self.game.simdata.bind_group, &self.game.cascade.stg_bind_group, ], workgroup_size, workgroup_size,);
+                                &[
+                                    &self.scene.consts_bind_group,
+                                    &self.simulation.simdata.bind_group,
+                                    &self.simulation.cascade.stg_bind_group,
+                                ],
+                                workgroup_size,
+                                workgroup_size,
+                            );
 
-                            self.game.conjugates_pass.compute(
+                            self.simulation.conjugates_pass.compute(
                                 &mut encoder,
                                 "Pack Conjugates",
-                                &[&self.scene.consts_bind_group, &self.game.cascade.stg_bind_group],
+                                &[
+                                    &self.scene.consts_bind_group,
+                                    &self.simulation.cascade.stg_bind_group,
+                                ],
                                 workgroup_size,
                                 workgroup_size,
                             );
@@ -143,51 +157,82 @@ impl<'a> Engine<'a> {
                         }
 
                         // per frame computation
-                        self.game.evolve_spectra_pass.compute(
-                            &mut encoder, "Evolve Spectra", &[ 
-                                &self.scene.consts_bind_group, 
-                                &self.game.cascade.stg_bind_group, 
-                                &self.game.cascade.h_displacement.stg_bind_group, 
-                                &self.game.cascade.v_displacement.stg_bind_group,
-                                &self.game.cascade.h_slope.stg_bind_group,
-                                &self.game.cascade.jacobian.stg_bind_group,
+                        self.simulation.evolve_spectra_pass.compute(
+                            &mut encoder,
+                            "Evolve Spectra",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade.stg_bind_group,
+                                &self.simulation.cascade.h_displacement.stg_bind_group,
+                                &self.simulation.cascade.v_displacement.stg_bind_group,
+                                &self.simulation.cascade.h_slope.stg_bind_group,
+                                &self.simulation.cascade.jacobian.stg_bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
-                        ); 
-                        self.game.fft.ifft2d(&mut encoder, &mut self.scene, &self.game.simdata, &self.game.cascade.h_displacement); 
-                        self.game.fft.ifft2d(&mut encoder, &mut self.scene, &self.game.simdata, &self.game.cascade.v_displacement); 
-                        self.game.fft.ifft2d(&mut encoder, &mut self.scene, &self.game.simdata, &self.game.cascade.h_slope); 
-                        self.game.fft.ifft2d(&mut encoder, &mut self.scene, &self.game.simdata, &self.game.cascade.jacobian);
+                        );
+                        self.simulation.fft.ifft2d(
+                            &mut encoder,
+                            &mut self.scene,
+                            &self.simulation.simdata,
+                            &self.simulation.cascade.h_displacement,
+                        );
+                        self.simulation.fft.ifft2d(
+                            &mut encoder,
+                            &mut self.scene,
+                            &self.simulation.simdata,
+                            &self.simulation.cascade.v_displacement,
+                        );
+                        self.simulation.fft.ifft2d(
+                            &mut encoder,
+                            &mut self.scene,
+                            &self.simulation.simdata,
+                            &self.simulation.cascade.h_slope,
+                        );
+                        self.simulation.fft.ifft2d(
+                            &mut encoder,
+                            &mut self.scene,
+                            &self.simulation.simdata,
+                            &self.simulation.cascade.jacobian,
+                        );
 
-                        self.game.process_deltas_pass.compute(
+                        self.simulation.process_deltas_pass.compute(
                             &mut encoder,
                             "Process Deltas",
                             &[
                                 &self.scene.consts_bind_group,
-                                &self.game.cascade.h_displacement.stg_bind_group,
-                                &self.game.cascade.v_displacement.stg_bind_group,
-                                &self.game.cascade.h_slope.stg_bind_group,
-                                &self.game.cascade.jacobian.stg_bind_group,
-                                &self.game.cascade.stg_bind_group,
+                                &self.simulation.cascade.h_displacement.stg_bind_group,
+                                &self.simulation.cascade.v_displacement.stg_bind_group,
+                                &self.simulation.cascade.h_slope.stg_bind_group,
+                                &self.simulation.cascade.jacobian.stg_bind_group,
+                                &self.simulation.cascade.stg_bind_group,
                             ],
                             workgroup_size,
                             workgroup_size,
                         );
 
-                        // Standard Pass
-                        self.queue.write_buffer(&self.scene.consts_buf, 0, cast_slice(&[self.scene.consts]));
-                        self.renderer.render(
+                        // Render Skybox
+                        self.renderer.render_skybox(&mut encoder, &surface_view, &self.scene);
+
+                        // Standard Render Pass
+                        self.queue.write_buffer(
+                            &self.scene.consts_buf,
+                            0,
+                            cast_slice(&[self.scene.consts]),
+                        );
+                        self.renderer.render_standard(
                             &mut encoder,
+                            &self.renderer.std_pipeline,
                             &[
                                 &self.scene.consts_bind_group,
                                 &self.renderer.sampler_bind_group,
                                 &self.renderer.hdri.smp_bind_group,
-                                &self.game.cascade.displacement_map.stg_bind_group,
-                                &self.game.cascade.normal_map.stg_bind_group,
-                                &self.game.cascade.foam_map.stg_bind_group,
-                            ], 
-                            &surface_view, 
+                                &self.simulation.cascade.displacement_map.stg_bind_group,
+                                &self.simulation.cascade.normal_map.stg_bind_group,
+                                &self.simulation.cascade.foam_map.stg_bind_group,
+                            ],
+                            wgpu::LoadOp::Load,
+                            &surface_view,
                             &self.scene.mesh,
                         );
 
@@ -213,6 +258,7 @@ impl<'a> Engine<'a> {
                         }
                         first_frame = false;
 
+                        // Submitting queue to be computed
                         self.queue.submit([encoder.finish()]);
                         surface.present();
                     }
@@ -232,7 +278,8 @@ impl<'a> Engine<'a> {
                         self.renderer.new_depth_view(&self.device, &self.window);
 
                         self.scene.camera.update_fov(&self.window);
-                        self.scene.consts.camera_proj = self.scene.camera.proj * self.scene.camera.view;
+                        self.scene.consts.camera_viewproj =
+                            self.scene.camera.proj * self.scene.camera.view;
                     }
                     WindowEvent::CloseRequested => elwt.exit(),
                     WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
