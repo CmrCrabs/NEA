@@ -1,5 +1,3 @@
-use std::default;
-
 use super::util::Texture;
 use super::{DEPTH_FORMAT, FORMAT};
 use crate::scene::{Mesh, Scene};
@@ -61,7 +59,7 @@ impl Renderer {
 
         let skybox_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-                bind_group_layouts: &[&scene.consts_layout, &hdri.smp_layout, &sampler_layout],
+                bind_group_layouts: &[&scene.consts_layout, &hdri.layout, &sampler_layout],
                 push_constant_ranges: &[],
                 label: None,
             });
@@ -101,10 +99,10 @@ impl Renderer {
             bind_group_layouts: &[
                 &scene.consts_layout,
                 &sampler_layout,
-                &hdri.smp_layout,
-                &game.cascade.displacement_map.stg_layout,
-                &game.cascade.normal_map.stg_layout,
-                &game.cascade.foam_map.stg_layout,
+                &hdri.layout,
+                &game.cascade.displacement_map.layout,
+                &game.cascade.normal_map.layout,
+                &game.cascade.foam_map.layout,
             ],
             push_constant_ranges: &[],
             label: None,
@@ -202,7 +200,7 @@ impl Renderer {
         });
         pass.set_pipeline(&self.skybox_pipeline);
         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
-        pass.set_bind_group(1, &self.hdri.smp_bind_group, &[]);
+        pass.set_bind_group(1, &self.hdri.bind_group, &[]);
         pass.set_bind_group(2, &self.sampler_bind_group, &[]);
         pass.draw(0..3, 0..1);
     }

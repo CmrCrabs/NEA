@@ -9,12 +9,12 @@ use wgpu::Queue;
 pub struct Texture {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,
-    pub smp_bind_group: wgpu::BindGroup,
-    pub smp_layout: wgpu::BindGroupLayout,
+    pub bind_group: wgpu::BindGroup,
+    pub layout: wgpu::BindGroupLayout,
 }
 
 impl Texture {
-    pub fn new(
+    pub fn new_sampled(
         width: u32,
         height: u32,
         format: wgpu::TextureFormat,
@@ -36,12 +36,12 @@ impl Texture {
             label: Some(label),
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[sampled_bind_group_descriptor(0)],
             label: Some(label),
         });
-        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &smp_layout,
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: wgpu::BindingResource::TextureView(&view),
@@ -52,8 +52,53 @@ impl Texture {
         Self {
             texture,
             view,
-            smp_bind_group,
-            smp_layout,
+            bind_group,
+            layout,
+        }
+    }
+
+    pub fn new_storage(
+        width: u32,
+        height: u32,
+        format: wgpu::TextureFormat,
+        device: &wgpu::Device,
+        label: &str,
+    ) -> Self {
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage: wgpu::TextureUsages::STORAGE_BINDING
+                | wgpu::TextureUsages::COPY_DST
+                | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+            label: Some(label),
+        });
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[bind_group_descriptor(0, format)],
+            label: Some(label),
+        });
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&view),
+            }],
+            label: Some(label),
+        });
+
+        Self {
+            texture,
+            view,
+            layout,
+            bind_group,
         }
     }
 
@@ -112,12 +157,12 @@ impl Texture {
             super::cast_slice(&diffuse_rgba.as_raw()),
         );
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[sampled_bind_group_descriptor(0)],
             label: Some(label),
         });
-        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &smp_layout,
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
                 resource: wgpu::BindingResource::TextureView(&view),
@@ -127,97 +172,9 @@ impl Texture {
         Self {
             texture,
             view,
-            smp_layout,
-            smp_bind_group,
+            layout,
+            bind_group,
         }
-    }
-}
-
-pub struct StorageTexture {
-    pub texture: wgpu::Texture,
-    pub view: wgpu::TextureView,
-    pub stg_bind_group: wgpu::BindGroup,
-    pub stg_layout: wgpu::BindGroupLayout,
-    pub smp_bind_group: wgpu::BindGroup,
-    pub smp_layout: wgpu::BindGroupLayout,
-}
-
-impl StorageTexture {
-    pub fn new(
-        width: u32,
-        height: u32,
-        format: wgpu::TextureFormat,
-        device: &wgpu::Device,
-        label: &str,
-    ) -> Self {
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            size: wgpu::Extent3d {
-                width,
-                height,
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format,
-            usage: wgpu::TextureUsages::STORAGE_BINDING
-                | wgpu::TextureUsages::COPY_DST
-                | wgpu::TextureUsages::TEXTURE_BINDING,
-            view_formats: &[],
-            label: Some(label),
-        });
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let stg_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[bind_group_descriptor(0, format)],
-            label: Some(label),
-        });
-        let stg_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &stg_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(&view),
-            }],
-            label: Some(label),
-        });
-        let smp_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            entries: &[sampled_bind_group_descriptor(0)],
-            label: Some(label),
-        });
-        let smp_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            layout: &smp_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(&view),
-            }],
-            label: Some(label),
-        });
-
-        Self {
-            texture,
-            view,
-            stg_bind_group,
-            stg_layout,
-            smp_layout,
-            smp_bind_group,
-        }
-    }
-
-    pub fn write(&self, queue: &Queue, data: &[u8], size: u32) {
-        queue.write_texture(
-            wgpu::ImageCopyTexture {
-                texture: &self.texture,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            data,
-            wgpu::ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(size * self.texture.width()),
-                rows_per_image: Some(self.texture.height()),
-            },
-            self.texture.size(),
-        );
     }
 }
 

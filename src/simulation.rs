@@ -27,7 +27,7 @@ impl Simulation {
         let simdata = SimData::new(&device, &scene.consts);
 
         let initial_spectra_pass = ComputePass::new(
-            &[&scene.consts_layout, &simdata.layout, &cascade.stg_layout],
+            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
             &device,
             &shader,
             "Initial Spectra",
@@ -41,7 +41,7 @@ impl Simulation {
             "fft::precompute_butterfly",
         );
         let conjugates_pass = ComputePass::new(
-            &[&scene.consts_layout, &cascade.stg_layout],
+            &[&scene.consts_layout, &cascade.layout],
             &device,
             &shader,
             "Pack Conjugates",
@@ -50,11 +50,11 @@ impl Simulation {
         let evolve_spectra_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.stg_layout,
-                &cascade.h_displacement.stg_layout,
-                &cascade.v_displacement.stg_layout,
-                &cascade.h_slope.stg_layout,
-                &cascade.jacobian.stg_layout,
+                &cascade.layout,
+                &cascade.h_displacement.layout,
+                &cascade.v_displacement.layout,
+                &cascade.h_slope.layout,
+                &cascade.jacobian.layout,
             ],
             &device,
             &shader,
@@ -64,11 +64,11 @@ impl Simulation {
         let process_deltas_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.h_displacement.stg_layout,
-                &cascade.v_displacement.stg_layout,
-                &cascade.h_slope.stg_layout,
-                &cascade.jacobian.stg_layout,
-                &cascade.stg_layout,
+                &cascade.h_displacement.layout,
+                &cascade.v_displacement.layout,
+                &cascade.h_slope.layout,
+                &cascade.jacobian.layout,
+                &cascade.layout,
             ],
             &device,
             &shader,

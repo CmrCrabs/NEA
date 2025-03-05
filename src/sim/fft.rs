@@ -1,4 +1,4 @@
-use super::{SimData, StorageTexture, Texture};
+use super::{SimData, Texture};
 use crate::{cast_slice, scene::Scene, WG_SIZE};
 use shared::FFTData;
 use std::mem;
@@ -7,7 +7,7 @@ pub struct FourierTransform {
     h_ifft: PipelineFFT,
     v_ifft: PipelineFFT,
     permute: PipelineFFT,
-    pingpong1: super::StorageTexture,
+    pingpong1: super::Texture,
 }
 
 impl FourierTransform {
@@ -17,8 +17,7 @@ impl FourierTransform {
         scene: &Scene,
         simdata: &SimData,
     ) -> Self {
-        //TODO: potentially optimise
-        let pingpong1 = StorageTexture::new(
+        let pingpong1 = Texture::new_storage(
             scene.consts.sim.size,
             scene.consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
@@ -27,8 +26,8 @@ impl FourierTransform {
         );
         let bind_group_layouts = &[
             &simdata.layout,
-            &pingpong1.stg_layout,
-            &pingpong1.stg_layout,
+            &pingpong1.layout,
+            &pingpong1.layout,
         ]; // layout is same for 0 and 1
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
@@ -74,12 +73,12 @@ impl FourierTransform {
         encoder: &'a mut wgpu::CommandEncoder,
         scene: &Scene,
         simdata: &SimData,
-        pingpong0: &StorageTexture,
+        pingpong0: &Texture,
     ) {
         let bind_groups = &[
             &simdata.bind_group,
-            &pingpong0.stg_bind_group,
-            &self.pingpong1.stg_bind_group,
+            &pingpong0.bind_group,
+            &self.pingpong1.bind_group,
         ];
         let wg_size = scene.consts.sim.size / WG_SIZE;
         let mut data = FFTData {

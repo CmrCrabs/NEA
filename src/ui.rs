@@ -50,7 +50,7 @@ impl UI {
         let fonts = context.fonts();
         fonts.add_font(&[FontSource::DefaultFontData { config: None }]);
         let font_texture = fonts.build_rgba32_texture();
-        let texture = Texture::new(
+        let texture = Texture::new_sampled(
             font_texture.width,
             font_texture.height,
             wgpu::TextureFormat::Rgba8UnormSrgb,
@@ -63,7 +63,7 @@ impl UI {
             label: None,
             bind_group_layouts: &[
                 &scene.consts_layout,
-                &texture.smp_layout,
+                &texture.layout,
                 &renderer.sampler_layout,
             ],
             push_constant_ranges: &[],
@@ -187,7 +187,7 @@ impl UI {
         queue.write_buffer(&scene.consts_buf, 0, cast_slice(&[scene.consts]));
         renderpass.set_pipeline(&self.pipeline);
         renderpass.set_bind_group(0, &scene.consts_bind_group, &[]);
-        renderpass.set_bind_group(1, &self.texture.smp_bind_group, &[]);
+        renderpass.set_bind_group(1, &self.texture.bind_group, &[]);
         renderpass.set_bind_group(2, sampler_bind_group, &[]);
         renderpass.set_vertex_buffer(0, self.vtx_buf.slice(..));
         renderpass.set_index_buffer(self.idx_buf.slice(..), wgpu::IndexFormat::Uint16);
