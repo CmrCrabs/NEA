@@ -8,6 +8,7 @@
 - [ ] lengthscales
 - [ ] frametime graph
 - [ ] showcase textures in ui?
+- [ ] fix pbr speckles
 
 
 - [ ] windows compile link1889
