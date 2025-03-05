@@ -110,7 +110,7 @@ impl Scene {
     }
 
     pub fn update_redraw(&mut self, window: &Window) {
-        // Update (consts)
+        // Update the constants for use in shaders
         let duration = self.start_time.elapsed().as_secs_f32();
         self.consts.deltatime = duration - self.consts.time;
         self.consts.time = duration;
@@ -234,12 +234,7 @@ impl Camera {
             view: Mat4::ZERO,
         };
 
-        camera.proj = Mat4::perspective_rh(
-            camera.fovy,
-            camera.aspect,
-            camera.znear,
-            camera.zfar,
-        );
+        camera.proj = Mat4::perspective_rh(camera.fovy, camera.aspect, camera.znear, camera.zfar);
         camera.view = Mat4::look_at_rh(camera.eye, camera.target, camera.up);
         camera
     }
@@ -280,7 +275,6 @@ impl Camera {
 
     pub fn update_fov(&mut self, window: &Window) {
         self.aspect = window.inner_size().width as f32 / window.inner_size().height as f32;
-        self.proj =
-            Mat4::perspective_rh(self.fovy, self.aspect, self.znear, self.zfar);
+        self.proj = Mat4::perspective_rh(self.fovy, self.aspect, self.znear, self.zfar);
     }
 }

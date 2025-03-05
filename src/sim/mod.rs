@@ -1,6 +1,4 @@
-use crate::{
-    util::{bind_group_descriptor, Texture},
-};
+use crate::util::{bind_group_descriptor, Texture};
 use glam::{Vec2, Vec4};
 use rand::prelude::*;
 use shared::Constants;

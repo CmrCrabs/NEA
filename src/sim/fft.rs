@@ -24,11 +24,7 @@ impl FourierTransform {
             &device,
             "PingPong 1",
         );
-        let bind_group_layouts = &[
-            &simdata.layout,
-            &pingpong1.layout,
-            &pingpong1.layout,
-        ]; // layout is same for 0 and 1
+        let bind_group_layouts = &[&simdata.layout, &pingpong1.layout, &pingpong1.layout]; // layout is same for 0 and 1
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
             range: 0..mem::size_of::<FFTData>() as u32,

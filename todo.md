@@ -1,13 +1,14 @@
 - [ ] move files for engine / sim
 
 - [ ] vectors confirm
-- [ ] sampler
 - [ ] full pbr
 - [ ] sun pos
 - [ ] still fix reflections
 - [ ] tiling
 - [ ] lengthscales
 - [ ] frametime graph
+- [ ] showcase textures in ui?
+
 
 - [ ] windows compile link1889
 - [ ] compile binaries
@@ -16,8 +17,6 @@
 - [ ] prove everything works
 - [ ] better camera!!!
 - [ ] remake camera struct to not be bad
-
-
 - [ ] update fragment tex map reads to use sampler
     - [ ] bind same texture multiple ways
 

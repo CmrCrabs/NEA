@@ -54,23 +54,23 @@ pub fn main_fs(
     output: &mut Vec4,
     ) {
     // TODO: fix vectors
-    let n = normal;
-    let l = (consts.shader.light - pos).truncate().normalize();
-    let v = (consts.eye - pos).truncate().normalize();
+    let n = normal.normalize();
+    let l = (consts.shader.light).truncate().normalize();
+    let v = (consts.eye - pos.normalize()).truncate().normalize();
     let h = (l + v).normalize();
  
     let foam = foam.x;
     
     let roughness = consts.shader.roughness + foam * consts.shader.foam_roughness;
 
-    let fresnel = fresnel(h, v, &consts);
+    let fresnel = fresnel(n, v, &consts) * consts.shader.fresnel_sf;
     let l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
     let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, -v))).truncate() * consts.shader.reflection_sf;
     // TODO check h as microfacet normal vs halfway
     let l_specular = match consts.shader.pbr {
         1 => pbr_specular(l, h, n, v, consts, roughness),
         _ => blinn_phong(n, h, consts) * fresnel,
-    };
+    } * consts.shader.pbr_sf;
 
     let l_eye = lerp(
         (1.0 - fresnel) * l_scatter + l_specular + fresnel * l_env_reflected,
@@ -79,7 +79,7 @@ pub fn main_fs(
     );
 
     *output = reinhard_tonemap(l_eye).extend(1.0);
-    //*output = n.extend(1.0);
+    //*output = l_specular.extend(1.0);
     //*output = l_env_reflected.extend(1.0);
 }
 
@@ -105,7 +105,7 @@ fn pbr_specular(l: Vec3, h: Vec3, n: Vec3, v: Vec3, consts: &Constants, roughnes
 }
 
 fn microfacet_brdf(l: Vec3, h: Vec3, n: Vec3, v: Vec3, consts: &Constants, roughness: f32) -> f32 {
-    let f = fresnel(n, v, consts);
+    let f = fresnel(h, v, consts) * consts.shader.fresnel_pbr_sf;
     let g = smith_g2(h, l, v, roughness);
     let d = ggx(n, h, roughness);
     f * g * d / (4.0 * n.dot(l) * n.dot(v))
@@ -125,7 +125,6 @@ fn smith_g1(h: Vec3, s: Vec3, roughness: f32) -> f32 {
     let alpha = roughness * roughness;
     let hs = h.dot(s);
     let a = hs / (alpha * (1.0 - hs * hs).sqrt());
-    // TODO multiply ggx by a?
     1.0 / (1.0 + lambda_ggx(a))
 }
 

@@ -212,7 +212,8 @@ impl<'a> Engine<'a> {
                         );
 
                         // Render Skybox
-                        self.renderer.render_skybox(&mut encoder, &surface_view, &self.scene);
+                        self.renderer
+                            .render_skybox(&mut encoder, &surface_view, &self.scene);
 
                         // Standard Render Pass
                         self.queue.write_buffer(

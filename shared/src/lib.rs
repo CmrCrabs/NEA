@@ -41,6 +41,9 @@ pub struct ShaderConstants {
     pub reflection_sf: f32,
     pub view_mat: Mat4,
     pub proj_mat: Mat4,
+    pub fresnel_sf: f32,
+    pub fresnel_pbr_sf: f32,
+    pub pbr_sf: f32,
 
 }
 impl Default for ShaderConstants {
@@ -65,10 +68,13 @@ impl Default for ShaderConstants {
             sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
             shininess: 2.0,
             distance_factor: 3.0,
-            pbr: 0,
+            pbr: 1,
             reflection_sf: 1.0,
             view_mat: Mat4::ZERO,
             proj_mat: Mat4::ZERO,
+            fresnel_sf: 0.1,
+            fresnel_pbr_sf: 1.0,
+            pbr_sf: 1.0,
         }
     }
 }
@@ -100,7 +106,7 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 512;
+        let size = 256;
         Self {
             size,
             lengthscale: 50,

@@ -291,10 +291,11 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.text("Info");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
             ui.text(format!(
-                "{}x{} Simulation",
-                consts.sim.size, consts.sim.size
+                "A {}x{} simulation, running at {} fps",
+                consts.sim.size,
+                consts.sim.size,
+                ui.io().framerate
             ));
-            ui.text(format!("Running at {} fps", ui.io().framerate));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.slider("Depth", 1.0, 50.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
@@ -336,11 +337,12 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     0.00001,
                     &mut consts.sim.cutoff_low,
                 );
-                ui.slider("Cutoff High 0", 0.0, 10.0, &mut consts.sim.cutoff_high);
+                ui.slider("Cutoff High 0", 0.0, 15.0, &mut consts.sim.cutoff_high);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.checkbox("PBR", &mut pbr_bool);
+                ui.slider("PBR Specular Scale Factor", 0.0, 10.0, &mut consts.shader.pbr_sf);
                 ui.slider(
                     "Water Refractive Index",
                     0.0,
@@ -348,6 +350,8 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     &mut consts.shader.water_ri,
                 );
                 ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
+                ui.slider("Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_sf);
+                ui.slider("PBR Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_pbr_sf);
                 ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
                 ui.slider(
                     "Foam Roughness Modifier",
@@ -381,7 +385,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     &mut consts.shader.bubble_density,
                 );
                 ui.slider("Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
-                ui.slider("Sun Height", -10.0, 50.0, &mut consts.shader.sun_height);
+                ui.slider("Sun Height", 0.0, 50.0, &mut consts.shader.sun_height);
                 ui.slider("Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
                 ui.slider(
                     "Distance Factor",
