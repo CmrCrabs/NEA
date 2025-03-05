@@ -23,40 +23,43 @@ type StorageImage = Image!(2D, format = rgba32f, sampled = false);
 #[spirv(vertex)]
 pub fn main_vs(
     pos: Vec4,
-    uv: Vec2,
+    uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4,
-    out_uv: &mut Vec2,
+    out_normal: &mut Vec3,
+    out_foam: &mut Vec3,
 ) { 
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
-    let displacement = displacement_map.read(UVec2::new(uv.x as _, uv.y as _));
+    let displacement = displacement_map.read(uv);
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_viewproj * resultant_pos;
-    *out_uv = uv;
+    *out_normal = normal_map.read(uv).truncate();
+    *out_foam = foam_map.read(uv).truncate();
 }
 
 #[inline(never)]
 #[spirv(fragment)]
 pub fn main_fs(
     #[spirv(position)] pos: Vec4,
-    uv: Vec2,
+    normal: Vec3,
+    foam: Vec3,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
-    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &Image2d,
-    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &Image2d,
     output: &mut Vec4,
     ) {
     // TODO: fix vectors
-    let n = normal_map.sample(*sampler, uv).truncate();
+    let n = normal;
     let l = (consts.shader.light - pos).truncate().normalize();
     let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
  
-    let foam = foam_map.sample(*sampler, uv).x;
+    let foam = foam.x;
     
     let roughness = consts.shader.roughness + foam * consts.shader.foam_roughness;
 

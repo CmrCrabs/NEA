@@ -44,7 +44,7 @@ pub struct Mesh {
 #[repr(C, align(16))]
 pub struct Vertex {
     pos: Vec4,
-    uv: glam::Vec2,
+    uv: glam::UVec2,
 }
 
 impl Scene {
@@ -172,7 +172,7 @@ impl Mesh {
         for z in 0..scale {
             for x in 0..scale {
                 let pos = Vec4::new(x as f32 * step, 0.0, z as f32 * step, 1.0);
-                let uv = glam::Vec2::new(x as f32, z as f32) / consts.sim.size as f32;
+                let uv = glam::UVec2::new(x, z);
                 vertices.push(Vertex { pos, uv });
             }
         }
