@@ -61,7 +61,7 @@ pub fn main_fs(
     let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
  
-    let foam = foam.y;
+    let foam = foam.x.max(0.0).min(1.0);
     
     let roughness = consts.shader.roughness + foam * consts.shader.foam_roughness;
 
@@ -79,7 +79,7 @@ pub fn main_fs(
     );
 
     *output = reinhard_tonemap(l_eye).extend(1.0);
-    //*output = l_specular.extend(1.0);
+    //*output = Vec3::splat(foam).extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {

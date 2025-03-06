@@ -308,7 +308,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
                 ui.slider(
                     "Foam Injection Threshold",
-                    0.00,
+                    -1.00,
                     1.0,
                     &mut consts.sim.injection_threshold,
                 );

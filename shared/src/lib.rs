@@ -140,7 +140,7 @@ impl Default for SimConstants {
             integration_step: 0.01,
             foam_bias: 0.76,
             foam_decay: 0.3,
-            injection_threshold: 0.13,
+            injection_threshold: -0.1,
             injection_amount: 0.5,
             height_offset: 4.5,
         }
