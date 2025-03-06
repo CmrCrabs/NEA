@@ -386,16 +386,6 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     1.0,
                     &mut consts.shader.bubble_density,
                 );
-                ui.slider("Sun Size", 0.0, 0.2, &mut consts.shader.sun_size);
-                ui.slider("Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
-                ui.slider("Sun Height", 0.0, 50.0, &mut consts.shader.sun_height);
-                ui.slider("Sun Distance", 0.0, 50.0, &mut consts.shader.sun_distance);
-                ui.slider(
-                    "Distance Factor",
-                    0.0,
-                    1.0,
-                    &mut consts.shader.distance_factor,
-                );
                 ui.slider(
                     "Blinn Phong Shininess",
                     0.0,
@@ -408,6 +398,17 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     10.0,
                     &mut consts.shader.reflection_sf,
                 );
+            }
+            ui.separator();
+            if ui.collapsing_header("World Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.slider("Sun X", -1.0, 1.0, &mut consts.shader.sun_x);
+                ui.slider("Sun Y", -1.0, 1.0, &mut consts.shader.sun_y);
+                ui.slider("Sun Z", -1.0, 1.0, &mut consts.shader.sun_z);
+                ui.slider("Sun Angle", -PI, PI, &mut consts.shader.sun_angle);
+                ui.slider("Sun Distance", 0.0, 500.0, &mut consts.shader.sun_distance);
+                ui.slider("Sun Size", 0.0, PI / 18.0, &mut consts.shader.sun_size);
+                ui.slider("Sun Falloff", 0.0, 10000.0, &mut consts.shader.sun_falloff);
+                ui.slider("Height Offset", 0.0, 50.0, &mut consts.sim.height_offset);
             }
             ui.separator();
             if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {

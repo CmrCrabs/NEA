@@ -34,7 +34,7 @@ pub fn main_vs(
     out_world_pos: &mut Vec4,
 ) { 
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
-    let offset = Vec4::new(offset, 0.0, offset, 0.0);
+    let offset = Vec4::new(offset, consts.sim.height_offset, offset, 0.0);
     let displacement = displacement_map.read(uv);
     let mut resultant_pos = pos + displacement - offset;
     resultant_pos.w = 1.0;

@@ -1,4 +1,4 @@
-use spirv_std::glam::{Vec4,  Vec2};
+use spirv_std::glam::{Vec4,  Vec2, Vec3};
 use spirv_std::{spirv,image::Image2d, Sampler};
 use shared::Constants;
 use spirv_std::num_traits::Float;
@@ -40,9 +40,11 @@ pub fn skybox_fs(
         equirectangular_to_uv(ray_dir.truncate()),
     ).truncate()).extend(1.0);
     
-    if ray_dir.dot(consts.shader.light.normalize()) > consts.shader.sun_size.cos() {
-        *out_color = (consts.shader.sun_color * 10.0).truncate().extend(1.0);      
-    } else {
-        *out_color = sky_col;
-    }
+    *out_color = sky_col + dist_to_sun(ray_dir.truncate(), &consts) * consts.shader.sun_color.truncate().extend(1.0);
+}
+
+fn dist_to_sun(ray: Vec3, consts: &Constants) -> f32 {
+    let dot = ray.dot(consts.shader.light.truncate().normalize());
+    let cos = consts.shader.sun_size.cos();
+    (dot - cos).max(0.0) * consts.shader.sun_falloff
 }

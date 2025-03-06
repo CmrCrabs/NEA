@@ -20,9 +20,11 @@ pub struct Constants {
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ShaderConstants {
     pub light: Vec4,
-    pub sun_height: f32,
-    pub sun_distance: f32,
+    pub sun_x: f32,
+    pub sun_y: f32,
+    pub sun_z: f32,
     pub sun_angle: f32,
+    pub sun_distance: f32,
     pub foam_color: Vec4,
     pub water_ri: f32,
     pub air_ri: f32,
@@ -37,7 +39,6 @@ pub struct ShaderConstants {
     pub scatter_color: Vec4,
     pub sun_color: Vec4,
     pub shininess: f32,
-    pub distance_factor: f32,
     pub pbr: u32,
     pub reflection_sf: f32,
     pub view_mat: Mat4,
@@ -48,15 +49,18 @@ pub struct ShaderConstants {
     pub fresnel_normal_sf: f32,
     pub fresnel_shine: f32,
     pub sun_size: f32,
+    pub sun_falloff: f32,
 
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,0.0,0.0,1.0),
-            sun_height: 5.9,
-            sun_distance: 50.0,
-            sun_angle: PI,
+            sun_x: 1.0,
+            sun_y: 0.08,
+            sun_z: 0.36,
+            sun_angle: 0.0,
+            sun_distance: 100.0,
             foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
             water_ri: 1.33,
             air_ri: 1.003,
@@ -69,9 +73,8 @@ impl Default for ShaderConstants {
             bubble_density: 0.35,
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
-            sun_color: Vec4::new(0.53, 0.45, 0.38, 1.0),
+            sun_color: Vec4::new(1.0, 0.6, 0.25, 1.0),
             shininess: 2.0,
-            distance_factor: 3.0,
             pbr: 1,
             reflection_sf: 1.0,
             view_mat: Mat4::ZERO,
@@ -81,7 +84,8 @@ impl Default for ShaderConstants {
             pbr_sf: 1.0,
             fresnel_normal_sf: 0.20,
             fresnel_shine: 7.6,
-            sun_size: 0.013,
+            sun_size: 0.02,
+            sun_falloff: 5000.0
         }
     }
 }
@@ -110,6 +114,7 @@ pub struct SimConstants {
     pub foam_decay: f32,
     pub injection_threshold: f32,
     pub injection_amount: f32,
+    pub height_offset: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
@@ -137,6 +142,7 @@ impl Default for SimConstants {
             foam_decay: 0.3,
             injection_threshold: 0.13,
             injection_amount: 0.5,
+            height_offset: 4.5,
         }
     }
 }
