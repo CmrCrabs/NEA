@@ -120,12 +120,12 @@ impl Scene {
         self.consts.shader.view_mat = self.camera.view;
 
         let w = self.consts.sim.size as f32
-            * self.consts.sim.mesh_step
             * self.consts.shader.distance_factor;
+
         self.consts.shader.light = Vec4::new(
             self.consts.shader.sun_distance,
             self.consts.shader.sun_height,
-            self.consts.shader.sun_distance,
+            0.0,
             1.0 / w,
         ) * w;
         self.consts.shader.light =
@@ -212,8 +212,8 @@ impl Mesh {
 impl Camera {
     pub fn new(window: &Window) -> Camera {
         let pitch: f32 = 0.0;
-        let yaw: f32 = -10.0;
-        let zoom: f32 = 20.0;
+        let yaw: f32 = 10.0;
+        let zoom: f32 = 30.0;
 
         let mut camera = Camera {
             pitch,

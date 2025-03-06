@@ -1,6 +1,7 @@
 use spirv_std::glam::{Vec4,  Vec2};
 use spirv_std::{spirv,image::Image2d, Sampler};
 use shared::Constants;
+use spirv_std::num_traits::Float;
 use crate::{equirectangular_to_uv, reinhard_tonemap};
 
 #[inline(never)]
@@ -32,9 +33,16 @@ pub fn skybox_fs(
     let target = proj_inverse * Vec4::new(uv.x, uv.y, 1.0, 1.0);
     let target_transform = (target.truncate() / target.w).normalize().extend(0.0);
     let ray_dir = view_inverse * target_transform;
+    
 
-    *out_color = reinhard_tonemap(hdri.sample(
+    let sky_col = reinhard_tonemap(hdri.sample(
         *sampler, 
         equirectangular_to_uv(ray_dir.truncate()),
     ).truncate()).extend(1.0);
+    
+    if ray_dir.dot(consts.shader.light.normalize()) > consts.shader.sun_size.cos() {
+        *out_color = (consts.shader.sun_color * 10.0).truncate().extend(1.0);      
+    } else {
+        *out_color = sky_col;
+    }
 }

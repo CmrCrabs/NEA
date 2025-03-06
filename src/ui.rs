@@ -386,13 +386,14 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     1.0,
                     &mut consts.shader.bubble_density,
                 );
+                ui.slider("Sun Size", 0.0, 0.2, &mut consts.shader.sun_size);
                 ui.slider("Sun Angle", 0.0, 2.0 * PI, &mut consts.shader.sun_angle);
                 ui.slider("Sun Height", 0.0, 50.0, &mut consts.shader.sun_height);
-                ui.slider("Sun Distance", 0.0, 20.0, &mut consts.shader.sun_distance);
+                ui.slider("Sun Distance", 0.0, 50.0, &mut consts.shader.sun_distance);
                 ui.slider(
                     "Distance Factor",
+                    0.0,
                     1.0,
-                    3.0,
                     &mut consts.shader.distance_factor,
                 );
                 ui.slider(

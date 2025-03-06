@@ -1,6 +1,7 @@
 #![no_std]
 
 use core::f32;
+use core::f32::consts::PI;
 use glam::{Vec4, Mat4};
 
 #[repr(C)]
@@ -46,15 +47,16 @@ pub struct ShaderConstants {
     pub pbr_sf: f32,
     pub fresnel_normal_sf: f32,
     pub fresnel_shine: f32,
+    pub sun_size: f32,
 
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
         Self {
             light: Vec4::new(0.0,0.0,0.0,1.0),
-            sun_height: 50.0,
-            sun_distance: 20.0,
-            sun_angle: 0.0,
+            sun_height: 5.9,
+            sun_distance: 50.0,
+            sun_angle: PI,
             foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
             water_ri: 1.33,
             air_ri: 1.003,
@@ -79,6 +81,7 @@ impl Default for ShaderConstants {
             pbr_sf: 1.0,
             fresnel_normal_sf: 0.20,
             fresnel_shine: 7.6,
+            sun_size: 0.013,
         }
     }
 }
@@ -110,7 +113,7 @@ pub struct SimConstants {
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 256;
+        let size = 512;
         Self {
             size,
             lengthscale: 50,
