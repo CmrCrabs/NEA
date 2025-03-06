@@ -288,7 +288,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
         .always_auto_resize(true)
         .build(|| {
             ui.text("Parameters marked with (*) generally should not be changed");
-            ui.text("Info");
+            ui.text("Info:");
             ui.text(format!("{:.1$} Elapsed", consts.time, 2));
             ui.text(format!(
                 "A {}x{} simulation, running at {} fps",
@@ -350,7 +350,9 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                     &mut consts.shader.water_ri,
                 );
                 ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
+                ui.slider("Fresnel Shine", 0.0, 10.0, &mut consts.shader.fresnel_shine);
                 ui.slider("Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_sf);
+                ui.slider("Fresnel Normal Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_normal_sf);
                 ui.slider("PBR Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_pbr_sf);
                 ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
                 ui.slider(

@@ -1,7 +1,5 @@
 use spirv_std::glam::{Vec4,  Vec2};
 use spirv_std::{spirv,image::Image2d, Sampler};
-use spirv_std::num_traits::Float;
-use core::f32::consts;
 use shared::Constants;
 use crate::{equirectangular_to_uv, reinhard_tonemap};
 
@@ -24,15 +22,11 @@ pub fn skybox_vs(
 #[spirv(fragment)]
 pub fn skybox_fs(
     uv: Vec2,
-    #[spirv(frag_coord)] pos: Vec4,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] hdri: &Image2d,
     #[spirv(descriptor_set = 2, binding = 0)] sampler: &Sampler,
     out_color: &mut Vec4,
 ) {
-    let eye = -consts.eye.normalize();
-    let inverse = consts.camera_viewproj.inverse();
-    let pos = inverse * uv.extend(1.0).extend(1.0);
     let proj_inverse = consts.shader.proj_mat.inverse();
     let view_inverse = consts.shader.view_mat.inverse();
     let target = proj_inverse * Vec4::new(uv.x, uv.y, 1.0, 1.0);

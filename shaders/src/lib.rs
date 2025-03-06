@@ -31,6 +31,7 @@ pub fn main_vs(
     #[spirv(position)] out_pos: &mut Vec4,
     out_normal: &mut Vec3,
     out_foam: &mut Vec3,
+    out_world_pos: &mut Vec4,
 ) { 
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, 0.0, offset, 0.0);
@@ -40,23 +41,24 @@ pub fn main_vs(
     *out_pos = consts.camera_viewproj * resultant_pos;
     *out_normal = normal_map.read(uv).truncate();
     *out_foam = foam_map.read(uv).truncate();
+    *out_world_pos = resultant_pos;
 }
 
 #[inline(never)]
 #[spirv(fragment)]
 pub fn main_fs(
-    #[spirv(position)] pos: Vec4,
     normal: Vec3,
     foam: Vec3,
+    world_pos: Vec4,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
     output: &mut Vec4,
     ) {
-    // TODO: fix vectors
+    let pos = world_pos;
     let n = normal.normalize();
-    let l = (consts.shader.light).truncate().normalize();
-    let v = (consts.eye - pos.normalize()).truncate().normalize();
+    let l = (consts.shader.light - pos).truncate().normalize();
+    let v = (consts.eye - pos).truncate().normalize();
     let h = (l + v).normalize();
  
     let foam = foam.x;
@@ -65,13 +67,11 @@ pub fn main_fs(
 
     let fresnel = fresnel(n, v, &consts) * consts.shader.fresnel_sf;
     let l_scatter = subsurface_scattering(l, v, n, pos.y, roughness, consts);
-    let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, -v))).truncate() * consts.shader.reflection_sf;
-    // TODO check h as microfacet normal vs halfway
+    let l_env_reflected = hdri.sample(*sampler, equirectangular_to_uv(reflect(n, v))).truncate() * consts.shader.reflection_sf;
     let l_specular = match consts.shader.pbr {
-        1 => pbr_specular(l, h, n, v, consts, roughness),
+        1 => pbr_specular(l, h, n, v, consts, roughness) * consts.shader.pbr_sf,
         _ => blinn_phong(n, h, consts) * fresnel,
-    } * consts.shader.pbr_sf;
-
+    };
     let l_eye = lerp(
         (1.0 - fresnel) * l_scatter + l_specular + fresnel * l_env_reflected,
         consts.shader.foam_color.truncate(),
@@ -79,14 +79,15 @@ pub fn main_fs(
     );
 
     *output = reinhard_tonemap(l_eye).extend(1.0);
-    //*output = l_specular.extend(1.0);
     //*output = l_env_reflected.extend(1.0);
+    //*output = Vec3::splat(fresnel).extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {
+    let fresnel_n = Vec3::new(n.x * consts.shader.fresnel_normal_sf, n.y, n.z * consts.shader.fresnel_normal_sf);
     let f0 = ((consts.shader.air_ri - consts.shader.water_ri)
         / (consts.shader.air_ri + consts.shader.water_ri)).powf(2.0);
-    f0 + (1.0 - f0) * (1.0 - n.dot(v)).powf(5.0)
+    f0 + (1.0 - f0) * (1.0 - fresnel_n.dot(v)).powf(consts.shader.fresnel_shine)
 }
 
 fn subsurface_scattering(l: Vec3, v: Vec3, n: Vec3, height: f32, roughness: f32, consts: &Constants) -> Vec3 {
@@ -120,7 +121,6 @@ fn smith_g2(h: Vec3, l: Vec3, v: Vec3, roughness: f32) -> f32 {
     1.0 / (1.0 + smith_g1(h, l, roughness) + smith_g1(h, v, roughness))
 }
 
-// TODO: h as microfacet normal
 fn smith_g1(h: Vec3, s: Vec3, roughness: f32) -> f32 {
     let alpha = roughness * roughness;
     let hs = h.dot(s);
@@ -154,8 +154,3 @@ fn equirectangular_to_uv(v: Vec3) -> Vec2 {
 fn reinhard_tonemap(c: Vec3) -> Vec3 {
     c / (c + Vec3::splat(1.0))
 }
-
-fn unreal_tonemap(c: Vec3) -> Vec3 {
-    c / (c + Vec3::splat(0.155)) * 1.019
-}
-

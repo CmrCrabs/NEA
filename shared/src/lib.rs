@@ -44,6 +44,8 @@ pub struct ShaderConstants {
     pub fresnel_sf: f32,
     pub fresnel_pbr_sf: f32,
     pub pbr_sf: f32,
+    pub fresnel_normal_sf: f32,
+    pub fresnel_shine: f32,
 
 }
 impl Default for ShaderConstants {
@@ -72,9 +74,11 @@ impl Default for ShaderConstants {
             reflection_sf: 1.0,
             view_mat: Mat4::ZERO,
             proj_mat: Mat4::ZERO,
-            fresnel_sf: 0.1,
+            fresnel_sf: 1.0,
             fresnel_pbr_sf: 1.0,
             pbr_sf: 1.0,
+            fresnel_normal_sf: 0.20,
+            fresnel_shine: 7.6,
         }
     }
 }
@@ -118,8 +122,6 @@ impl Default for SimConstants {
             depth: 10.0,
             gravity: 9.81,
             wind_speed: 40.0,
-            //gravity: 10.0,
-            //wind_speed: 0.01,
             beta: 5.0 / 4.0,
             gamma: 3.3,
             wind_offset: f32::consts::FRAC_PI_4,
