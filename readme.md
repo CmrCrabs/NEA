@@ -6,7 +6,7 @@ fft works. 90fps at 512x512x1 on an intel integrated iris xe gpu
 - currently defaulting to "kloofendal.exr"
 - default hdri can be changed in src/renderer.rs line 42
 
-https://polyhaven.com/a/belfast_sunset_puresky
+https://polyhaven.com/a/kloofendal_43d_clear_puresky
 
 [Report](paperwork.pdf)
 [Todo List](todo.md)

@@ -61,3 +61,4 @@
 - proper tonemapping based on exposure
 - more advanced foam
 - sea spray
+- level of detail
