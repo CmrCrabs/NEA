@@ -426,7 +426,7 @@ To hide the imperfect horizon line we use a distance fog attenuated based on hei
 A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
 
 #figure(
-  image("paperwork_assets/chaotic_attractor.png", width: 50%),
+  image("assets/chaotic_attractor.png", width: 50%),
   caption: [
     Found at https://github.com/CmrCrabs/chaotic-attractors
   ],

@@ -39,9 +39,9 @@ impl Renderer {
             label: None,
         });
 
-        let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/kloofendal.exr");
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/kloppenheim.exr");
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/belfast_sunset.exr");
+        let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/kloofendal.exr");
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/kloppenheim.exr");
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/belfast_sunset.exr");
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
