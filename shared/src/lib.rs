@@ -50,6 +50,7 @@ pub struct ShaderConstants {
     pub fresnel_shine: f32,
     pub sun_size: f32,
     pub sun_falloff: f32,
+    pub pbr_cutoff: f32,
 
 }
 impl Default for ShaderConstants {
@@ -73,7 +74,7 @@ impl Default for ShaderConstants {
             bubble_density: 0.35,
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
-            sun_color: Vec4::new(1.0, 0.6, 0.25, 1.0),
+            sun_color: Vec4::new(1.0, 0.8, 0.55, 1.0),
             shininess: 2.0,
             pbr: 1,
             reflection_sf: 1.0,
@@ -85,7 +86,8 @@ impl Default for ShaderConstants {
             fresnel_normal_sf: 0.20,
             fresnel_shine: 7.6,
             sun_size: 0.02,
-            sun_falloff: 5000.0
+            sun_falloff: 5000.0,
+            pbr_cutoff: 0.1,
         }
     }
 }
@@ -140,8 +142,8 @@ impl Default for SimConstants {
             integration_step: 0.01,
             foam_bias: 0.76,
             foam_decay: 0.3,
-            injection_threshold: -0.1,
-            injection_amount: 0.5,
+            injection_threshold: -0.3,
+            injection_amount: 1.0,
             height_offset: 4.5,
         }
     }

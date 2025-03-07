@@ -28,10 +28,10 @@ pub fn main_vs(
     #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
     #[spirv(descriptor_set = 5, binding = 0)] foam_map: &StorageImage,
-    #[spirv(position)] out_pos: &mut Vec4,
-    out_normal: &mut Vec3,
+    #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
+    out_uv: &mut UVec2,
 ) { 
     let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
     let offset = Vec4::new(offset, consts.sim.height_offset, offset, 0.0);
@@ -42,6 +42,7 @@ pub fn main_vs(
     *out_normal = normal_map.read(uv).truncate();
     *out_foam = foam_map.read(uv).truncate();
     *out_world_pos = resultant_pos;
+    *out_uv = uv;
 }
 
 #[inline(never)]
@@ -50,15 +51,17 @@ pub fn main_fs(
     normal: Vec3,
     foam: Vec3,
     world_pos: Vec4,
+    #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
+    #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     output: &mut Vec4,
     ) {
-    let pos = world_pos;
+    let pos = world_pos.truncate();
     let n = normal.normalize();
-    let l = (consts.shader.light - pos).truncate().normalize();
-    let v = (consts.eye - pos).truncate().normalize();
+    let l = (consts.shader.light.truncate() - pos).normalize();
+    let v = (consts.eye.truncate() - pos).normalize();
     let h = (l + v).normalize();
  
     let foam = foam.x.max(0.0).min(1.0);
@@ -77,9 +80,9 @@ pub fn main_fs(
         consts.shader.foam_color.truncate(),
         foam,
     );
-
+    
     *output = reinhard_tonemap(l_eye).extend(1.0);
-    //*output = Vec3::splat(foam).extend(1.0);
+    //*output = l_specular.extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {
@@ -108,12 +111,14 @@ fn microfacet_brdf(l: Vec3, h: Vec3, n: Vec3, v: Vec3, consts: &Constants, rough
     let f = fresnel(h, v, consts) * consts.shader.fresnel_pbr_sf;
     let g = smith_g2(h, l, v, roughness);
     let d = ggx(n, h, roughness);
-    f * g * d / (4.0 * n.dot(l) * n.dot(v))
+    let div = (4.0 * n.dot(l) * n.dot(v)).max(consts.shader.pbr_cutoff);
+    f * g * d / div
 }
 
 fn ggx(n: Vec3, h: Vec3, roughness: f32) -> f32 {
+    let nh = n.dot(h).max(0.0001).min(0.9999);
     roughness * roughness / (consts::PI * 
-    ((roughness * roughness - 1.0) * n.dot(h).powf(2.0) + 1.0).powf(2.0))
+    ((roughness * roughness - 1.0) * nh.powf(2.0) + 1.0).powf(2.0))
 }
 
 fn smith_g2(h: Vec3, l: Vec3, v: Vec3, roughness: f32) -> f32 {

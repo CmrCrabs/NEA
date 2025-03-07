@@ -297,6 +297,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.io().framerate
             ));
             if ui.collapsing_header("Simulation Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.text("Waves");
                 ui.slider("Depth", 1.0, 50.0, &mut consts.sim.depth);
                 ui.slider("Gravity", 0.1, 100.0, &mut consts.sim.gravity);
                 ui.slider("Wind Speed", 0.1, 100.0, &mut consts.sim.wind_speed);
@@ -304,103 +305,47 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
-                ui.slider("Foam Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
-                ui.slider("Foam Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
-                ui.slider(
-                    "Foam Injection Threshold",
-                    -1.00,
-                    1.0,
-                    &mut consts.sim.injection_threshold,
-                );
-                ui.slider(
-                    "Foam Injection Amount",
-                    0.00,
-                    2.0,
-                    &mut consts.sim.injection_amount,
-                );
-                ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
-                ui.slider(
-                    "Integration Step*",
-                    0.001,
-                    0.02,
-                    &mut consts.sim.integration_step,
-                );
-                ui.slider(
-                    "Lengthscale 0",
-                    0,
-                    consts.sim.size,
-                    &mut consts.sim.lengthscale,
-                );
-                ui.slider(
-                    "Cutoff Low 0*",
-                    0.00000,
-                    0.00001,
-                    &mut consts.sim.cutoff_low,
-                );
+                ui.text("Lengthscales");
+                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
+                ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
                 ui.slider("Cutoff High 0", 0.0, 15.0, &mut consts.sim.cutoff_high);
+                ui.text("Foam");
+                ui.slider("Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
+                ui.slider("Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
+                ui.slider("Injection Threshold", -1.00, 1.0, &mut consts.sim.injection_threshold);
+                ui.slider("Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
+                ui.text("Misc");
+                ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
+                ui.slider("Integration Step*", 0.001, 0.02, &mut consts.sim.integration_step);
             }
             ui.separator();
             if ui.collapsing_header("Shader Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.text("PBR");
                 ui.checkbox("PBR", &mut pbr_bool);
                 ui.slider("PBR Specular Scale Factor", 0.0, 10.0, &mut consts.shader.pbr_sf);
-                ui.slider(
-                    "Water Refractive Index",
-                    0.0,
-                    2.0,
-                    &mut consts.shader.water_ri,
-                );
+                ui.slider("PBR Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_pbr_sf);
+                ui.slider("PBR Cutoff Low*", 0.0, 0.2, &mut consts.shader.pbr_cutoff);
+                ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
+                ui.slider("Foam Roughness Modifier", 0.0, 2.0, &mut consts.shader.foam_roughness);
+                ui.text("Fresnel");
+                ui.slider("Water Refractive Index", 0.0, 2.0, &mut consts.shader.water_ri);
                 ui.slider("Air Refractive Index*", 0.0, 2.0, &mut consts.shader.air_ri);
                 ui.slider("Fresnel Shine", 0.0, 10.0, &mut consts.shader.fresnel_shine);
                 ui.slider("Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_sf);
                 ui.slider("Fresnel Normal Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_normal_sf);
-                ui.slider("PBR Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_pbr_sf);
-                ui.slider("Water Roughness", 0.0, 0.5, &mut consts.shader.roughness);
-                ui.slider(
-                    "Foam Roughness Modifier",
-                    0.0,
-                    2.0,
-                    &mut consts.shader.foam_roughness,
-                );
-                ui.slider(
-                    "Subsurface Scattering Height Attenuation",
-                    0.0,
-                    1.0,
-                    &mut consts.shader.ss_height,
-                );
-                ui.slider(
-                    "Subsurface Scattering Reflection Strength",
-                    0.0,
-                    1.0,
-                    &mut consts.shader.ss_reflected,
-                );
+                ui.text("Subsurface Scattering");
+                ui.slider("Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
+                ui.slider("Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
-                ui.slider(
-                    "Ambient Light Strength",
-                    0.0,
-                    1.0,
-                    &mut consts.shader.ss_ambient,
-                );
-                ui.slider(
-                    "Air Bubble Density",
-                    0.0,
-                    1.0,
-                    &mut consts.shader.bubble_density,
-                );
-                ui.slider(
-                    "Blinn Phong Shininess",
-                    0.0,
-                    50.0,
-                    &mut consts.shader.shininess,
-                );
-                ui.slider(
-                    "Reflections Strength",
-                    0.0,
-                    10.0,
-                    &mut consts.shader.reflection_sf,
-                );
+                ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
+                ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
+                ui.text("Misc");
+                ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
+                ui.slider("Reflections Strength", 0.0, 10.0, &mut consts.shader.reflection_sf);
             }
             ui.separator();
             if ui.collapsing_header("World Parameters", TreeNodeFlags::DEFAULT_OPEN) {
+                ui.text("Sun");
                 ui.slider("Sun X", -1.0, 1.0, &mut consts.shader.sun_x);
                 ui.slider("Sun Y", -1.0, 1.0, &mut consts.shader.sun_y);
                 ui.slider("Sun Z", -1.0, 1.0, &mut consts.shader.sun_z);
@@ -408,6 +353,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Sun Distance", 0.0, 500.0, &mut consts.shader.sun_distance);
                 ui.slider("Sun Size", 0.0, PI / 18.0, &mut consts.shader.sun_size);
                 ui.slider("Sun Falloff", 0.0, 10000.0, &mut consts.shader.sun_falloff);
+                ui.text("Water");
                 ui.slider("Height Offset", 0.0, 50.0, &mut consts.sim.height_offset);
             }
             ui.separator();
