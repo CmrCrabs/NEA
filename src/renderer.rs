@@ -6,6 +6,8 @@ pub struct Renderer {
     pub sampler_bind_group: wgpu::BindGroup,
     pub sampler_layout: wgpu::BindGroupLayout,
     pub depth_view: wgpu::TextureView,
+    pub depth_bind_group: wgpu::BindGroup,
+    pub depth_layout: wgpu::BindGroupLayout,
     pub std_pipeline: wgpu::RenderPipeline,
     pub hdri: Texture,
     pub skybox_pipeline: wgpu::RenderPipeline,
@@ -17,7 +19,7 @@ impl Renderer {
         queue: &wgpu::Queue,
         shader: &wgpu::ShaderModule,
         window: &winit::window::Window,
-        game: &super::simulation::Simulation,
+        sim: &super::simulation::Simulation,
         scene: &super::scene::Scene,
     ) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
@@ -58,6 +60,18 @@ impl Renderer {
             view_formats: &[],
         });
         let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let depth_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            entries: &[super::util::sampled_bind_group_descriptor(0)],
+            label: Some("Depth Texture"),
+        });
+        let depth_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            layout: &depth_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&depth_view),
+            }],
+            label: Some("Depth Texture"),
+        });
 
         let skybox_pipeline_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -102,9 +116,7 @@ impl Renderer {
                 &scene.consts_layout,
                 &sampler_layout,
                 &hdri.layout,
-                &game.cascade.displacement_map.layout,
-                &game.cascade.normal_map.layout,
-                &game.cascade.foam_map.layout,
+                &sim.cascade.layout,
             ],
             push_constant_ranges: &[],
             label: None,
@@ -149,6 +161,8 @@ impl Renderer {
             sampler_layout,
             sampler_bind_group,
             depth_view,
+            depth_layout,
+            depth_bind_group,
             std_pipeline,
             hdri,
             skybox_pipeline,

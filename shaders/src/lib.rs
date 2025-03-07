@@ -26,12 +26,15 @@ pub fn main_vs(
     uv: UVec2,
     #[spirv(instance_index)] instance_index: u32,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 5, binding = 0)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
+    #[spirv(descriptor_set = 3, binding = 3)] displacement_map: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 4)] normal_map: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 5)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 0)] depth_tex: &Image2d,
     #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
+    out_depth: &mut Vec4,
 ) { 
     let width = consts.sim.size as f32 * consts.sim.mesh_step;
     let x = instance_index % consts.sim.instances;
@@ -55,6 +58,7 @@ pub fn main_fs(
     normal: Vec3,
     foam: Vec3,
     world_pos: Vec4,
+    depth: Vec4,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
@@ -65,6 +69,7 @@ pub fn main_fs(
     let l = (consts.shader.light.truncate() - pos).normalize();
     let v = (consts.eye.truncate() - pos).normalize();
     let h = (l + v).normalize();
+    let dist = (consts.eye - world_pos).length();
  
     let foam = foam.x.max(0.0).min(1.0);
     
