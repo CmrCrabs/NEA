@@ -40,6 +40,8 @@ impl Renderer {
         });
 
         let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/kloofendal.exr");
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/kloppenheim.exr");
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/hdris/belfast_sunset.exr");
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -213,6 +215,7 @@ impl Renderer {
         load_op: wgpu::LoadOp<wgpu::Color>,
         surface_view: &wgpu::TextureView,
         mesh: &Mesh,
+        instances: u32,
     ) {
         // TODO: move to render
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -242,6 +245,6 @@ impl Renderer {
         }
         pass.set_vertex_buffer(0, mesh.vtx_buf.slice(..));
         pass.set_index_buffer(mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
-        pass.draw_indexed(0..(mesh.length as _), 0, 0..1);
+        pass.draw_indexed(0..(mesh.length as _), 0, 0..(instances * instances));
     }
 }

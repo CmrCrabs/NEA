@@ -24,6 +24,7 @@ type StorageImage = Image!(2D, format = rgba32f, sampled = false);
 pub fn main_vs(
     pos: Vec4,
     uv: UVec2,
+    #[spirv(instance_index)] instance_index: u32,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     #[spirv(descriptor_set = 4, binding = 0)] normal_map: &StorageImage,
@@ -31,18 +32,21 @@ pub fn main_vs(
     #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
-    out_uv: &mut UVec2,
 ) { 
-    let offset = 0.5 * consts.sim.size as f32 * consts.sim.mesh_step;
-    let offset = Vec4::new(offset, consts.sim.height_offset, offset, 0.0);
+    let width = consts.sim.size as f32 * consts.sim.mesh_step;
+    let x = instance_index % consts.sim.instances;
+    let z  = instance_index / consts.sim.instances;
+    let tiling_offset = Vec4::new(x as f32 * width, 0.0, z as f32 * width, 0.0) * 0.99;
+    let positive_offset = Vec4::new(width * 0.5, 0.0, width * 0.5, 0.0) * (consts.sim.instances as f32 - 1.0);
+
+    let centring_offset = Vec4::new(0.5 * width, consts.sim.height_offset, 0.5 * width, 0.0);
     let displacement = displacement_map.read(uv);
-    let mut resultant_pos = pos + displacement - offset;
+    let mut resultant_pos = pos + displacement - centring_offset + tiling_offset - positive_offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_viewproj * resultant_pos;
     *out_normal = normal_map.read(uv).truncate();
     *out_foam = foam_map.read(uv).truncate();
     *out_world_pos = resultant_pos;
-    *out_uv = uv;
 }
 
 #[inline(never)]
@@ -51,11 +55,9 @@ pub fn main_fs(
     normal: Vec3,
     foam: Vec3,
     world_pos: Vec4,
-    #[spirv(flat)] uv: UVec2,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
-    #[spirv(descriptor_set = 3, binding = 0)] displacement_map: &StorageImage,
     output: &mut Vec4,
     ) {
     let pos = world_pos.truncate();
@@ -82,7 +84,6 @@ pub fn main_fs(
     );
     
     *output = reinhard_tonemap(l_eye).extend(1.0);
-    //*output = l_specular.extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {

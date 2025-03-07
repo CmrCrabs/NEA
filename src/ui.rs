@@ -315,6 +315,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Injection Threshold", -1.00, 1.0, &mut consts.sim.injection_threshold);
                 ui.slider("Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
                 ui.text("Misc");
+                ui.slider("Instances per Axis",1, 10, &mut consts.sim.instances);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider("Integration Step*", 0.001, 0.02, &mut consts.sim.integration_step);
             }

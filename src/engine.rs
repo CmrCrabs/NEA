@@ -235,6 +235,7 @@ impl<'a> Engine<'a> {
                             wgpu::LoadOp::Load,
                             &surface_view,
                             &self.scene.mesh,
+                            self.scene.consts.sim.instances,
                         );
 
                         // UI Pass

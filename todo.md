@@ -1,3 +1,6 @@
+- offset top right
+- move whole thing such that centred again
+
 - [ ] move files for engine / sim
 
 - [ ] vectors confirm
@@ -42,7 +45,10 @@
 - [ ] mention nyquist theorem for bounds
 - [ ] add section and explain complex mult, ih
 - [ ] credit biebras  using actual name
+- [ ] credit reinhard tonemapping
 - [ ] talk about equirectangular sampling for an "alg"
+    - [ ] credit equirect sample and skybox sample
+- [ ] credit learn wgpu
 
 
 ### future improvements
@@ -50,5 +56,8 @@
 - use push constants
 - better optimise
 - shore interactions
+- bloom pass
+- fix skybox offset
+- proper tonemapping based on exposure
 - more advanced foam
 - sea spray

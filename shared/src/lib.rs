@@ -1,7 +1,6 @@
 #![no_std]
 
 use core::f32;
-use core::f32::consts::PI;
 use glam::{Vec4, Mat4};
 
 #[repr(C)]
@@ -117,25 +116,26 @@ pub struct SimConstants {
     pub injection_threshold: f32,
     pub injection_amount: f32,
     pub height_offset: f32,
+    pub instances: u32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
-        let size = 512;
+        let size = 256;
         Self {
             size,
-            lengthscale: 50,
+            lengthscale: 100,
             cutoff_low: 0.00000001,
             cutoff_high: 10.0,
-            mesh_step: 0.2 * 128.0 / size as f32,
+            mesh_step: 0.4 * 128.0 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
             depth: 10.0,
             gravity: 9.81,
-            wind_speed: 40.0,
+            wind_speed: 10.0,
             beta: 5.0 / 4.0,
             gamma: 3.3,
             wind_offset: f32::consts::FRAC_PI_4,
-            fetch: 9500.0,
+            fetch: 2500.0,
             choppiness: 0.6,
             logsize: 0,
             swell: 0.6,
@@ -145,6 +145,7 @@ impl Default for SimConstants {
             injection_threshold: -0.3,
             injection_amount: 1.0,
             height_offset: 4.5,
+            instances: 5,
         }
     }
 }

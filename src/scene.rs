@@ -225,7 +225,7 @@ impl Camera {
             aspect: window.inner_size().width as f32 / window.inner_size().height as f32,
             fovy: PI / 4.0,
             znear: 0.1,
-            zfar: 100.0,
+            zfar: 100000.0,
             proj: Mat4::ZERO,
             view: Mat4::ZERO,
         };
