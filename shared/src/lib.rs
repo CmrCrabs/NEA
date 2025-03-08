@@ -54,7 +54,7 @@ pub struct ShaderConstants {
     pub fog_color: Vec4,
     pub fog_offset: f32,
     pub fog_falloff: f32,
-
+    pub fog_height: f32,
 }
 impl Default for ShaderConstants {
     fn default() -> Self {
@@ -62,7 +62,7 @@ impl Default for ShaderConstants {
             light: Vec4::new(0.0,0.0,0.0,1.0),
             sun_x: 1.0,
             sun_y: 0.08,
-            sun_z: 0.36,
+            sun_z: 0.034,
             sun_angle: 0.0,
             sun_distance: 100.0,
             foam_color: Vec4::new(0.79,0.92,0.96, 1.0),
@@ -73,7 +73,7 @@ impl Default for ShaderConstants {
             ss_height: 0.76,
             ss_reflected: 1.0,
             ss_lambert: 1.0,
-            ss_ambient: 0.9,
+            ss_ambient: 0.75,
             bubble_density: 0.35,
             bubble_color: Vec4::new(0.0, 0.15, 0.15, 1.0),
             scatter_color: Vec4::new(0.04, 0.06, 0.14, 1.0),
@@ -87,14 +87,15 @@ impl Default for ShaderConstants {
             fresnel_pbr_sf: 1.0,
             pbr_sf: 1.0,
             fresnel_normal_sf: 0.20,
-            fresnel_shine: 7.6,
+            fresnel_shine: 4.5,
             sun_size: 0.02,
             sun_falloff: 5000.0,
             pbr_cutoff: 0.1,
             fog_color: Vec4::new(0.9,0.9,0.9,1.0),
-            fog_density: 10.0,
-            fog_offset: 81.522,
-            fog_falloff: 3.744,
+            fog_density: 8.9,
+            fog_offset: 24.5,
+            fog_falloff: 3.7,
+            fog_height: 3.8,
         }
     }
 }
@@ -130,16 +131,16 @@ impl Default for SimConstants {
     fn default() -> Self {
         let size = 256;
         Self {
+            depth: 10.0,
             size,
-            lengthscale: 100,
+            lengthscale: 120,
             cutoff_low: 0.00000001,
             cutoff_high: 10.0,
             mesh_step: 0.4 * 128.0 / size as f32,
             standard_deviation: 1.0,
             mean: 0.0,
-            depth: 10.0,
             gravity: 9.81,
-            wind_speed: 10.0,
+            wind_speed: 5.0,
             beta: 5.0 / 4.0,
             gamma: 3.3,
             wind_offset: f32::consts::FRAC_PI_4,

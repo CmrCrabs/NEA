@@ -344,6 +344,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fog Density", 0.0, 10.0, &mut consts.shader.fog_density);
                 ui.slider("Fog Offset", 0.0, 500.0, &mut consts.shader.fog_offset);
                 ui.slider("Fog Falloff", 0.0, 10.0, &mut consts.shader.fog_falloff);
+                ui.slider("Fog Height", 0.0, 100.0, &mut consts.shader.fog_height);
                 ui.text("Misc");
                 ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
                 ui.slider("Reflections Strength", 0.0, 10.0, &mut consts.shader.reflection_sf);

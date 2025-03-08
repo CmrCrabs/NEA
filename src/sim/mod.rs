@@ -9,9 +9,6 @@ pub mod fft;
 pub struct Cascade {
     pub bind_group: wgpu::BindGroup,
     pub layout: wgpu::BindGroupLayout,
-    pub displacement_map: Texture,
-    pub normal_map: Texture,
-    pub foam_map: Texture,
     pub h_displacement: Texture,
     pub h_slope: Texture,
     pub v_displacement: Texture,
@@ -137,9 +134,6 @@ impl Cascade {
         Self {
             layout,
             bind_group,
-            displacement_map,
-            normal_map,
-            foam_map,
             h_slope,
             h_displacement,
             v_displacement,

@@ -9,7 +9,7 @@ pub mod skybox;
 pub mod process_deltas;
 
 use core::f32::consts;
-use core::ops::{Add,Mul};
+use core::ops::{Add, Mul};
 
 use spirv_std::glam::{Vec4, Vec3, UVec2, Vec2};
 use spirv_std::image::Image2d;
@@ -32,7 +32,7 @@ pub fn main_vs(
     #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
-) { 
+) {
     let width = consts.sim.size as f32 * consts.sim.mesh_step;
     let x = instance_index % consts.sim.instances;
     let z  = instance_index / consts.sim.instances;
