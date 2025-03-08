@@ -340,6 +340,10 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
                 ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
                 ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
+                ui.text("Fog");
+                ui.slider("Fog Density", 0.0, 10.0, &mut consts.shader.fog_density);
+                ui.slider("Fog Offset", 0.0, 500.0, &mut consts.shader.fog_offset);
+                ui.slider("Fog Falloff", 0.0, 10.0, &mut consts.shader.fog_falloff);
                 ui.text("Misc");
                 ui.slider("Blinn Phong Shininess", 0.0, 50.0, &mut consts.shader.shininess);
                 ui.slider("Reflections Strength", 0.0, 10.0, &mut consts.shader.reflection_sf);
@@ -369,6 +373,9 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             }
             if ui.collapsing_header("Foam Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
                 ui.color_picker4("Foam Color", consts.shader.foam_color.as_mut());
+            }
+            if ui.collapsing_header("Fog Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
+                ui.color_picker4("Fog Color", consts.shader.fog_color.as_mut());
             }
             focused = ui.is_window_focused();
             consts.shader.pbr = pbr_bool as u32;

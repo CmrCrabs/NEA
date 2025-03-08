@@ -50,6 +50,10 @@ pub struct ShaderConstants {
     pub sun_size: f32,
     pub sun_falloff: f32,
     pub pbr_cutoff: f32,
+    pub fog_density: f32,
+    pub fog_color: Vec4,
+    pub fog_offset: f32,
+    pub fog_falloff: f32,
 
 }
 impl Default for ShaderConstants {
@@ -87,6 +91,10 @@ impl Default for ShaderConstants {
             sun_size: 0.02,
             sun_falloff: 5000.0,
             pbr_cutoff: 0.1,
+            fog_color: Vec4::new(0.9,0.9,0.9,1.0),
+            fog_density: 10.0,
+            fog_offset: 81.522,
+            fog_falloff: 3.744,
         }
     }
 }

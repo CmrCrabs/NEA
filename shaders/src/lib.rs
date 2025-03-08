@@ -26,15 +26,12 @@ pub fn main_vs(
     uv: UVec2,
     #[spirv(instance_index)] instance_index: u32,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 3, binding = 3)] displacement_map: &StorageImage,
     #[spirv(descriptor_set = 3, binding = 4)] normal_map: &StorageImage,
     #[spirv(descriptor_set = 3, binding = 5)] foam_map: &StorageImage,
-    #[spirv(descriptor_set = 4, binding = 0)] depth_tex: &Image2d,
     #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
-    out_depth: &mut Vec4,
 ) { 
     let width = consts.sim.size as f32 * consts.sim.mesh_step;
     let x = instance_index % consts.sim.instances;
@@ -58,7 +55,6 @@ pub fn main_fs(
     normal: Vec3,
     foam: Vec3,
     world_pos: Vec4,
-    depth: Vec4,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
     #[spirv(descriptor_set = 1, binding = 0)] sampler: &Sampler,
     #[spirv(descriptor_set = 2, binding = 0)] hdri: &Image2d,
@@ -69,8 +65,12 @@ pub fn main_fs(
     let l = (consts.shader.light.truncate() - pos).normalize();
     let v = (consts.eye.truncate() - pos).normalize();
     let h = (l + v).normalize();
+
     let dist = (consts.eye - world_pos).length();
- 
+    let max_dist = (consts.eye - 0.5 * consts.sim.size as f32 * consts.sim.mesh_step * consts.sim.instances as f32).length();
+    let t = ((dist - consts.shader.fog_offset) / (max_dist - consts.shader.fog_offset)).clamp(0.0, 1.0);
+    let fog = t.powf(consts.shader.fog_falloff) * consts.shader.fog_density;
+
     let foam = foam.x.max(0.0).min(1.0);
     
     let roughness = consts.shader.roughness + foam * consts.shader.foam_roughness;
@@ -87,13 +87,17 @@ pub fn main_fs(
         consts.shader.foam_color.truncate(),
         foam,
     );
+    let l_eye = lerp(
+        l_eye,
+        consts.shader.fog_color.truncate(),
+        fog,
+    );
     
     *output = reinhard_tonemap(l_eye).extend(1.0);
 }
 
 fn fresnel(n: Vec3, v: Vec3, consts: &Constants) -> f32 {
-    let fresnel_n = Vec3::new(n.x * consts.shader.fresnel_normal_sf, n.y, n.z * consts.shader.fresnel_normal_sf);
-    let f0 = ((consts.shader.air_ri - consts.shader.water_ri)
+    let fresnel_n = Vec3::new(n.x * consts.shader.fresnel_normal_sf, n.y, n.z * consts.shader.fresnel_normal_sf); let f0 = ((consts.shader.air_ri - consts.shader.water_ri)
         / (consts.shader.air_ri + consts.shader.water_ri)).powf(2.0);
     f0 + (1.0 - f0) * (1.0 - fresnel_n.dot(v)).powf(consts.shader.fresnel_shine)
 }

@@ -9,10 +9,11 @@
 - [ ] still fix reflections
 - [ ] tiling
 - [ ] lengthscales
-- [ ] frametime graph
 - [ ] showcase textures in ui?
 - [ ] fix pbr speckles
 
+- [ ] use better fog color per demo window
+- [ ] frametime graph
 
 - [ ] windows compile link1889
 - [ ] compile binaries
@@ -62,3 +63,6 @@
 - more advanced foam
 - sea spray
 - level of detail
+- improve camera
+- add lengthscales
+- add live texture viewers to imgui, explain why i didnt

@@ -1,7 +1,7 @@
 use spirv_std::glam::{Vec4,  Vec2, Vec3};
 use spirv_std::{spirv,image::Image2d, Sampler};
-use shared::Constants;
 use spirv_std::num_traits::Float;
+use shared::Constants;
 use crate::{equirectangular_to_uv, reinhard_tonemap};
 
 #[inline(never)]
@@ -33,7 +33,6 @@ pub fn skybox_fs(
     let target = proj_inverse * Vec4::new(uv.x, uv.y, 1.0, 1.0);
     let target_transform = (target.truncate() / target.w).normalize().extend(0.0);
     let ray_dir = view_inverse * target_transform;
-    
 
     let sky_col = reinhard_tonemap(hdri.sample(
         *sampler, 
