@@ -92,10 +92,10 @@ impl Default for ShaderConstants {
             sun_falloff: 5000.0,
             pbr_cutoff: 0.1,
             fog_color: Vec4::new(0.9,0.9,0.9,1.0),
-            fog_density: 8.9,
+            fog_density: 1.47,
             fog_offset: 24.5,
-            fog_falloff: 3.7,
-            fog_height: 3.8,
+            fog_falloff: 3.54,
+            fog_height: 1.04,
         }
     }
 }

@@ -40,7 +40,7 @@ pub fn skybox_fs(
     let world_pos = view_inverse * view_pos;
     let ray_dir = world_pos.truncate().normalize();
 
-    let h = ray_dir.y / consts.eye.normalize().y;
+    let h = (ray_dir.y / consts.eye.normalize().y).clamp(0.0, 1.0);
     let fog = (-h * consts.shader.fog_density - consts.shader.fog_height).exp();
 
     let sky_col = reinhard_tonemap(hdri.sample(

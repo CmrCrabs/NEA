@@ -36,7 +36,7 @@ pub fn main_vs(
     let width = consts.sim.size as f32 * consts.sim.mesh_step;
     let x = instance_index % consts.sim.instances;
     let z  = instance_index / consts.sim.instances;
-    let tiling_offset = Vec4::new(x as f32 * width, 0.0, z as f32 * width, 0.0) * 0.99;
+    let tiling_offset = Vec4::new(x as f32 * width, 0.0, z as f32 * width, 0.0) * 0.96;
     let positive_offset = Vec4::new(width * 0.5, 0.0, width * 0.5, 0.0) * (consts.sim.instances as f32 - 1.0);
 
     let centring_offset = Vec4::new(0.5 * width, consts.sim.height_offset, 0.5 * width, 0.0);
