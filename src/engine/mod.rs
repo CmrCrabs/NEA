@@ -1,14 +1,19 @@
 use super::{FORMAT, WG_SIZE};
 use crate::{cast_slice, Result};
-use crate::{
+use {
     renderer::Renderer,
     scene::{Mesh, Scene},
-    simulation::Simulation,
+    crate::sim::Simulation,
     ui::UI,
 };
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::keyboard::{KeyCode, PhysicalKey};
+
+pub mod renderer;
+pub mod scene;
+pub mod ui;
+pub mod util;
 
 pub struct Engine<'a> {
     pub device: wgpu::Device,
@@ -240,7 +245,7 @@ impl<'a> Engine<'a> {
                         let consts_copy = self.scene.consts.clone();
                         self.ui.update_cursor(&self.window);
                         let ui_frame = self.ui.context.frame();
-                        self.ui.focused = super::ui::build(ui_frame, &mut self.scene.consts);
+                        self.ui.focused = ui::build(ui_frame, &mut self.scene.consts);
                         self.ui.render(
                             &self.device,
                             &self.queue,

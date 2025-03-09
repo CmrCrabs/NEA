@@ -3,13 +3,8 @@ use log::LevelFilter;
 use std::{mem, slice};
 use winit::{event_loop::EventLoop, window::WindowBuilder};
 
-mod engine;
-mod renderer;
-mod scene;
-mod sim;
-mod simulation;
-mod ui;
-mod util;
+pub mod engine;
+pub mod sim;
 
 pub type Result<T = (), E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 

@@ -1,5 +1,5 @@
-use super::{SimData, Texture};
-use crate::{cast_slice, scene::Scene, WG_SIZE};
+use super::SimData;
+use crate::{cast_slice, engine::{scene::Scene, util::Texture}, WG_SIZE};
 use shared::FFTData;
 use std::mem;
 
@@ -7,7 +7,7 @@ pub struct FourierTransform {
     h_ifft: PipelineFFT,
     v_ifft: PipelineFFT,
     permute: PipelineFFT,
-    pingpong1: super::Texture,
+    pingpong1: Texture,
 }
 
 impl FourierTransform {
@@ -36,7 +36,7 @@ impl FourierTransform {
             &device,
             &shader,
             "H-Step IFFT",
-            "fft::hstep_ifft",
+            "sim::fft::hstep_ifft",
         );
         let v_ifft = PipelineFFT::new(
             bind_group_layouts,
@@ -44,7 +44,7 @@ impl FourierTransform {
             &device,
             &shader,
             "V-Step IFFT",
-            "fft::vstep_ifft",
+            "sim::fft::vstep_ifft",
         );
         let permute = PipelineFFT::new(
             bind_group_layouts,
@@ -52,7 +52,7 @@ impl FourierTransform {
             &device,
             &shader,
             "Permute",
-            "fft::permute",
+            "sim::fft::permute",
         );
 
         Self {

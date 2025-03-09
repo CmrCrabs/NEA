@@ -1,12 +1,9 @@
 #![no_std]
 // TODO: clean warnings
 //#![deny(warnings)]
-pub mod initial_spectra;
-pub mod evolve_spectra;
-pub mod fft;
+pub mod sim;
 pub mod ui;
 pub mod skybox;
-pub mod process_deltas;
 
 use core::f32::consts;
 use core::ops::{Add, Mul};

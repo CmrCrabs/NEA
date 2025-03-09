@@ -1,4 +1,4 @@
-use crate::{cast_slice, renderer::Renderer, scene::Scene, util::Texture, FORMAT};
+use {crate::{cast_slice, FORMAT}, super::renderer::Renderer, super::scene::Scene, super::util::Texture};
 use imgui::{BackendFlags, DrawVert, FontSource, Key, MouseCursor, TreeNodeFlags, Ui};
 use shared::Constants;
 use std::{f32::consts::PI, mem};

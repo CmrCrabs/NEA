@@ -1,19 +1,10 @@
-- offset top right
-- move whole thing such that centred again
-
 - [ ] move files for engine / sim
 
-- [ ] vectors confirm
-- [ ] full pbr
-- [ ] sun pos
-- [ ] still fix reflections
-- [ ] tiling
-- [ ] lengthscales
-- [ ] showcase textures in ui?
-- [ ] fix pbr speckles
+- [ ] create compute_lengthscale fn
+- [ ] add lengthscales
 
 - [ ] use better fog color per demo window
-- [ ] frametime graph
+- [ ] cargo clippy
 
 - [ ] windows compile link1889
 - [ ] compile binaries

@@ -3,7 +3,7 @@ use spirv_std::{
     num_traits::Float,
 };
 use core::f32::consts;
-use crate::{evolve_spectra::complex_mult, StorageImage};
+use crate::{sim::evolve_spectra::complex_mult, StorageImage};
 use shared::{Constants, FFTData};
 use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
 

@@ -1,6 +1,7 @@
 use super::util::Texture;
-use super::{DEPTH_FORMAT, FORMAT};
-use crate::scene::{Mesh, Scene};
+use crate::{DEPTH_FORMAT, FORMAT};
+use super::scene::{Mesh, Scene};
+use super::Simulation;
 
 pub struct Renderer {
     pub sampler_bind_group: wgpu::BindGroup,
@@ -17,7 +18,7 @@ impl Renderer {
         queue: &wgpu::Queue,
         shader: &wgpu::ShaderModule,
         window: &winit::window::Window,
-        sim: &super::simulation::Simulation,
+        sim: &Simulation,
         scene: &super::scene::Scene,
     ) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
@@ -39,9 +40,9 @@ impl Renderer {
             label: None,
         });
 
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "../assets/kloppenheim.exr");
+        //let hdri = Texture::from_file(&device, &queue, "HDRI", "../assets/belfast_sunset.exr");
         let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/kloofendal.exr");
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/kloppenheim.exr");
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/belfast_sunset.exr");
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
