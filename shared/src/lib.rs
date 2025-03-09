@@ -163,7 +163,7 @@ impl Default for SimConstants {
             gamma: 3.3,
             wind_offset: f32::consts::FRAC_PI_4,
             fetch: 4000.0,
-            choppiness: 0.6,
+            choppiness: 0.2,
             logsize: 0,
             swell: 0.1,
             integration_step: 0.01,
