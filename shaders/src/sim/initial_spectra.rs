@@ -139,7 +139,6 @@ fn final_spread(omega: f32, omega_p: f32, theta: f32, consts: &Constants) -> f32
     let spread = directional_spread(omega, omega_p, theta, consts);
     let integral = integral(omega_p, omega, consts);
     spread * integral
-
 }
 
 fn integral(omega_p: f32, omega: f32, consts: &Constants) -> f32 {

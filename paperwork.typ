@@ -59,12 +59,13 @@
 
 
 == Abstract
+// TODO: SYNOPSIS
 \/\/ synopsis
 // the goal of this project was to....
 = Analysis
 
 == Client Introduction
-The client is Jahleel Abraham. They are a game developer who require a physically based, performant, configurable simulation of an ocean for use in their game. They also require a physically based lighting model derived from microfacet theory, including PBR specular, and empirical subsurface scattering. Also expected is a fully featured GUI allowing direct control over every input parameter, and a functioning orbit camera.
+The client is Jahleel Abraham. They are a game developer who require a physically based, performant, configurable simulation of an ocean for use in their game. They also require a physically based lighting model derived from microfacet theory, including PBR specular, and empirical subsurface scattering. Also expected is a fully featured GUI allowing direct control over every input parameter, and a functioning camera controller.
 
 == Interview Questions
 + Functionality
@@ -88,11 +89,11 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 + Functionality
   + it should simulate waves in all real world conditions and be able to generate foam, if possible simulating other phenomena would be nice.
   + all necessary parameters in order to simulate real world conditions, ability to control tile size / individual wave quantity
-  + accompanying GUI to control parameters and tile size. GUI should also output debug information and performance statistics
+  + accompanying GUI to control parameters and tile size. GUI should output frametime, and the current state of every parameter.
 + Visuals
   + a basic skybox would be nice, if possible include an atmosphere shader
   + implement a PBR water shader, include a microfacet BRDF
-  + caustics are out of scope, implement approximate subsurface scattering, use beckmann distribution in combination with brdf to simulate reflections
+  + caustics are out of scope, implement approximate subsurface scattering, use GGX distribution in combination with brdf to simulate reflections
 + Technologies
   + client has not started technical implementation of project, so is not beholden to an existing technical stack
   + see response 3.1
@@ -102,10 +103,10 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   + the simulation is targeted towards mid to high end systems, ideally the solution would also be performant on lower end hardware 
 
 #pagebreak()
-== Technologies (Unfinished)
+== Technologies
 - Rust:
   - Fast, memory efficient programming language
-- WGPU:
+- wgpu:
   - Graphics library
 - Rust GPU:
   - (Rust as a) shader language
@@ -113,56 +114,79 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
   - cross platform window creation and event loop management library
 - Dear ImGui
   - Bloat-free GUI library with minimal dependencies
-- Naga:
-  - Shader translation library
 - GLAM:
   - Linear algebra library
+- Pollster / Env Logger:
+  - used to read errors, as wgpu does not log as would be standard
+- Image:
+  - used to read HDRIs from a file into memory for processing
 - Nix:
-  - Declarative, reproducible development environment
+  - Used to create a declarative, reproducible development environment
 
+// TODO LINK TO UI.RS // TODO: properly credit and comment
 == Algorithm Overview (Unfinished)
-// add sources per line
-\/\/ like 20x more complex than this 
-Note that throughout this project we are defining the positive $y$ direction as "up".
+// INCLUDE COOL GRAPH OF TEXTURES
+Note that throughout this project we are defining the positive $y$ direction as "up". All textures exist only in GPU memory.
 \
-startup:
-- generate gaussian random number pairs and store into texture on cpu
-param change:
-- generate energy spectrum for every wave and store into texture
-- generate dispersion relation for every wave and store into texture
-every frame:
-- evolve spectrum
-- inverse fft for all 3 axes 
-- inverse fft for all 5 derivatives
-- store results into textures
-- displace vertices per textures
-- compute jacobian of textures
-- inject foam into foam texture
-- lighting
-- color pixels for foam
-- exponential decay function on foam
+On Startup:
+- Generate gaussian random number pairs, and store them into a texture, on the CPU
+- Compute the butterfly operation's twiddle factors, and indices, and store them into a texture
+On Parameter Change (For Every Lengthscale):
+- Compute the initial wave vectors and dispersion relation, and store into a texture
+- Compute the initial frequency spectrum for each wave vector, and store into a texture
+- Compute the conjugate of each wave vector, and store into a texture
+Frame-by-Frame:
+- For Every Lengthscale:
+  - Evolve initial frequency spectrum through time
+  - Pre-compute & store amplitudes for FFT into textures
+  - perform IFFT for height displacement
+  - perform IFFT for normal calculation
+  - perform IFFT(s) for jacobian
+  - Process & merge IFFT results into displacement, normal, and foam maps 
+- Create a fullscreen quad and render skybox, sun & fog to framebuffer
+- Offset tiles based on instance index & centering
+- Combine values for all 3 lengthscales & offset vertices based on displacement map
+- Compute lighting value and render result to framebuffer
 
-#pagebreak()
+== Nomenclature
+To compute the inital spectra, we rely on various input parameters and definitions shared between various functions and parts of the program. @variables lists the relevant symbols, meanings and relationships where appropriate.
+#figure(
+  table(
+    columns: 2,
+    table.header[*Variable*][*Definition*],
+    [$arrow(k)$], [2D Wave Vector],
+    [$k_x$], [X Component of wave vector],
+    [$k_z$], [Z Component of wave vector],
+    [$k$], [Magnitude of the wave vector],
+    [$t$], [time],
+    [$arrow(x) = [x_x, x_z]$], [Position vector in world space],
+    [$omega = phi(k)$], [Dispersion relation],
+    [$omega_p$], [Peak Frequency],
+    [$g$], [Gravitational Constant = 9.81],
+    [$h$], [Ocean Depth],
+    [$U_(10)$], [Wind speed 10m above surface],
+    [$F$], [Fetch, distance over which wind blows],
+    [$theta$], [Wind direction = $"arctan2"(k_z, k_x) - theta_0$],
+    [$theta_0$], [Wind direction offset],
+    [$L$], [Lengthscale],
+    [$L_x = L_z$], [Simulation Dimensions, power of two],
+    [$xi$], [Swell amount],
+    [$lambda$], [Choppiness factor],
+  ),
+  caption: [Initial Variable Definitions],
+) <variables>
+
 == Spectrum Generation
-// overview
 === Dispersion Relation @JTessendorf @Empirical-Spectra
-The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it. This dispersion relation also considers capillary waves using an approximate relationship between surface tension and density @Empirical-Spectra.
+The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it.@Empirical-Spectra
 
-//$ phi(k) = omega =  sqrt(g k tanh (k h)) $
-//$ (d phi(k)) / (d k) = (h(sigma / rho k^3 + g k) sech^2 (h k) +  (g k + sigma / rho k^3) tanh (k h))  / (2 sqrt((g k + sigma / rho k^3) tanh (k h))) $
 $ omega = phi(k) =  sqrt(g k tanh (k h)) $
 $ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
 
-where
-- $g$ is gravity
-- $h$ is the ocean depth
-- $k = |arrow(k)|$, defined with the wave summation below
-- $sigma$ is the surface tension coefficient $N m^(-1)$
-- $rho$ is the density $"kg" m^(-3)$
-
+#pagebreak()
 === Non-Directional Spectrum (JONSWAP) @Empirical-Spectra @OW-Spectra @Jump-Trajectory @Acerola-FFT
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
-  $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- beta (omega_p / omega)^4] gamma^r $
+  $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- 5/4 (omega_p / omega)^4] 3.3^r $
   $ r = exp [ - (omega -omega_p)^2 / (2omega_p ^2 sigma ^2)] $ 
   $ alpha = 0.076 ( (U_(10) ^2) / (F g))^(0.22) $
   $ omega_p = 22( (g^2) / (U_10 F))^(1/3) $
@@ -170,15 +194,6 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
       0.07 "if" omega <= omega_p,
       0.09 "if" omega > omega_p,
     ) $
-  where
-  - $alpha$ is the intensity of the spectra
-  - $beta = 5/4$, a "shape factor", rarely changed @OW-Spectra
-  - $gamma = 3.3$
-  - $omega = phi(k)$, the dispersion relation
-  - $omega_p$ is the peak wave frequency
-  - $U_(10)$ is the wind speed at $10"m"$ above the sea surface @OW-Spectra
-  - $F$ is the distance from a lee shore (a fetch) - distance over which wind blows with constant velocity @OW-Spectra @Empirical-Spectra
-  - $g$ is gravity
 
 === Depth Attenuation Function (Approximation of Kitaiigorodskii) @Empirical-Spectra
 JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra. 
@@ -187,16 +202,10 @@ $ Phi (omega, h) = cases(
   1 - 1 / 2 (2 - omega_h)^2 "if" omega_h > 1,
 ) $
 $ omega_h = omega sqrt(h / g) $
-where 
-- $omega = phi(k)$, the dispersion relation
-- $h$ is the ocean depth
-- $g$ is gravity
-Given time, I may derive a simpler approximation using $tanh(k)$ as that seems interesting.
 
-=== Directional Spread Function (Donelan-Banner) @Empirical-Spectra
+=== Directional Spread Function (Donelan-Banner) @Empirical-Spectra <Donelan-Banner>
 The directional spread models how waves react to wind direction @Jump-Trajectory. This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
-$ theta = arctan (k_z / k_x) - theta_0 $
 $ D (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
 $ beta_s = cases( 
   2.61 (omega / omega_p)^1.3 "if" omega / omega_p < 0.95,
@@ -204,52 +213,36 @@ $ beta_s = cases(
   10^epsilon "if" omega / omega_p >= 1.6,
 ) $
 $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
-where
-- $theta_0$ is a wind direction offset
 
-=== Swell (Unfinished) @Empirical-Spectra
-Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. It is worth noting that, "bar the 'magic value' of 16 seen in $s_xi$, the spectrum (and thus the simulation) is fully empirical" @Empirical-Spectra. The integral seen in $Q_"final"$ is computed numerically.
+=== Swell @Empirical-Spectra
+Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. The integral seen in $Q_"final"$ is computed numerically using the rectangle rule. $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra, approximation taken from @Jump-Trajectory
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
 $ Q_"final" (omega) = ( integral_(- pi)^(pi) D_"base" (omega, theta) D_xi (omega, theta) d theta )^(-1)  $
 $ D_xi = Q_xi (s_xi) |cos (theta / 2)|^(2 s_xi) $
 $ s_xi = 16 tanh (omega_p / omega) xi^2 $
-$ Q_xi (s_xi) = $ //TODO EULER GAMMA
-where
- - $xi$ is a "swell" parameter, in the range $0..1$
- - $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra
-
-
+$ Q_xi (s_xi) = cases(
+  -0.000564 s_xi^4 + 0.00776 s_xi^3 - 0.044 s_xi^2 + 0.192 s_xi + 0.163 "if" s_xi < 5,
+  -4.80 times 10^-8 s_xi^4 + 1.07 times 10^(-5) s_xi^3 - 9.53 times 10^(-4) s_xi^2 + 5.90 times 10^(-2) s_xi + 3.93e-01 "otherwise"
+)
+$ 
 === Directional Spectrum Function @Empirical-Spectra
 The TMA spectrum below is an undirectional spectrum that considers depth.
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
-This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following 'transformation'. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
-$ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) D (omega, theta) (d omega(|k|)) / (d |k|) 1 / (|k|) Delta arrow(k)_x Delta arrow(k)_z $
-$ Delta arrow(k)_x = Delta arrow(k)_z = (2 pi) / L $
-where 
-- $L$ is the lengthscale defined below
+This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following transformation @Empirical-Spectra. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
+$ S_"TMA" (arrow(k)) = 2 S_"TMA" (omega, h) (d omega) / (d k) 1 / k Delta k_x Delta k_z D (omega, theta) $
+$ Delta k_x = Delta k_z = (2 pi) / L $
 
 #pagebreak()
 == Ocean Geometry & Foam (Unfinished)
-=== the Statistical Wave Summation @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz
-For a height field, of dimensions $L_x$ and $L_z$, we calculate the height ($h$) at a position $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf.
-The frequency domain representation of the waves are converted to the spatial domain using an inverse discrete fourier transform. This is split into 2 components, with the derivatives computed seperately to find exact normals / the jacobian:
-
+=== Displacements @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz
+For a field of dimensions $L_x$ and $L_z$, we calculate the displacements at positions $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf. By arranging the equations into a specific format, we can convert the frequency domain representation of the wave into the spatial domain using the inverse discrete fourier transform.
   $ "Vertical Displacement (y)": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement (x):" lambda D_x (arrow(x), t) = sum_arrow(k) -i arrow(k)_x / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement (z):" lambda D_z (arrow(x), t) = sum_arrow(k) -i arrow(k)_z / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
 
-where
-- $t$ is the time
-- $arrow(k) = [k_x, k_z]$, the wave vector, direction vector of the spectrum's texture
-- $k = |arrow(k)|$, the magnitude of the wave vector
-- $arrow(x) = [x_x,x_z]$, the direction vector for the height map for which we are summing
-- $hat(h) (arrow(k), t)$ is the frequency spectrum function
-- $h(arrow(x),t)$ gives the vertical displacement vector at the point $x$ at time $t$
-- $arrow(D) (arrow(x),t) = [arrow(D)_x, arrow(D)_z]$ gives the horizontal displacement at $arrow(x)$ at time $t$, used to simulate "choppy waves". We would split the normalised vector $arrow(k)$ into its components and compute them seperately @JTessendorf
-- $lambda$ is a convenient scale factor "choppiness" in order to create sharper wave peaks @JTessendorf
-
 === Derivatives (Unfinished) @JTessendorf @Jump-Trajectory
+For lighting calculations and the computation of the jacobian, we require the derivatives of the above displacements. As the derivative of a sum is equal to the sum of the derivatives, we compute exact derivatives using the following summations.
   $ "Height Derivative": (delta h(arrow(x),t))/(delta x) = sum_(arrow(k)) i arrow(k) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Displacement Derivative (x) ?": lambda nabla D_x (arrow(x),t) = sum_(arrow(k)) arrow(k) arrow(k)_x/k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
 where
