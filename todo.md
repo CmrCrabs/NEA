@@ -1,6 +1,5 @@
-- [ ] move files for engine / sim
-
 - [ ] create compute_lengthscale fn
+- [ ] use push constants for which lengthscale we are on
 - [ ] add lengthscales
 
 - [ ] use better fog color per demo window
@@ -41,6 +40,9 @@
 - [ ] talk about equirectangular sampling for an "alg"
     - [ ] credit equirect sample and skybox sample
 - [ ] credit learn wgpu
+- [ ] talk about semantics of holding computepass in sim not engine
+- [ ] just heading of file structure semantics
+- [ ] explain why engine shaders are file root, how main_vs is arguably both sim and engine
 
 
 ### future improvements

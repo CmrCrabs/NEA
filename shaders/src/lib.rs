@@ -23,13 +23,29 @@ pub fn main_vs(
     uv: UVec2,
     #[spirv(instance_index)] instance_index: u32,
     #[spirv(uniform, descriptor_set = 0, binding = 0)] consts: &Constants,
-    #[spirv(descriptor_set = 3, binding = 3)] displacement_map: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 4)] normal_map: &StorageImage,
-    #[spirv(descriptor_set = 3, binding = 5)] foam_map: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 3)] displacement_map0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 4)] normal_map0: &StorageImage,
+    #[spirv(descriptor_set = 3, binding = 5)] foam_map0: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 3)] displacement_map1: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 4)] normal_map1: &StorageImage,
+    #[spirv(descriptor_set = 4, binding = 5)] foam_map1: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 3)] displacement_map2: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 4)] normal_map2: &StorageImage,
+    #[spirv(descriptor_set = 5, binding = 5)] foam_map2: &StorageImage,
     #[spirv(position)] out_pos: &mut Vec4, out_normal: &mut Vec3,
     out_foam: &mut Vec3,
     out_world_pos: &mut Vec4,
 ) {
+    let mut displacement = displacement_map0.read(uv) * consts.sim.lengthscale0_sf;
+    displacement += displacement_map1.read(uv) * consts.sim.lengthscale1_sf;
+    displacement += displacement_map2.read(uv) * consts.sim.lengthscale2_sf;
+    let mut normal = normal_map0.read(uv) * consts.sim.lengthscale0_sf;
+    normal += normal_map1.read(uv) * consts.sim.lengthscale1_sf;
+    normal += normal_map2.read(uv) * consts.sim.lengthscale2_sf;
+    let mut foam = foam_map0.read(uv) * consts.sim.lengthscale0_sf;
+    foam += foam_map1.read(uv) * consts.sim.lengthscale1_sf;
+    foam += foam_map2.read(uv) * consts.sim.lengthscale2_sf;
+
     let width = consts.sim.size as f32 * consts.sim.mesh_step;
     let x = instance_index % consts.sim.instances;
     let z  = instance_index / consts.sim.instances;
@@ -37,12 +53,11 @@ pub fn main_vs(
     let positive_offset = Vec4::new(width * 0.5, 0.0, width * 0.5, 0.0) * (consts.sim.instances as f32 - 1.0);
 
     let centring_offset = Vec4::new(0.5 * width, consts.sim.height_offset, 0.5 * width, 0.0);
-    let displacement = displacement_map.read(uv);
     let mut resultant_pos = pos + displacement - centring_offset + tiling_offset - positive_offset;
     resultant_pos.w = 1.0;
     *out_pos = consts.camera_viewproj * resultant_pos;
-    *out_normal = normal_map.read(uv).truncate();
-    *out_foam = foam_map.read(uv).truncate();
+    *out_normal = normal.truncate();
+    *out_foam = foam.truncate();
     *out_world_pos = resultant_pos;
 }
 

@@ -1,10 +1,11 @@
 pub struct ComputePass {
-    pipeline: wgpu::ComputePipeline,
+    pub pipeline: wgpu::ComputePipeline,
 }
 
 impl ComputePass {
     pub fn new(
         bind_group_layouts: &[&wgpu::BindGroupLayout],
+        push_constant_ranges: &[wgpu::PushConstantRange],
         device: &wgpu::Device,
         shader: &wgpu::ShaderModule,
         label: &str,
@@ -12,7 +13,7 @@ impl ComputePass {
     ) -> Self {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             bind_group_layouts,
-            push_constant_ranges: &[],
+            push_constant_ranges,
             label: Some(label),
         });
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {

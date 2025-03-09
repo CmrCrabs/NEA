@@ -1,6 +1,6 @@
 use super::sim::compute::ComputePass;
 use super::sim::fft::FourierTransform;
-use cascade::SimData;
+use simdata::SimData;
 use crate::cast_slice;
 use crate::engine::scene::Scene;
 use cascade::Cascade;
@@ -8,10 +8,14 @@ use cascade::Cascade;
 pub mod compute;
 pub mod fft;
 pub mod cascade;
+pub mod simdata;
+
 
 pub struct Simulation {
     pub simdata: SimData,
-    pub cascade: Cascade,
+    pub cascade0: Cascade,
+    pub cascade1: Cascade,
+    pub cascade2: Cascade,
     pub butterfly_precompute_pass: ComputePass,
     pub initial_spectra_pass: ComputePass,
     pub conjugates_pass: ComputePass,
@@ -27,11 +31,19 @@ impl Simulation {
         shader: &wgpu::ShaderModule,
         scene: &Scene,
     ) -> Self {
-        let cascade = Cascade::new(&device, &scene.consts);
         let simdata = SimData::new(&device, &scene.consts);
+        
+        let cascade0 = Cascade::new(&device, &scene.consts);
+        let cascade1 = Cascade::new(&device, &scene.consts);
+        let cascade2 = Cascade::new(&device, &scene.consts);
 
+        let push_constant_ranges = &[wgpu::PushConstantRange {
+            stages: wgpu::ShaderStages::COMPUTE,
+            range: 0..std::mem::size_of::<u32>() as u32,
+        }];
         let initial_spectra_pass = ComputePass::new(
-            &[&scene.consts_layout, &simdata.layout, &cascade.layout],
+            &[&scene.consts_layout, &simdata.layout, &cascade0.layout],
+            push_constant_ranges,
             &device,
             &shader,
             "Initial Spectra",
@@ -39,13 +51,15 @@ impl Simulation {
         );
         let butterfly_precompute_pass = ComputePass::new(
             &[&scene.consts_layout, &simdata.layout],
+            &[],
             &device,
             &shader,
             "Precompute Butterfly",
             "sim::fft::precompute_butterfly",
         );
         let conjugates_pass = ComputePass::new(
-            &[&scene.consts_layout, &cascade.layout],
+            &[&scene.consts_layout, &simdata.layout, &cascade0.layout],
+            &[],
             &device,
             &shader,
             "Pack Conjugates",
@@ -54,12 +68,13 @@ impl Simulation {
         let evolve_spectra_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.layout,
-                &cascade.h_displacement.layout,
-                &cascade.v_displacement.layout,
-                &cascade.h_slope.layout,
-                &cascade.jacobian.layout,
+                &cascade0.layout,
+                &cascade0.h_displacement.layout,
+                &cascade0.v_displacement.layout,
+                &cascade0.h_slope.layout,
+                &cascade0.jacobian.layout,
             ],
+            &[],
             &device,
             &shader,
             "Evolve Spectra",
@@ -68,12 +83,13 @@ impl Simulation {
         let process_deltas_pass = ComputePass::new(
             &[
                 &scene.consts_layout,
-                &cascade.h_displacement.layout,
-                &cascade.v_displacement.layout,
-                &cascade.h_slope.layout,
-                &cascade.jacobian.layout,
-                &cascade.layout,
+                &cascade0.h_displacement.layout,
+                &cascade0.v_displacement.layout,
+                &cascade0.h_slope.layout,
+                &cascade0.jacobian.layout,
+                &cascade0.layout,
             ],
+            &[],
             &device,
             &shader,
             "Process Deltas",
@@ -86,7 +102,9 @@ impl Simulation {
             .write(&queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
 
         Self {
-            cascade,
+            cascade0,
+            cascade1,
+            cascade2,
             simdata,
             initial_spectra_pass,
             butterfly_precompute_pass,
@@ -95,5 +113,99 @@ impl Simulation {
             process_deltas_pass,
             fft,
         }
+    }
+    pub fn compute_cascade<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        cascade: &Cascade,
+        scene: &mut Scene,
+        workgroup_size: u32,
+    ) {
+
+        self.evolve_spectra_pass.compute(
+            encoder,
+            "Evolve Spectra",
+            &[
+                &scene.consts_bind_group,
+                &cascade.bind_group,
+                &cascade.h_displacement.bind_group,
+                &cascade.v_displacement.bind_group,
+                &cascade.h_slope.bind_group,
+                &cascade.jacobian.bind_group,
+            ],
+            workgroup_size,
+            workgroup_size,
+        );
+        self.fft.ifft2d(
+            encoder,
+            scene,
+            &self.simdata,
+            &cascade.h_displacement,
+        );
+        self.fft.ifft2d(
+            encoder,
+            scene,
+            &self.simdata,
+            &cascade.v_displacement,
+        );
+        self.fft.ifft2d(
+            encoder,
+            scene,
+            &self.simdata,
+            &cascade.h_slope,
+        );
+        self.fft.ifft2d(
+            encoder,
+            scene,
+            &self.simdata,
+            &cascade.jacobian,
+        );
+
+        self.process_deltas_pass.compute(
+            encoder,
+            "Process Deltas",
+            &[
+                &scene.consts_bind_group,
+                &cascade.h_displacement.bind_group,
+                &cascade.v_displacement.bind_group,
+                &cascade.h_slope.bind_group,
+                &cascade.jacobian.bind_group,
+                &cascade.bind_group,
+            ],
+            workgroup_size,
+            workgroup_size,
+        );
+    }
+    pub fn compute_initial<'a>(
+        &'a self,
+        encoder: &'a mut wgpu::CommandEncoder,
+        bind_groups: &[&wgpu::BindGroup],
+        pc: u32,
+        x: u32,
+        y: u32,
+    ) {
+        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            timestamp_writes: None,
+            label: Some("Initial Spectra"),
+        });
+
+        pass.set_pipeline(&self.initial_spectra_pass.pipeline);
+        for i in 0..bind_groups.len() {
+            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        }
+        pass.set_push_constants(0, cast_slice(&[pc]));
+        pass.dispatch_workgroups(x, y, 1);
+        drop(pass);
+
+        let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            timestamp_writes: None,
+            label: Some("Conjugates"),
+        });
+
+        pass.set_pipeline(&self.conjugates_pass.pipeline);
+        for i in 0..bind_groups.len() {
+            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        }
+        pass.dispatch_workgroups(x, y, 1);
     }
 }

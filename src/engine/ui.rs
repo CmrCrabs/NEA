@@ -306,12 +306,24 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
                 ui.text("Lengthscales");
-                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale);
-                ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low);
-                ui.slider("Cutoff High 0", 0.0, 15.0, &mut consts.sim.cutoff_high);
+                ui.slider("Lengthscale 0", 0, consts.sim.size, &mut consts.sim.lengthscale0);
+                ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low0);
+                ui.slider("Cutoff High 0", 0.0, 15.0, &mut consts.sim.cutoff_high0);
+                ui.slider("Lengthscale 0 Scale Factor", 0.0, 1.0, &mut consts.sim.lengthscale0_sf);
+
+                ui.slider("Lengthscale 1", 0, consts.sim.size, &mut consts.sim.lengthscale1);
+                ui.slider("Cutoff Low 1", 0.00000, 15.0, &mut consts.sim.cutoff_low1);
+                ui.slider("Cutoff High 1", 0.0, 15.0, &mut consts.sim.cutoff_high1);
+                ui.slider("Lengthscale 1 Scale Factor", 0.0, 1.0, &mut consts.sim.lengthscale1_sf);
+
+                ui.slider("Lengthscale 2", 0, consts.sim.size, &mut consts.sim.lengthscale2);
+                ui.slider("Cutoff Low 2", 0.00000, 15.0, &mut consts.sim.cutoff_low2);
+                ui.slider("Cutoff High 2", 0.0, 15.0, &mut consts.sim.cutoff_high2);
+                ui.slider("Lengthscale 2 Scale Factor", 0.0, 1.0, &mut consts.sim.lengthscale2_sf);
+
                 ui.text("Foam");
                 ui.slider("Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
-                ui.slider("Bias", 0.00, 1.0, &mut consts.sim.foam_bias);
+                ui.slider("Bias", 0.00, 2.0, &mut consts.sim.foam_bias);
                 ui.slider("Injection Threshold", -1.00, 1.0, &mut consts.sim.injection_threshold);
                 ui.slider("Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
                 ui.text("Misc");

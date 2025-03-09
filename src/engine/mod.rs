@@ -136,85 +136,47 @@ impl<'a> Engine<'a> {
                         if self.scene.consts_changed {
                             self.scene.write(&self.queue);
 
-                            self.simulation.initial_spectra_pass.compute(
-                                &mut encoder,
-                                "Initial Spectra",
+                            self.simulation.compute_initial(
+                                &mut encoder, 
                                 &[
                                     &self.scene.consts_bind_group,
                                     &self.simulation.simdata.bind_group,
-                                    &self.simulation.cascade.bind_group,
+                                    &self.simulation.cascade0.bind_group,
                                 ],
+                                0, 
+                                workgroup_size,
+                                workgroup_size,
+                            );
+                            self.simulation.compute_initial(
+                                &mut encoder, 
+                                &[
+                                    &self.scene.consts_bind_group,
+                                    &self.simulation.simdata.bind_group,
+                                    &self.simulation.cascade1.bind_group,
+                                ],
+                                1, 
+                                workgroup_size,
+                                workgroup_size,
+                            );
+                            self.simulation.compute_initial(
+                                &mut encoder, 
+                                &[
+                                    &self.scene.consts_bind_group,
+                                    &self.simulation.simdata.bind_group,
+                                    &self.simulation.cascade2.bind_group,
+                                ],
+                                2, 
                                 workgroup_size,
                                 workgroup_size,
                             );
 
-                            self.simulation.conjugates_pass.compute(
-                                &mut encoder,
-                                "Pack Conjugates",
-                                &[
-                                    &self.scene.consts_bind_group,
-                                    &self.simulation.cascade.bind_group,
-                                ],
-                                workgroup_size,
-                                workgroup_size,
-                            );
                             self.scene.mesh = Mesh::new(&self.device, &self.scene.consts);
                         }
 
                         // per frame computation
-                        self.simulation.evolve_spectra_pass.compute(
-                            &mut encoder,
-                            "Evolve Spectra",
-                            &[
-                                &self.scene.consts_bind_group,
-                                &self.simulation.cascade.bind_group,
-                                &self.simulation.cascade.h_displacement.bind_group,
-                                &self.simulation.cascade.v_displacement.bind_group,
-                                &self.simulation.cascade.h_slope.bind_group,
-                                &self.simulation.cascade.jacobian.bind_group,
-                            ],
-                            workgroup_size,
-                            workgroup_size,
-                        );
-                        self.simulation.fft.ifft2d(
-                            &mut encoder,
-                            &mut self.scene,
-                            &self.simulation.simdata,
-                            &self.simulation.cascade.h_displacement,
-                        );
-                        self.simulation.fft.ifft2d(
-                            &mut encoder,
-                            &mut self.scene,
-                            &self.simulation.simdata,
-                            &self.simulation.cascade.v_displacement,
-                        );
-                        self.simulation.fft.ifft2d(
-                            &mut encoder,
-                            &mut self.scene,
-                            &self.simulation.simdata,
-                            &self.simulation.cascade.h_slope,
-                        );
-                        self.simulation.fft.ifft2d(
-                            &mut encoder,
-                            &mut self.scene,
-                            &self.simulation.simdata,
-                            &self.simulation.cascade.jacobian,
-                        );
-
-                        self.simulation.process_deltas_pass.compute(
-                            &mut encoder,
-                            "Process Deltas",
-                            &[
-                                &self.scene.consts_bind_group,
-                                &self.simulation.cascade.h_displacement.bind_group,
-                                &self.simulation.cascade.v_displacement.bind_group,
-                                &self.simulation.cascade.h_slope.bind_group,
-                                &self.simulation.cascade.jacobian.bind_group,
-                                &self.simulation.cascade.bind_group,
-                            ],
-                            workgroup_size,
-                            workgroup_size,
-                        );
+                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade0, &mut self.scene, workgroup_size);
+                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade1, &mut self.scene, workgroup_size);
+                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade2, &mut self.scene, workgroup_size);
 
                         // Render Skybox
                         self.renderer
@@ -233,7 +195,9 @@ impl<'a> Engine<'a> {
                                 &self.scene.consts_bind_group,
                                 &self.renderer.sampler_bind_group,
                                 &self.renderer.hdri.bind_group,
-                                &self.simulation.cascade.bind_group,
+                                &self.simulation.cascade0.bind_group,
+                                &self.simulation.cascade1.bind_group,
+                                &self.simulation.cascade2.bind_group,
                             ],
                             wgpu::LoadOp::Load,
                             &surface_view,
