@@ -19,7 +19,7 @@ impl ComputePass {
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             entry_point: Some(entry_point),
             layout: Some(&pipeline_layout),
-            module: &shader,
+            module: shader,
             compilation_options: Default::default(),
             cache: None,
             label: Some(label),
@@ -41,8 +41,8 @@ impl ComputePass {
         });
 
         pass.set_pipeline(&self.pipeline);
-        for i in 0..bind_groups.len() {
-            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        for (i, bind_group) in bind_groups.iter().enumerate() {
+            pass.set_bind_group(i as _, *bind_group, &[]);
         }
         pass.dispatch_workgroups(x, y, 1);
     }

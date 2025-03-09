@@ -122,7 +122,7 @@ impl Texture {
 
     pub fn from_file(device: &wgpu::Device, queue: &Queue, label: &str, file: &str) -> Self {
         let mut file_data = Vec::new();
-        File::open(&file)
+        File::open(file)
             .expect("failed to open file")
             .read_to_end(&mut file_data)
             .expect("failed to read file");
@@ -142,7 +142,7 @@ impl Texture {
 
         // TEXTURE
         let texture = device.create_texture_with_data(
-            &queue,
+            queue,
             &wgpu::TextureDescriptor {
                 size: texture_size,
                 mip_level_count: 1,
@@ -154,7 +154,7 @@ impl Texture {
                 view_formats: &[],
             },
             wgpu::util::TextureDataOrder::default(),
-            super::cast_slice(&diffuse_rgba.as_raw()),
+            super::cast_slice(diffuse_rgba.as_raw()),
         );
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {

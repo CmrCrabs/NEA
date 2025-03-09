@@ -38,10 +38,12 @@ impl<'a> Engine<'a> {
         }))
         .expect("failed to create adapter");
 
-        let mut required_limits = wgpu::Limits::default();
-        required_limits.max_storage_textures_per_shader_stage = 6;
-        required_limits.max_bind_groups = 6;
-        required_limits.max_push_constant_size = 8;
+        let required_limits = wgpu::Limits {
+            max_storage_textures_per_shader_stage: 6,
+            max_bind_groups: 6,
+            max_push_constant_size: 8,
+            ..Default::default()
+        };
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 required_features: wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
@@ -69,17 +71,17 @@ impl<'a> Engine<'a> {
         };
         surface.configure(&device, &config);
 
-        let scene = Scene::new(&device, &window);
+        let scene = Scene::new(&device, window);
         let simulation = Simulation::new(&device, &queue, &shader, &scene);
-        let renderer = Renderer::new(&device, &queue, &shader, &window, &simulation, &scene);
-        let ui = UI::new(&device, &queue, &window, &shader, &renderer, &scene);
+        let renderer = Renderer::new(&device, &queue, &shader, window, &simulation, &scene);
+        let ui = UI::new(&device, &queue, window, &shader, &renderer, &scene);
 
         Self {
             config,
             device,
             queue,
             surface,
-            window: &window,
+            window,
             simulation,
             scene,
             renderer,
@@ -102,11 +104,11 @@ impl<'a> Engine<'a> {
             Event::WindowEvent { event, .. } => {
                 self.ui.handle_events(&event);
                 if !self.ui.focused {
-                    self.scene.update_camera(&event, &self.window);
+                    self.scene.update_camera(&event, self.window);
                 }
                 match event {
                     WindowEvent::RedrawRequested => {
-                        self.scene.update_redraw(&self.window);
+                        self.scene.update_redraw(self.window);
 
                         let surface = self
                             .surface
@@ -199,15 +201,14 @@ impl<'a> Engine<'a> {
                                 &self.simulation.cascade1.bind_group,
                                 &self.simulation.cascade2.bind_group,
                             ],
-                            wgpu::LoadOp::Load,
                             &surface_view,
                             &self.scene.mesh,
                             self.scene.consts.sim.instances,
                         );
 
                         // UI Pass
-                        let consts_copy = self.scene.consts.clone();
-                        self.ui.update_cursor(&self.window);
+                        let consts_copy = self.scene.consts;
+                        self.ui.update_cursor(self.window);
                         let ui_frame = self.ui.context.frame();
                         self.ui.focused = ui::build(ui_frame, &mut self.scene.consts);
                         self.ui.render(
@@ -220,11 +221,7 @@ impl<'a> Engine<'a> {
                         );
 
                         // updating some rendering logic
-                        if consts_copy != self.scene.consts {
-                            self.scene.consts_changed = true;
-                        } else {
-                            self.scene.consts_changed = false;
-                        }
+                        self.scene.consts_changed = consts_copy != self.scene.consts;
                         first_frame = false;
 
                         // Submitting queue to be computed
@@ -244,16 +241,15 @@ impl<'a> Engine<'a> {
                             desired_maximum_frame_latency: 2,
                         };
                         self.surface.configure(&self.device, &self.config);
-                        self.renderer.new_depth_view(&self.device, &self.window);
+                        self.renderer.new_depth_view(&self.device, self.window);
 
-                        self.scene.camera.update_fov(&self.window);
+                        self.scene.camera.update_fov(self.window);
                         self.scene.consts.camera_viewproj =
                             self.scene.camera.proj * self.scene.camera.view;
                     }
                     WindowEvent::CloseRequested => elwt.exit(),
-                    WindowEvent::KeyboardInput { event, .. } => match event.physical_key {
-                        PhysicalKey::Code(KeyCode::Escape) => elwt.exit(),
-                        _ => {}
+                    WindowEvent::KeyboardInput { event, .. } => if let PhysicalKey::Code(KeyCode::Escape) = event.physical_key {
+                        elwt.exit()
                     },
                     _ => {}
                 }

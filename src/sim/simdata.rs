@@ -16,7 +16,7 @@ impl SimData {
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Gaussian",
         );
         let gaussian_noise = Self::guassian_noise(consts);
@@ -25,7 +25,7 @@ impl SimData {
             consts.sim.size.ilog2(),
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Butterfly",
         );
 
@@ -59,7 +59,6 @@ impl SimData {
         }
     }
 
-    //TODO: seed with wavenumber?
     fn guassian_noise(consts: &Constants) -> Vec<Vec4> {
         let mut rng = rand::thread_rng();
         let mut data = vec![];

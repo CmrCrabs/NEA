@@ -140,9 +140,8 @@ impl Scene {
 
     pub fn update_camera(&mut self, event: &WindowEvent, window: &Window) {
         match event {
-            WindowEvent::MouseInput { state, button, .. } => match button {
-                winit::event::MouseButton::Left => self.cursor_down = state.is_pressed(),
-                _ => {}
+            WindowEvent::MouseInput { state, button, .. } => if button == &winit::event::MouseButton::Left {
+                self.cursor_down = state.is_pressed()
             },
             WindowEvent::MouseWheel { delta, .. } => {
                 self.camera.zoom(*delta);
@@ -253,14 +252,11 @@ impl Camera {
     }
 
     pub fn pan(&mut self, position: PhysicalPosition<f64>, window: &Window) {
-        match position {
-            PhysicalPosition { x, y } => {
-                self.yaw = (PI / window.inner_size().height as f32)
-                    * (y as f32 - (window.inner_size().height as f32 / 2.0) + 0.01);
-                self.pitch = ((2.0 * PI) / window.inner_size().width as f32)
-                    * (x as f32 - (window.inner_size().width as f32 / 2.0));
-            }
-        }
+        let PhysicalPosition { x, y } = position;
+        self.yaw = (PI / window.inner_size().height as f32)
+            * (y as f32 - (window.inner_size().height as f32 / 2.0) + 0.01);
+        self.pitch = ((2.0 * PI) / window.inner_size().width as f32)
+            * (x as f32 - (window.inner_size().width as f32 / 2.0));
         self.eye = Vec3::new(
             self.zoom * -self.yaw.cos() * self.pitch.sin(),
             self.zoom * self.yaw.sin(),

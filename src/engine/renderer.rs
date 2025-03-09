@@ -40,9 +40,7 @@ impl Renderer {
             label: None,
         });
 
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "../assets/kloppenheim.exr");
-        //let hdri = Texture::from_file(&device, &queue, "HDRI", "../assets/belfast_sunset.exr");
-        let hdri = Texture::from_file(&device, &queue, "HDRI", "./assets/kloofendal.exr");
+        let hdri = Texture::from_file(device, queue, "HDRI", "./assets/kloofendal.exr");
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -69,13 +67,13 @@ impl Renderer {
         let skybox_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             layout: Some(&skybox_pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &shader,
+                module: shader,
                 entry_point: Some("skybox::skybox_vs"),
                 buffers: &[],
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
-                module: &shader,
+                module: shader,
                 entry_point: Some("skybox::skybox_fs"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: FORMAT,
@@ -113,7 +111,7 @@ impl Renderer {
         let std_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             layout: Some(&std_pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &shader,
+                module: shader,
                 entry_point: Some("main_vs"),
                 buffers: &[wgpu::VertexBufferLayout {
                     array_stride: std::mem::size_of::<super::scene::Vertex>() as _,
@@ -123,7 +121,7 @@ impl Renderer {
                 compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
-                module: &shader,
+                module: shader,
                 entry_point: Some("main_fs"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: FORMAT,
@@ -213,18 +211,16 @@ impl Renderer {
         encoder: &'a mut wgpu::CommandEncoder,
         pipeline: &wgpu::RenderPipeline,
         bind_groups: &[&wgpu::BindGroup],
-        load_op: wgpu::LoadOp<wgpu::Color>,
         surface_view: &wgpu::TextureView,
         mesh: &Mesh,
         instances: u32,
     ) {
-        // TODO: move to render
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: load_op,
+                    load: wgpu::LoadOp::Load,
                     store: wgpu::StoreOp::Store,
                 },
             })],
@@ -240,9 +236,9 @@ impl Renderer {
             occlusion_query_set: None,
             label: None,
         });
-        pass.set_pipeline(&pipeline);
-        for i in 0..bind_groups.len() {
-            pass.set_bind_group(i as _, bind_groups[i], &[]);
+        pass.set_pipeline(pipeline);
+        for (i, bind_group) in bind_groups.iter().enumerate() {
+            pass.set_bind_group(i as _, *bind_group, &[]);
         }
         pass.set_vertex_buffer(0, mesh.vtx_buf.slice(..));
         pass.set_index_buffer(mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);

@@ -21,7 +21,7 @@ impl FourierTransform {
             scene.consts.sim.size,
             scene.consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "PingPong 1",
         );
         let bind_group_layouts = &[&simdata.layout, &pingpong1.layout, &pingpong1.layout]; // layout is same for 0 and 1
@@ -33,24 +33,24 @@ impl FourierTransform {
         let h_ifft = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            &device,
-            &shader,
+            device,
+            shader,
             "H-Step IFFT",
             "sim::fft::hstep_ifft",
         );
         let v_ifft = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            &device,
-            &shader,
+            device,
+            shader,
             "V-Step IFFT",
             "sim::fft::vstep_ifft",
         );
         let permute = PipelineFFT::new(
             bind_group_layouts,
             push_constant_ranges,
-            &device,
-            &shader,
+            device,
+            shader,
             "Permute",
             "sim::fft::permute",
         );
@@ -140,7 +140,7 @@ impl PipelineFFT {
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             entry_point: Some(entry_point),
             layout: Some(&pipeline_layout),
-            module: &shader,
+            module: shader,
             compilation_options: Default::default(),
             cache: None,
             label: Some(label),
@@ -161,11 +161,10 @@ impl PipelineFFT {
             timestamp_writes: None,
             label: Some(label),
         });
-        //TODO: make 1 pass instead
 
         pass.set_pipeline(&self.pipeline);
-        for i in 0..bind_groups.len() {
-            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        for (i, bind_group) in bind_groups.iter().enumerate() {
+            pass.set_bind_group(i as _, *bind_group, &[]);
         }
         pass.set_push_constants(0, push_constants);
         pass.dispatch_workgroups(x, y, 1);

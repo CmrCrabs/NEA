@@ -31,11 +31,11 @@ impl Simulation {
         shader: &wgpu::ShaderModule,
         scene: &Scene,
     ) -> Self {
-        let simdata = SimData::new(&device, &scene.consts);
+        let simdata = SimData::new(device, &scene.consts);
         
-        let cascade0 = Cascade::new(&device, &scene.consts);
-        let cascade1 = Cascade::new(&device, &scene.consts);
-        let cascade2 = Cascade::new(&device, &scene.consts);
+        let cascade0 = Cascade::new(device, &scene.consts);
+        let cascade1 = Cascade::new(device, &scene.consts);
+        let cascade2 = Cascade::new(device, &scene.consts);
 
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
@@ -44,24 +44,24 @@ impl Simulation {
         let initial_spectra_pass = ComputePass::new(
             &[&scene.consts_layout, &simdata.layout, &cascade0.layout],
             push_constant_ranges,
-            &device,
-            &shader,
+            device,
+            shader,
             "Initial Spectra",
             "sim::initial_spectra::main",
         );
         let butterfly_precompute_pass = ComputePass::new(
             &[&scene.consts_layout, &simdata.layout],
             &[],
-            &device,
-            &shader,
+            device,
+            shader,
             "Precompute Butterfly",
             "sim::fft::precompute_butterfly",
         );
         let conjugates_pass = ComputePass::new(
             &[&scene.consts_layout, &simdata.layout, &cascade0.layout],
             &[],
-            &device,
-            &shader,
+            device,
+            shader,
             "Pack Conjugates",
             "sim::initial_spectra::pack_conjugates",
         );
@@ -75,8 +75,8 @@ impl Simulation {
                 &cascade0.jacobian.layout,
             ],
             &[],
-            &device,
-            &shader,
+            device,
+            shader,
             "Evolve Spectra",
             "sim::evolve_spectra::main",
         );
@@ -90,16 +90,16 @@ impl Simulation {
                 &cascade0.layout,
             ],
             &[],
-            &device,
-            &shader,
+            device,
+            shader,
             "Process Deltas",
             "sim::process_deltas::main",
         );
-        let fft = FourierTransform::new(&device, &shader, &scene, &simdata);
+        let fft = FourierTransform::new(device, shader, scene, &simdata);
 
         simdata
             .gaussian_tex
-            .write(&queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
+            .write(queue, cast_slice(&simdata.gaussian_noise.clone()), 16);
 
         Self {
             cascade0,
@@ -190,8 +190,8 @@ impl Simulation {
         });
 
         pass.set_pipeline(&self.initial_spectra_pass.pipeline);
-        for i in 0..bind_groups.len() {
-            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        for (i, bind_group) in bind_groups.iter().enumerate() {
+            pass.set_bind_group(i as _, *bind_group, &[]);
         }
         pass.set_push_constants(0, cast_slice(&[pc]));
         pass.dispatch_workgroups(x, y, 1);
@@ -203,8 +203,8 @@ impl Simulation {
         });
 
         pass.set_pipeline(&self.conjugates_pass.pipeline);
-        for i in 0..bind_groups.len() {
-            pass.set_bind_group(i as u32, bind_groups[i], &[]);
+        for (i, bind_group) in bind_groups.iter().enumerate() {
+            pass.set_bind_group(i as _, *bind_group, &[]);
         }
         pass.dispatch_workgroups(x, y, 1);
     }

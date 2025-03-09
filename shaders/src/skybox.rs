@@ -9,7 +9,6 @@ use crate::{equirectangular_to_uv, reinhard_tonemap, lerp};
 pub fn skybox_vs(
     #[spirv(vertex_index)] vertex_index: u32,
     #[spirv(position)] out_pos: &mut Vec4,
-    out_uv: &mut Vec2,
 ) {
     let out_uv1 = Vec2::new(
         ((vertex_index << 1) & 2) as f32,

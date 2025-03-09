@@ -1,6 +1,4 @@
 use crate::engine::util::{bind_group_descriptor, Texture};
-use glam::{Vec2, Vec4};
-use rand::prelude::*;
 use shared::Constants;
 
 pub struct Cascade {
@@ -18,42 +16,42 @@ impl Cascade {
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Waves",
         );
         let initial_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Initial Spectrum",
         );
         let evolved_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Evolved Spectrum",
         );
         let displacement_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Displacement Map",
         );
         let normal_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Normal Map",
         );
         let foam_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "Foam",
         );
 
@@ -103,28 +101,28 @@ impl Cascade {
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "h_displacement",
         );
         let h_slope = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "h_slope",
         );
         let jacobian = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "jacobian",
         );
         let v_displacement = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
-            &device,
+            device,
             "v_displacment",
         );
 

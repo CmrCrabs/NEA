@@ -1,6 +1,4 @@
 #![no_std]
-// TODO: clean warnings
-//#![deny(warnings)]
 pub mod sim;
 pub mod ui;
 pub mod skybox;

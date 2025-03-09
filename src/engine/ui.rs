@@ -54,10 +54,10 @@ impl UI {
             font_texture.width,
             font_texture.height,
             wgpu::TextureFormat::Rgba8UnormSrgb,
-            &device,
+            device,
             "Font Atlas",
         );
-        texture.write(&queue, &font_texture.data, 4);
+        texture.write(queue, font_texture.data, 4);
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
@@ -72,7 +72,7 @@ impl UI {
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 layout: Some(&pipeline_layout),
                 vertex: wgpu::VertexState {
-                    module: &shader,
+                    module: shader,
                     entry_point: Some("ui::ui_vs"),
                     buffers: &[wgpu::VertexBufferLayout {
                         array_stride: mem::size_of::<DrawVert>() as _,
@@ -82,7 +82,7 @@ impl UI {
                     compilation_options: Default::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
-                    module: &shader,
+                    module: shader,
                     entry_point: Some("ui::ui_fs"),
                     targets: &[Some(wgpu::ColorTargetState {
                         format: FORMAT,
@@ -134,7 +134,7 @@ impl UI {
     ) {
         let mut renderpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &surface_view,
+                view: surface_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Load,
@@ -280,10 +280,7 @@ impl UI {
 
 pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     let mut focused = false;
-    let mut pbr_bool = match consts.shader.pbr {
-        0 => false,
-        _ => true,
-    };
+    let mut pbr_bool = consts.shader.pbr != 0;
     ui.window("NEA Ocean Simulation")
         .always_auto_resize(true)
         .build(|| {
@@ -322,6 +319,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Lengthscale 2 Scale Factor", 0.0, 1.0, &mut consts.sim.lengthscale2_sf);
 
                 ui.text("Foam");
+                ui.color_edit4("Foam Color", consts.shader.foam_color.as_mut());
                 ui.slider("Decay", 0.0, 0.3, &mut consts.sim.foam_decay);
                 ui.slider("Bias", 0.00, 2.0, &mut consts.sim.foam_bias);
                 ui.slider("Injection Threshold", -1.00, 1.0, &mut consts.sim.injection_threshold);
@@ -347,12 +345,15 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fresnel Effect Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_sf);
                 ui.slider("Fresnel Normal Scale Factor", 0.0, 1.0, &mut consts.shader.fresnel_normal_sf);
                 ui.text("Subsurface Scattering");
+                ui.color_edit4("Scatter Color", consts.shader.scatter_color.as_mut());
+                ui.color_edit4("Bubble Color", consts.shader.bubble_color.as_mut());
                 ui.slider("Height Attenuation", 0.0, 1.0, &mut consts.shader.ss_height);
                 ui.slider("Reflection Strength", 0.0, 1.0, &mut consts.shader.ss_reflected);
                 ui.slider("Diffuse Strength", 0.0, 1.0, &mut consts.shader.ss_lambert);
                 ui.slider("Ambient Light Strength", 0.0, 1.0, &mut consts.shader.ss_ambient);
                 ui.slider("Air Bubble Density", 0.0, 1.0, &mut consts.shader.bubble_density);
                 ui.text("Fog");
+                ui.color_edit4("Fog Color", consts.shader.fog_color.as_mut());
                 ui.slider("Fog Density", 0.0, 10.0, &mut consts.shader.fog_density);
                 ui.slider("Fog Offset", 0.0, 500.0, &mut consts.shader.fog_offset);
                 ui.slider("Fog Falloff", 0.0, 10.0, &mut consts.shader.fog_falloff);
@@ -364,6 +365,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
             ui.separator();
             if ui.collapsing_header("World Parameters", TreeNodeFlags::DEFAULT_OPEN) {
                 ui.text("Sun");
+                ui.color_edit4("Sun Color", consts.shader.sun_color.as_mut());
                 ui.slider("Sun X", -1.0, 1.0, &mut consts.shader.sun_x);
                 ui.slider("Sun Y", -1.0, 1.0, &mut consts.shader.sun_y);
                 ui.slider("Sun Z", -1.0, 1.0, &mut consts.shader.sun_z);
@@ -373,22 +375,6 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Sun Falloff", 0.0, 10000.0, &mut consts.shader.sun_falloff);
                 ui.text("Water");
                 ui.slider("Height Offset", 0.0, 50.0, &mut consts.sim.height_offset);
-            }
-            ui.separator();
-            if ui.collapsing_header("Sun Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Sun Color", consts.shader.sun_color.as_mut());
-            }
-            if ui.collapsing_header("Scatter Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Scatter Color", consts.shader.scatter_color.as_mut());
-            }
-            if ui.collapsing_header("Bubble Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Bubble Color", consts.shader.bubble_color.as_mut());
-            }
-            if ui.collapsing_header("Foam Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Foam Color", consts.shader.foam_color.as_mut());
-            }
-            if ui.collapsing_header("Fog Color", TreeNodeFlags::SPAN_AVAIL_WIDTH) {
-                ui.color_picker4("Fog Color", consts.shader.fog_color.as_mut());
             }
             focused = ui.is_window_focused();
             consts.shader.pbr = pbr_bool as u32;
