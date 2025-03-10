@@ -70,6 +70,7 @@ impl FourierTransform {
         scene: &Scene,
         simdata: &SimData,
         pingpong0: &Texture,
+        index: u32,
     ) {
         let bind_groups = &[
             &simdata.bind_group,
@@ -88,7 +89,7 @@ impl FourierTransform {
                 encoder,
                 bind_groups,
                 cast_slice(&[data]),
-                format!("H-Step {}", stage).as_str(),
+                &format!("H-Step {}, {}", stage, index),
                 wg_size,
                 wg_size,
             );
@@ -101,7 +102,7 @@ impl FourierTransform {
                 encoder,
                 bind_groups,
                 cast_slice(&[data]),
-                format!("V-Step {}", stage).as_str(),
+                &format!("V-Step {}, {}", stage, index),
                 wg_size,
                 wg_size,
             );
@@ -112,7 +113,7 @@ impl FourierTransform {
             encoder,
             bind_groups,
             cast_slice(&[data]),
-            "Permute",
+            &format!("Permute {}", index),
             wg_size,
             wg_size,
         );

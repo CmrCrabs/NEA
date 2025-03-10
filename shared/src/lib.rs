@@ -140,17 +140,16 @@ impl Default for SimConstants {
     fn default() -> Self {
         let size = 256;
         Self {
-            depth: 10.0,
+            depth: 500.0,
             size,
-            lengthscale0: 20,
+            lengthscale0: 40,
             cutoff_low0: 0.00000001,
-            cutoff_high0: 1.1,
+            cutoff_high0: 1.0,
             lengthscale0_sf: 1.0,
-            lengthscale1: 110,
+            lengthscale1: 106,
             cutoff_low1: 1.0,
-            cutoff_high1: 2.0,
-            lengthscale1_sf: 1.0,
-            lengthscale2: 256,
+            cutoff_high1: 2.0, lengthscale1_sf: 1.0,
+            lengthscale2: 180,
             cutoff_low2: 2.0,
             cutoff_high2: 999.0,
             lengthscale2_sf: 1.0,

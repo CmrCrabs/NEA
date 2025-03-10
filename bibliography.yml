@@ -105,7 +105,7 @@ Biebras:
   title: Realistic Ocean Simulation using Fourier Transform
   author: Saulius Vincevičius
   url:
-    value: https://github.com/Biebras/Ocean-Simulation-Report
+    value: https://github.com/Biebras/Ocean-Simulation-Unity
     date: 2024-10-20
 
 Empirical-Spectra:
@@ -131,3 +131,12 @@ GPGPU:
   url: 
     value: http://tubdok.tub.tuhh.de/handle/11420/1439
     date: 25-01-14
+
+HDR:
+  type: article
+  title: HDR
+  author: Learn OpenGL 
+  url: 
+    value: https://learnopengl.com/Advanced-Lighting/HDR
+    date: 2025-03-02
+

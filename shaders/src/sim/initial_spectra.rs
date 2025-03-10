@@ -23,12 +23,12 @@ pub fn main(
     } as f32;
     let cutoff_high = match cascade {
         0 => consts.sim.cutoff_high0,
-        2 => consts.sim.cutoff_high1,
+        1 => consts.sim.cutoff_high1,
         _ => consts.sim.cutoff_high2,
     };
     let cutoff_low = match cascade {
         0 => consts.sim.cutoff_low0,
-        2 => consts.sim.cutoff_low1,
+        1 => consts.sim.cutoff_low1,
         _ => consts.sim.cutoff_low2,
     };
 
@@ -55,9 +55,9 @@ pub fn main(
             spectrum_tex.write(id.xy(), Vec4::new(h0.x, h0.y, 0.0, 1.0));
         }
     } else {
-    unsafe {
-        wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
-        spectrum_tex.write(id.xy(), Vec4::ZERO);
+        unsafe {
+            wave_tex.write(id.xy(), Vec4::new(k.x, k.y, 0.0, 1.0));
+            spectrum_tex.write(id.xy(), Vec4::ZERO);
         }
     }
 }

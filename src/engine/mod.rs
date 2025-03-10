@@ -135,9 +135,9 @@ impl<'a> Engine<'a> {
                         }
 
                         // Compute Initial spectrum on param change
-                        if self.scene.consts_changed {
+                        //if self.scene.consts_changed {
+                        if true {
                             self.scene.write(&self.queue);
-
                             self.simulation.compute_initial(
                                 &mut encoder, 
                                 &[
@@ -176,9 +176,108 @@ impl<'a> Engine<'a> {
                         }
 
                         // per frame computation
-                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade0, &mut self.scene, workgroup_size);
-                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade1, &mut self.scene, workgroup_size);
-                        self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade2, &mut self.scene, workgroup_size);
+                        self.simulation.evolve_spectra_pass.compute(
+                            &mut encoder,
+                            "Evolve Spectra",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade0.bind_group,
+                                &self.simulation.cascade0.h_displacement.bind_group,
+                                &self.simulation.cascade0.v_displacement.bind_group,
+                                &self.simulation.cascade0.h_slope.bind_group,
+                                &self.simulation.cascade0.jacobian.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
+                        self.simulation.evolve_spectra_pass.compute(
+                            &mut encoder,
+                            "Evolve Spectra",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade1.bind_group,
+                                &self.simulation.cascade1.h_displacement.bind_group,
+                                &self.simulation.cascade1.v_displacement.bind_group,
+                                &self.simulation.cascade1.h_slope.bind_group,
+                                &self.simulation.cascade1.jacobian.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
+                        self.simulation.evolve_spectra_pass.compute(
+                            &mut encoder,
+                            "Evolve Spectra",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade2.bind_group,
+                                &self.simulation.cascade2.h_displacement.bind_group,
+                                &self.simulation.cascade2.v_displacement.bind_group,
+                                &self.simulation.cascade2.h_slope.bind_group,
+                                &self.simulation.cascade2.jacobian.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
+
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade0.h_displacement, 0);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade1.h_displacement, 1);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade2.h_displacement, 2);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade0.v_displacement, 0);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade1.v_displacement, 1);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade2.v_displacement, 2);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade0.h_slope, 0);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade1.h_slope, 1);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade2.h_slope, 2);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade0.jacobian, 0);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade1.jacobian, 1);
+                        self.simulation.fft.ifft2d( &mut encoder, &self.scene, &self.simulation.simdata, &self.simulation.cascade2.jacobian, 2);
+
+                        self.simulation.process_deltas_pass.compute(
+                            &mut encoder,
+                            "Process Deltas",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade0.h_displacement.bind_group,
+                                &self.simulation.cascade0.v_displacement.bind_group,
+                                &self.simulation.cascade0.h_slope.bind_group,
+                                &self.simulation.cascade0.jacobian.bind_group,
+                                &self.simulation.cascade0.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        ); 
+                        self.simulation.process_deltas_pass.compute(
+                            &mut encoder,
+                            "Process Deltas",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade1.h_displacement.bind_group,
+                                &self.simulation.cascade1.v_displacement.bind_group,
+                                &self.simulation.cascade1.h_slope.bind_group,
+                                &self.simulation.cascade1.jacobian.bind_group,
+                                &self.simulation.cascade1.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        );
+                        self.simulation.process_deltas_pass.compute(
+                            &mut encoder,
+                            "Process Deltas",
+                            &[
+                                &self.scene.consts_bind_group,
+                                &self.simulation.cascade2.h_displacement.bind_group,
+                                &self.simulation.cascade2.v_displacement.bind_group,
+                                &self.simulation.cascade2.h_slope.bind_group,
+                                &self.simulation.cascade2.jacobian.bind_group,
+                                &self.simulation.cascade2.bind_group,
+                            ],
+                            workgroup_size,
+                            workgroup_size,
+                        ); 
+
+                        //self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade0, &mut self.scene, workgroup_size, 0);
+                        //self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade1, &mut self.scene, workgroup_size, 1);
+                        //self.simulation.compute_cascade(&mut encoder, &self.simulation.cascade2, &mut self.scene, workgroup_size, 2);
 
                         // Render Skybox
                         self.renderer

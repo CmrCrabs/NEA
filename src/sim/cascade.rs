@@ -11,48 +11,48 @@ pub struct Cascade {
 }
 
 impl Cascade {
-    pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
+    pub fn new(device: &wgpu::Device, consts: &Constants, index: &str) -> Self {
         let wave_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Waves",
+            &format!("Waves {}", index),
         );
         let initial_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Initial Spectrum",
+            &format!("Initial Spectrum {}", index),
         );
         let evolved_spectrum_texture = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Evolved Spectrum",
+            &format!("Evolved Spectrum {}", index),
         );
         let displacement_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Displacement Map",
+            &format!("Displacement Map {}", index),
         );
         let normal_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Normal Map",
+            &format!("Normal Map{}", index),
         );
         let foam_map = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "Foam",
+            &format!("Foam {}", index),
         );
 
         let layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -94,7 +94,7 @@ impl Cascade {
                     resource: wgpu::BindingResource::TextureView(&foam_map.view),
                 },
             ],
-            label: Some("Storage Textures"),
+            label: Some(&format!("Storage Textures {}", index)),
         });
 
         let h_displacement = Texture::new_storage(
@@ -102,28 +102,28 @@ impl Cascade {
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "h_displacement",
+            &format!("h_displacement {}", index),
         );
         let h_slope = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "h_slope",
+            &format!("h_slope {}", index),
         );
         let jacobian = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "jacobian",
+            &format!("jacobian {}", index),
         );
         let v_displacement = Texture::new_storage(
             consts.sim.size,
             consts.sim.size,
             wgpu::TextureFormat::Rgba32Float,
             device,
-            "v_displacment",
+            &format!("v_displacment {}", index),
         );
 
         Self {

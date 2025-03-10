@@ -33,9 +33,9 @@ impl Simulation {
     ) -> Self {
         let simdata = SimData::new(device, &scene.consts);
         
-        let cascade0 = Cascade::new(device, &scene.consts);
-        let cascade1 = Cascade::new(device, &scene.consts);
-        let cascade2 = Cascade::new(device, &scene.consts);
+        let cascade0 = Cascade::new(device, &scene.consts, "0");
+        let cascade1 = Cascade::new(device, &scene.consts, "1");
+        let cascade2 = Cascade::new(device, &scene.consts, "2");
 
         let push_constant_ranges = &[wgpu::PushConstantRange {
             stages: wgpu::ShaderStages::COMPUTE,
@@ -120,8 +120,8 @@ impl Simulation {
         cascade: &Cascade,
         scene: &mut Scene,
         workgroup_size: u32,
+        index: u32,
     ) {
-
         self.evolve_spectra_pass.compute(
             encoder,
             "Evolve Spectra",
@@ -141,24 +141,28 @@ impl Simulation {
             scene,
             &self.simdata,
             &cascade.h_displacement,
+            index,
         );
         self.fft.ifft2d(
             encoder,
             scene,
             &self.simdata,
             &cascade.v_displacement,
+            index,
         );
         self.fft.ifft2d(
             encoder,
             scene,
             &self.simdata,
             &cascade.h_slope,
+            index,
         );
         self.fft.ifft2d(
             encoder,
             scene,
             &self.simdata,
             &cascade.jacobian,
+            index,
         );
 
         self.process_deltas_pass.compute(
