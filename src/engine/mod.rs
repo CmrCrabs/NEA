@@ -135,8 +135,7 @@ impl<'a> Engine<'a> {
                         }
 
                         // Compute Initial spectrum on param change
-                        //if self.scene.consts_changed {
-                        if true {
+                        if self.scene.consts_changed {
                             self.scene.write(&self.queue);
                             self.simulation.compute_initial(
                                 &mut encoder, 

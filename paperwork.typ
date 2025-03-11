@@ -43,8 +43,8 @@
 
 == Abstract
 // TODO: SYNOPSIS
+// I am developing a blah blah that doesn blah balh
 \/\/ synopsis
-// the goal of this project was to....
 = Analysis
 == Client Introduction
 The client is Jahleel Abraham. They are a game developer who require a physically based, performant, configurable simulation of an ocean for use in their game. They also require a physically based lighting model derived from microfacet theory, including PBR specular, and empirical subsurface scattering. Also expected is a fully featured GUI allowing direct control over every input parameter, and a functioning camera controller.
@@ -356,38 +356,14 @@ To render the sun, I compare the dot product of the ray and sun directions to th
 
 #pagebreak()
 == Prototyping
-A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, and then did some trigonometry to create a basic camera controller using Winit's event loop.
+A prototype was made in order to test the technical stack and gain experience with graphics programming and managing shaders. I created a Halvorsen strange attractor @Halvorsen, using differential equations, and then did some trigonometry to create a basic camera controller using Winit's event loop.
 
 #figure(
   image("assets/chaotic_attractor.png", width: 50%),
   caption: [
-    Found at https://github.com/CmrCrabs/chaotic-attractors
+    Shader Output, Found at https://github.com/CmrCrabs/chaotic-attractors
   ],
 )
-
-//#pagebreak()
-//== Critical Path
-//The critical path for the project below assumes each new task has every previous task as a dependent, and thus that they must be completed in that order. Smaller parts of each task are completed concurrently where possible, the relative timescale is in arbitrary units as I do not think a rigid timeline will provide much benefit here.
-//#figure(
-//table(
-//  columns: 3,
-//  align: left,
-//  [*Task*], [*Description*], [Relative Timescale],
-//  [Graphics State Setup], [Create the window and event loop, including all necessary data to handle basic window functions and shutdown], [],
-//  [Engine Setup], [Setup the application-agnostic rendering code and sort/handle data], [],
-//  [Renderer Setup], [Setup the application-specific rendering code and logic], [],
-//  [UI Setup], [Create and render an imgui frame], [],
-//  [Data Precompute], [Precompute the butterfly texture and gaussian random numbers], [],
-//  [Spectrum Synthesis], [Generate the frequency spectrum using compute shaders on the GPU], [],
-//  [FFT Precompute], [Evolve frequency spectrum and precompute fourier amplitudes using compute shaders on the GPU], [],
-//  [Implement IFFT], [Implement the GPGPU 2D IFFT], [],
-//  [Process IFFT Outputs], [Process the FFT data into the correct maps], [],
-//  [Vertex Manipulation], [Offset tiles based on GPU instance ID, centering offset and displacement. Combine lengthscales], [],
-//  [Non-PBR Lighting], [Implement Blinn-Phong shading and subsurface scattering], [],
-//  [PBR Lighting], [Use microfacet BRDF and statistical distributions for realistic shading], [],
-//),
-//caption: "Compacted Critical Path",
-//)
 
 == Additional Features
 If given enough time I would like to implement the following:
@@ -400,69 +376,84 @@ If given enough time I would like to implement the following:
 #pagebreak()
 == Project Objectives (Unfinished)
 
-+ Scene
-  + Language & Environment Setup
-    + setup all dependencies 
-    + have development shell to ensure correct execution
-    + ensure compatability for all engines
-  + Window & Compatability
-    + ensure compatability with windows, macos & wayland (& X11?) linux
-    + title & respects client side rendering of respective os
-  + Data Structure
-    + talk abt shared data structures
-    + create struct for all variables 
-    + camera struct etc
-  + Render Pipeline
-    + list steps and that it works
-    // alot of yap
-  + Event Loop
-    + able to detect mouse movement for camera inputs
-    + able to detect mouse down for camera inputs
-    + escape to close
-    + resize
-    + redraw requested
-+ Simulation
-  + Startup
-  + On Parameter Change
-  + Every Frame
-  + Optimisations
-    + dynamic render scaling stuff
-+ Rendering
-  + Lighting
-    + calculate light / view / halfway / normal vectors
-    + normalise all vectors
-    + fresnel
-    + subsurface scattering
-    + specular reflections 
-      + blinn-phong
-      + pbr
-        + microfacet brdf
-        + distribution function
-        + geometric attenuation
-    + env reflections 
-      + acerola
-      + LEADR
-    + lerp between this and foam
-    + adjust roughness of areas with foam
-  + Post Processing / Scene
-    + HDRI
-    + Sun
-    + distance fog
-    + attenuation of fog
-    + bloom pass for sun
-    + tone mapping
-+ Interaction
-  + Orbit Camera
-    + zoom
-    + revolve
-    + aspect ratio
-  + Graphical User Interface
-    + select hdri - file picker
-    + parameter sliders
-    + parameter input boxes
-    + parameter checkboxes
-      + toggle between pbr / non pbr lighting
-    + color select wheel (imgui) for parameters 
+=== Engine
++ there is an os window created on startup
+  + the window has a appropriate title
+  + the window follows the OS's conventions and compositor styling
+  + the window can be resized without breaking the simulation
+  + the window can be moved
+  + the window can move between monitors without breaking
+  + the window can be closed by pressing the escape key
++ the scene has a single mesh stored on the cpu
+  + the user can resize the mesh
+  + there are multiple instances of the mesh visible
+  + the user can control how many instances there are
++ a filepath can be specified such that a .exr texture is read into gpu memory from it
++ the user can control the camera
+  + the camera can only be controlled when left-click is held down
+  + the camera's pitch can be controlled by moving the mouse
+  + the camera's yaw can be controlled by moving the mouse
+  + the camera's zoom can be controlled by using the scroll wheel
+  + the camera's render distance is large enough to see the entire ocean
+  + the cameras field of view does not change upon window resize
+  + the cameras view direction does not change upon window resize
++ the user can only control the camera if the UI is not selected
++ the user can access a user interface
+  + the user can resize the UI
+  + the user can move the UI
+  + the user can collapse the UI
+  + the user can edit colors using the UI
+  + the user can control sliders using the UI
+  + the user can read the fps from the UI
+  + the user can get the simulation resolution from the UI
+  + the user can see the time elapsed from the UI
+
+=== Renderer
++ the scene has a skybox
+  + the skybox is correctly transformed when the camera view direction is changed
+  + the skybox is correctly transformed when the camera zoom is changed
+  + the skybox is correctly transformed when the window is resized
+  + there is a sun interpolated into the skybox
+    + the sun is in the correct position in the sky relative to the light vector
+    + the sun is correctly transformed when the camera view direction is changed
+    + the sun is correctly transformed when the camera zoom is changed
+    + the sun is correctly transformed when the window is resized
++ Scene will have visible depth
++ Depth will remain consistent when view is changed
++ Textures are sampled such that there is no visible pixelation
+
+=== Simulation
++ The simulation exhibits gaussian variance in the possible waves
++ The simulation is performant, being able to run at above 60fps on mid-range gaming hardware (gtx 1060+)
++ the simulation should have sensible default parameters
++ the simulations input parameters should be clamped such that changing parameters cannot permanently break the simulation
++ the simulation should not have visible tiling
++ the simulation should have 3 lengthscales, with user control over
+  + all 3 lengthscales
+  + all 3 low frequency cutoffs
+  + all 3 high frequency cutoffs
++ the simulation should have a controllable size
+  + the user should have a slider to control the size of an individual tile
+  + the user should be able to input how many instances are tiled
++ the simulation should support foam, with the following controllable conditions
+  + the foam color
+  + how fast the foam decays
+  + how much foam is visible
+  + when foam is injected on breaking waves
+  + how much foam is injected on breaking waves
++ the user should be able to control the ocean conditions
+  + user can control the ocean depth
+  + user can control the gravitational field strength
+  + user can control the wind speed
+  + user can control the wind angle
+  + user can control the fetch
+  + user can control the choppiness
+  + user can control the amount of swell
+  + user can control the integration step for swell computation
+  + user can control a height offset for the ocean surface
+=== Post Processing
++ User can adjust parameters to change output color
+
 
 #pagebreak()
 = Documented Design
@@ -522,6 +513,8 @@ Frame-by-Frame:
 == Cascades
 
 == Application State
+
+== Event Loop
 
 #pagebreak()
 = Bibliography

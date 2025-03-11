@@ -302,6 +302,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Fetch", 1000.0, 10000.0, &mut consts.sim.fetch);
                 ui.slider("Choppiness", 0.0, 1.0, &mut consts.sim.choppiness);
                 ui.slider("Swell", 0.001, 1.0, &mut consts.sim.swell);
+
                 ui.text("Lengthscales");
                 ui.slider("Lengthscale 0", 1, consts.sim.size, &mut consts.sim.lengthscale0);
                 ui.slider("Cutoff Low 0*", 0.00000, 0.00001, &mut consts.sim.cutoff_low0);
