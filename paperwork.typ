@@ -37,112 +37,76 @@
 // replicate old academic paper style
 // https://journals.ametsoc.org/view/journals/phoc/5/3/1520-0485_1975_005_0410_optoer_2_0_co_2.xml?tab_body=pdf
 
-// jacobian & eigenvalue
-// define derivatives
-// how to pack 8 ffts into 4
-// expand upon technologies
-// post processing tonemapping
-// Objectives
-// look into blurring for sea of thieves foam
-
-// explain IDFT in terms of indices (keith lantz & jump trajectory)
-// IFFT
 
 // Contents Page
-#page(outline(indent: true, depth: 2))
+#page(outline(indent: true, depth: 3))
 
 == Abstract
 // TODO: SYNOPSIS
 \/\/ synopsis
 // the goal of this project was to....
 = Analysis
-
 == Client Introduction
 The client is Jahleel Abraham. They are a game developer who require a physically based, performant, configurable simulation of an ocean for use in their game. They also require a physically based lighting model derived from microfacet theory, including PBR specular, and empirical subsurface scattering. Also expected is a fully featured GUI allowing direct control over every input parameter, and a functioning camera controller.
 
 == Interview Questions
-+ Functionality
-  + "what specific ocean phenomena need to be simulated? (e.g. waves, foam, spray, currents)"
-  + "what parameters of the simulation need to be configurable?"
-  + "does there need to be an accompanying GUI?"
-+ Visuals
-  + "do i need to implement an atmosphere / skybox?"
-  + "do i need to implement a pbr water shader?"
-  + "do i need to implement caustics, reflections, or other light-related phenomena?"
-+ Technologies
-  + "are there any limitations due to existing technology?"
-  + "does this need to interop with existing code?"
-+ Scope
-  + "are there limitations due to the target device(s)?"
-  + "are there other performance intesive systems in place?"
-  + "is the product targeted to low / mid / high end systems?"
+Interview notes are paraphrased.
+Q: What specific ocean phenomena need to be simulated?
+A: The simulation should include waves in all real-world conditions and generate foam. If possible, it should also simulate other ocean phenomena.
 
-#pagebreak()
-== Interview Notes
-+ Functionality
-  + it should simulate waves in all real world conditions and be able to generate foam, if possible simulating other phenomena would be nice.
-  + all necessary parameters in order to simulate real world conditions, ability to control tile size / individual wave quantity
-  + accompanying GUI to control parameters and tile size. GUI should output frametime, and the current state of every parameter.
-+ Visuals
-  + a basic skybox would be nice, if possible include an atmosphere shader
-  + implement a PBR water shader, include a microfacet BRDF
-  + caustics are out of scope, implement approximate subsurface scattering, use GGX distribution in combination with brdf to simulate reflections
-+ Technologies
-  + client has not started technical implementation of project, so is not beholden to an existing technical stack
-  + see response 3.1
-+ Scope
-  + the simulation is intended to run on both x86 and arm64 devices
-  + see response 3.1
-  + the simulation is targeted towards mid to high end systems, ideally the solution would also be performant on lower end hardware 
+Q: What parameters of the simulation need to be configurable?
+A: All necessary parameters for simulating real-world conditions, including tile size and individual wave quantity.
 
-#pagebreak()
-== Technologies
-- Rust:
-  - Fast, memory efficient programming language
-- wgpu:
-  - Graphics library
-- Rust GPU:
-  - (Rust as a) shader language
-- Winit:
-  - cross platform window creation and event loop management library
-- Dear ImGui
-  - Bloat-free GUI library with minimal dependencies
-- GLAM:
-  - used for various linear algebra operations
-- Pollster / Env Logger:
-  - used to read errors, as wgpu does not log as would be standard
-- Image:
-  - used to read HDRIs from a file into memory for processing
-- Nix:
-  - Used to create a declarative, reproducible development environment
-// TODO LINK TO UI.RS // TODO: properly credit and comment
+Q: Does there need to be an accompanying GUI?
+A: Yes, the GUI should allow control over parameters and tile size, display frametime, and show the current state of all parameters.
 
-// INCLUDE COOL GRAPH OF TEXTURES
-== Algorithm Overview (Unfinished) @JTessendorf @Empirical-Spectra 
-// TODO: link to documented design
-Below is a high-level explanation of the algorithm used in this project, primarily for providing context for the upcoming theory. It is explained in more detail in the documented design. 
-\
-On Startup:
-- Generate gaussian random number pairs, and store them into a texture, on the CPU
-- Compute the butterfly operation's twiddle factors, and indices, and store them into a texture
-On Parameter Change (For Every Lengthscale):
-- Compute the initial wave vectors and dispersion relation, and store into a texture
-- Compute the initial frequency spectrum for each wave vector, and store into a texture
-- Compute the conjugate of each wave vector, and store into a texture
-Frame-by-Frame:
-- For Every Lengthscale:
-  - Evolve initial frequency spectrum through time
-  - Pre-compute & store amplitudes for FFT into textures
-  - perform IFFT for height displacement
-  - perform IFFT for normal calculation
-  - perform IFFT(s) for jacobian
-  - Process & merge IFFT results into displacement, normal, and foam maps 
-- Create a fullscreen quad and render skybox, sun & fog to framebuffer
-- Offset tiles based on instance index & centering
-- Combine values for all 3 lengthscales & offset vertices based on displacement map
-- Compute lighting value and render result to framebuffer
+Q: Do I need to implement an atmosphere/skybox?
+A: A basic skybox would be nice, and an atmosphere shader should be included if possible.
 
-== Spectrum Generation
+Q: Do I need to implement a PBR water shader?
+A: Yes, the simulation should use a physically based rendering (PBR) water shader with a microfacet BRDF.
+
+Q: Do I need to implement caustics, reflections, or other light-related phenomena?
+A: Caustics are out of scope. Implement approximate subsurface scattering and use GGX distribution with the BRDF to simulate reflections.
+
+Q: Are there any limitations due to existing technology?
+A: The client has not started technical implementation, so they are not limited by an existing technical stack.
+
+Q: Does this need to interoperate with existing code?
+A: See the response to technical limitations (no existing stack constraints).
+
+Q: Are there limitations due to the target device(s)?
+A: The simulation should run on both x86 and ARM64 devices.
+
+Q: Are there other performance-intensive systems in place?
+A: See the response to technical limitations.
+
+Q: Is the product targeted to low/mid/high-end systems?
+A: The simulation is primarily targeted at mid-to-high-end systems, but ideally, it should also be performant on lower-end hardware.
+
+== Similar Solutions
+As this is a fairly niche simulation that is generally used in closed source applications, there were only a few sources I could find that are relevant and have available information in relation to their implementation. Understanding existing implementations, particularly in regard to their spectrum synthesis, has allowed me to develop the correct balance between fidelity and performance.
+=== Sea of Thieves
+Sea of thieves is by far the highest profile game utilising an FFT ocean. It focuses on developing a stylised ocean scene over a realistic one so differs in the following ways:
+- Does not have exact PBR lighting, but still derives its lighting from PBR theory
+- Is intended to have minimal frametime impact while operating on low end hardware, so has a lower resolution, using a less complicated spectrum
+- Has a more detailed foam simulation, where they convolve the foam map with a stylised texture, and use Unreal Engine's particle system to simulate sea spray
+The implementation is closed source, so I do not have access to any source code. Any information I could find was primarily from a conference they held on its development.
+=== Acerola
+Acerola's ocean simulation was made as part of a pseudo-educational youtube series on simulating water in games. It has a few notable similarities, and key benefits over others:
+- It is a realistic simulation, using a spectrum that is (As far as I am aware) fully in-line with the most recent oceanographic literature
+- Uses a highly performant FFT implementation, based on Nvidia WaveWorks
+- Is built upon unity and utilises full PBR lighting, as derived from microfacet theory
+
+=== Jump Trajectory
+Jump trajectory created a very detailed video explaining the process of creating an FFT-based ocean simulation, also sharing the source code publically. It is similar to acerolas in most ways, but has a few notable differences:
+- uses a "simpler" FFT implementation, that is much easier to understand
+- Abstracts his data and algorithms into different compute passes
+- Decays foam non-exponentially, using a flat base color for foam
+
+== Success Criteria
+// TODO: fill with condensed objectives
+== Spectrum Synthesis
 === Nomenclature
 To compute the inital spectra, we rely on various input parameters and definitions shared between various functions and parts of the program. @sim-variables lists the relevant symbols, meanings and relationships where appropriate. Note that throughout this project we are defining the positive $y$ direction as "up".
 \
@@ -157,6 +121,8 @@ To compute the inital spectra, we rely on various input parameters and definitio
     [$k_z$], [Z Component of wave vector],
     [$k$], [Magnitude of the wave vector],
     [$t$], [time],
+    [$m, n$], [Indices of summation],
+    [$M, N$], [Dimensions of summation],
     [$arrow(x) = [x_x, x_z]$], [Position vector in world space],
     [$omega = phi(k)$], [Dispersion relation],
     [$omega_p$], [Peak Frequency],
@@ -170,7 +136,6 @@ To compute the inital spectra, we rely on various input parameters and definitio
     [$L_x = L_z$], [Simulation Dimensions, power of two],
     [$xi$], [Swell amount],
     [$xi_r, xi_i$], [Gaussian Random Numbers],
-    [$lambda$], [Choppiness factor],
     [$lambda$], [Choppiness factor],
     [$kappa$], [Foam bias],
     [$mu$], [Foam injection threshold],
@@ -239,7 +204,6 @@ $ Delta k_x = Delta k_z = (2 pi) / L $
 
 #pagebreak()
 == Ocean Geometry & Foam
-All of the following is repeated for every lengthscale, with the final output values being the sum of the individual displacement, normal, and foam maps.
 === Displacements @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz
 For a field of dimensions $L_x$ and $L_z$, we calculate the displacements at positions $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf. By arranging the equations into a specific format, we can convert the frequency domain representation of the wave into the spatial domain using the inverse discrete fourier transform.
   $ "Vertical Displacement (y)": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
@@ -268,7 +232,7 @@ $ xi_i = sqrt(-2.0 ln (u_1)) sin (2 pi u_2) $
 
 === Foam, The Jacobian, and Decay @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the displacements goes negative. Per Tessendorf @JTessendorf, we compute the determinant of the jacobian for the horizontal displacement, $D(arrow(x), t)$.
-  $ J(x) = J_"xx" J_"zz" - J_"xz" J_"zx" $
+  $ J(arrow(x)) = J_"xx" J_"zz" - J_"xz" J_"zx" $
   $ J_"xx" = 1 + lambda (d D_x)/(d x) , J_"zz" = 1 + lambda (d D_z)/(d z) $
   $ J_"xz" = J_"zx" = 1 + lambda (d D_x)/(d z) $
 we then threshold the value such that $J(arrow(x)) < mu$, wherein if true we inject foam into the simulation at the given point. This value should accumulate (and decay) over time to mimic actual ocean foam, which is achieved by modulating the previous foam value ($I_0$) by an exponential decay function:
@@ -279,24 +243,14 @@ $ I = cases(
   I_0 e^(-zeta) "if" J_"biased" < mu,
 ) $
 
-=== Cascades (Unfinished) @Jump-Trajectory @JTessendorf @Empirical-Spectra
-
 #pagebreak()
-== The Fourier Transform (Unfinished)
-=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform (Unfinished) @Code-Motion @JTessendorf @Jump-Trajectory
-The Cooley-Tukey FFT is a common implementation of the FFT algorithm used for fast calculation of the DFT. The direct DFT is computed in $O(N^2)$ time whilst the FFT is computed in $O(N log N)$. This is a significant improvement as we are dealing with summations in the order of $10^4 - 10^6$ multiple times per frame. The FFT exploits the redundancy in DFT computation in order to increase performance, but is only applicable when the following conditions are met:
-- $L_x = L_z = 2^x, x in ZZ$
-- the coordinates and wave vectors lie on a regular grid
-\
-The overarching FFT algorithm is as follows:
-- kA
+=== Cascades @Jump-Trajectory @JTessendorf @Empirical-Spectra
+The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
 
-
-=== Butterfly Texture (Unfinished)
-
-=== Butterfly Operations (Unfinished)
-
-=== Permutation (Unfinished)
+=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform @Code-Motion @JTessendorf @Jump-Trajectory
+The Cooley-Tukey FFT is a common implementation of the FFT, used for fast calculation of the DFT. The direct DFT is computed in $O(n^2)$ time whilst the FFT is computed in $O(n log n)$. This is a significant improvement as we are dealing with $n$ in the order of $10^4 - 10^6$, computed multiple times per frame. The FFT exploits the redundancy in DFT computation in order to increase performance, being able to do so only when $L_x = L_z = M = N = 2^x, x in ZZ$, the coordinates and wave vectors lie on a regular grid, and the summation is in the following format, which are all true save some differences in summation limits.
+$ "Inverse DFT:" F_n = sum_(m=0)^(N - 1) f_m e^(2 pi i m/N n ) $
+$ "Wave Summation:" h (arrow(x), t) = sum_(m=-N/2)^(N / 2) h (t) e^(2 pi i m/N n ) $
 
 #pagebreak()
 == Post Processing
@@ -411,8 +365,29 @@ A prototype was made in order to test the technical stack and gain experience wi
   ],
 )
 
-== Project Considerations
-The project will be split into 4 major stages - the simulation, implementing the IFFT, non PBR lighting, and PBR lighting. The simulation will most likely take the bulk of the project duration as implementing the spectrums, DFT and a GUI with just a graphics library is already a major undertaking. I will then implement the Blinn-Phong lighting model @Blinn-Phong in conjunction with the subsurface scattering seen in Atlas @Atlas-Water. Beyond this I will implement full PBR lighting using a microfacet BRDF and statistical distribution functions in order to simulate surface microfacets.
+//#pagebreak()
+//== Critical Path
+//The critical path for the project below assumes each new task has every previous task as a dependent, and thus that they must be completed in that order. Smaller parts of each task are completed concurrently where possible, the relative timescale is in arbitrary units as I do not think a rigid timeline will provide much benefit here.
+//#figure(
+//table(
+//  columns: 3,
+//  align: left,
+//  [*Task*], [*Description*], [Relative Timescale],
+//  [Graphics State Setup], [Create the window and event loop, including all necessary data to handle basic window functions and shutdown], [],
+//  [Engine Setup], [Setup the application-agnostic rendering code and sort/handle data], [],
+//  [Renderer Setup], [Setup the application-specific rendering code and logic], [],
+//  [UI Setup], [Create and render an imgui frame], [],
+//  [Data Precompute], [Precompute the butterfly texture and gaussian random numbers], [],
+//  [Spectrum Synthesis], [Generate the frequency spectrum using compute shaders on the GPU], [],
+//  [FFT Precompute], [Evolve frequency spectrum and precompute fourier amplitudes using compute shaders on the GPU], [],
+//  [Implement IFFT], [Implement the GPGPU 2D IFFT], [],
+//  [Process IFFT Outputs], [Process the FFT data into the correct maps], [],
+//  [Vertex Manipulation], [Offset tiles based on GPU instance ID, centering offset and displacement. Combine lengthscales], [],
+//  [Non-PBR Lighting], [Implement Blinn-Phong shading and subsurface scattering], [],
+//  [PBR Lighting], [Use microfacet BRDF and statistical distributions for realistic shading], [],
+//),
+//caption: "Compacted Critical Path",
+//)
 
 == Additional Features
 If given enough time I would like to implement the following:
@@ -420,6 +395,7 @@ If given enough time I would like to implement the following:
 - Further post processing effects, such as varying tonemapping options and a toggleable bloom pass
 - A sky color simulation, as this would allow the complete simulation of a realistic day night cycle for any real world ocean condition.
 - LEADR environment reflections, based on the paper by the same name (Linear Efficient Antialiased Displacement and Reflectance Mapping)
+
 
 #pagebreak()
 == Project Objectives (Unfinished)
@@ -487,6 +463,65 @@ If given enough time I would like to implement the following:
     + parameter checkboxes
       + toggle between pbr / non pbr lighting
     + color select wheel (imgui) for parameters 
+
+#pagebreak()
+= Documented Design
+== Technologies
+- Rust:
+  - Fast, memory efficient programming language
+- wgpu:
+  - Graphics library
+- Rust GPU:
+  - (Rust as a) shader language
+- Winit:
+  - cross platform window creation and event loop management library
+- Dear ImGui
+  - Bloat-free GUI library with minimal dependencies
+- GLAM:
+  - used for various linear algebra operations
+- Pollster / Env Logger:
+  - used to read errors, as wgpu does not log as would be standard
+- Image:
+  - used to read HDRIs from a file into memory for processing
+- Nix:
+  - Used to create a declarative, reproducible development environment
+// TODO LINK TO UI.RS // TODO: properly credit and comment
+
+// INCLUDE COOL GRAPH OF TEXTURES
+== Algorithm Overview (Unfinished) @JTessendorf @Empirical-Spectra 
+// TODO: link to documented design
+Below is a high-level explanation of the algorithm used in this project, primarily for providing context for the upcoming theory. It is explained in more detail in the documented design. 
+\
+On Startup:
+- Generate gaussian random number pairs, and store them into a texture, on the CPU
+- Compute the butterfly operation's twiddle factors, and indices, and store them into a texture
+On Parameter Change (For Every Lengthscale):
+- Compute the initial wave vectors and dispersion relation, and store into a texture
+- Compute the initial frequency spectrum for each wave vector, and store into a texture
+- Compute the conjugate of each wave vector, and store into a texture
+Frame-by-Frame:
+- For Every Lengthscale:
+  - Evolve initial frequency spectrum through time
+  - Pre-compute & store amplitudes for FFT into textures
+  - perform IFFT for height displacement
+  - perform IFFT for normal calculation
+  - perform IFFT(s) for jacobian
+  - Process & merge IFFT results into displacement, normal, and foam maps 
+- Create a fullscreen quad and render skybox, sun & fog to framebuffer
+- Offset tiles based on instance index & centering
+- Combine values for all 3 lengthscales & offset vertices based on displacement map
+- Compute lighting value and render result to framebuffer
+
+== The Fourier Transform (Unfinished)
+=== Butterfly Texture (Unfinished)
+
+=== Butterfly Operations (Unfinished)
+
+=== Permutation (Unfinished)
+
+== Cascades
+
+== Application State
 
 #pagebreak()
 = Bibliography

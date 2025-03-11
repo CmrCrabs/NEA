@@ -40,6 +40,7 @@ pub fn main_vs(
     let mut normal = normal_map0.read(uv) * consts.sim.lengthscale0_sf;
     normal += normal_map1.read(uv) * consts.sim.lengthscale1_sf;
     normal += normal_map2.read(uv) * consts.sim.lengthscale2_sf;
+    normal.y = 1.0;
     let mut foam = foam_map0.read(uv) * consts.sim.lengthscale0_sf;
     foam += foam_map1.read(uv) * consts.sim.lengthscale1_sf;
     foam += foam_map2.read(uv) * consts.sim.lengthscale2_sf;
