@@ -1,5 +1,5 @@
 // Settings
-#set par(justify: true)
+#show table: set par(justify: false)
 #show link: underline
 #set page(
   numbering: "1",
@@ -8,7 +8,7 @@
 ) 
 #set text(
   hyphenate: false,
-  font: "EB Garamond"
+  font: "EB Garamond",
 )
 #set heading(numbering: "1.", offset: 0)
 #set text(12pt)
@@ -17,13 +17,11 @@
 #set math.mat(delim: "[");
 #set math.vec(delim: "[");
 
-// Title Page
-// disable justification
 #page(numbering: none, [
   #v(2fr)
   #align(center, [
     //#image("/Assets/ocean.png", width: 60%)
-    #text(23pt, weight: 700, [NEA])
+    #text(23pt, weight: 700, [A-Level Computer Science NEA])
     #v(0.1fr)
     #text(23pt, weight: 700, [Real-Time, Empirical Ocean Simulation & Physically Based Renderer])
     #v(0.1fr)
@@ -32,6 +30,8 @@
   ])
   #v(2fr)
 ])
+
+#set par(justify: true)
 
 // TODO: 
 // replicate old academic paper style
@@ -104,8 +104,28 @@ Jump trajectory created a very detailed video explaining the process of creating
 - Abstracts his data and algorithms into different compute passes
 - Decays foam non-exponentially, using a flat base color for foam
 
+#pagebreak()
 == Success Criteria
-// TODO: fill with condensed objectives
++  The application opens with a titled, resizable, movable, and closable OS window that follows OS styling.
++  A single skybox texture can be loaded from a specified filepath.
++  The camera can be controlled via mouse input, with left-click activation, full panning, scroll-based zoom, and stable field of view across window resizes.
++  A user interface (UI) is present, featuring resizable, movable, and collapsable panels, color pickers, sliders, an FPS display, and simulation details.
+
++  The ocean simulation exhibits Gaussian wave variance with three controllable length scales and frequency cutoffs.
++  The simulation runs at a minimum of 60 FPS on mid-range gaming hardware (GTX 1060 and above).
++  The simulation has sensible default parameters
++  The ocean has adjustable size, including tile size, instance count, and simulation resolution.
++  Foam effects are implemented with adjustable color, decay rate, visibility, and wave-breaking injection settings.
++  The ocean conditions are user-adjustable, including depth, gravity, wind parameters, fetch, choppiness, and swell properties.
+
++  A skybox with a correctly transformed sun is rendered, responding correctly to camera view and zoom
++  The ocean surface has no obvious pixellation beyond that as a result of the simulation resolution
++  The ocean has approximate subsurface scattering, with adjustable scatter color, bubble effects, and lighting properties.
++  Real-time reflections from the environment are visible, influenced by user-controllable fresnel effects and refractive indices.
++  Specular reflections are implemented with toggleable PBR/non-PBR modes, adjustable shininess, and roughness settings.
++  Distance fog is implemented with user-adjustable density, offset, falloff, and height settings.
+
+#pagebreak()
 == Spectrum Synthesis
 === Nomenclature
 To compute the inital spectra, we rely on various input parameters and definitions shared between various functions and parts of the program. @sim-variables lists the relevant symbols, meanings and relationships where appropriate. Note that throughout this project we are defining the positive $y$ direction as "up".
@@ -146,13 +166,15 @@ To compute the inital spectra, we rely on various input parameters and definitio
 ) <sim-variables>
 
 #pagebreak()
-=== Dispersion Relation @JTessendorf @Empirical-Spectra
+=== Dispersion Relation 
+Citations: @JTessendorf @Empirical-Spectra \
 The relation between the travel speed of the waves and their wavelength, written as a function relating angular frequency $omega$ to wave number $arrow(k)$. This simulation involves finite depth, and so we will be using a dispersion relation that considers it.@Empirical-Spectra
 
 $ omega = phi(k) =  sqrt(g k tanh (k h)) $
 $ (d phi(k)) / (d k) = (g( tanh (h k) + h k sech^2 (h k))) / (2 sqrt(g k tanh (h k))) $
 
-=== Non-Directional Spectrum (JONSWAP) @Empirical-Spectra @OW-Spectra @Jump-Trajectory @Acerola-FFT
+=== Non-Directional Spectrum (JONSWAP) 
+Citations: @Empirical-Spectra @OW-Spectra @Jump-Trajectory @Acerola-FFT \
 The JONSWAP energy spectrum is a more parameterised version of the Pierson-Moskowitz spectrum, and an improvement over the Philips Spectrum used in @JTessendorf, simulating an ocean that is not fully developed (as recent oceanographic literature has determined this does not happen). The increase in parameters allows simulating a wider breadth of real world conditions. 
   $ S_"JONSWAP" (omega) = (alpha g^2) / (omega^5) "exp" [- 5/4 (omega_p / omega)^4] 3.3^r $
   $ r = exp [ - (omega -omega_p)^2 / (2omega_p ^2 sigma ^2)] $ 
@@ -163,7 +185,8 @@ The JONSWAP energy spectrum is a more parameterised version of the Pierson-Mosko
       0.09 "if" omega > omega_p,
     ) $
 
-=== Depth Attenuation Function (Approximation of Kitaiigorodskii) @Empirical-Spectra
+=== Depth Attenuation Function (Approximation of Kitaiigorodskii) 
+Citations: @Empirical-Spectra \
 JONSWAP was fit to observations of waves in deep water. This function adapts the JONSWAP spectrum to consider ocean depth, allowing a realistic look based on distance to shore. The actual function is quite complex for a relatively simple graph, so can be well approximated as below @Empirical-Spectra. 
 $ Phi (omega, h) = cases(
   1 / 2 omega_h ^2 "if" omega_h <= 1,
@@ -171,7 +194,8 @@ $ Phi (omega, h) = cases(
 ) $
 $ omega_h = omega sqrt(h / g) $
 
-=== Directional Spread Function (Donelan-Banner) @Empirical-Spectra <Donelan-Banner>
+=== Directional Spread Function (Donelan-Banner) <donelan-banner>
+Citations: @Empirical-Spectra \
 The directional spread models how waves react to wind direction @Jump-Trajectory. This function is multiplied with the non-directional spectrum in order to produce a direction dependent spectrum @Empirical-Spectra. 
 
 $ D (omega, theta) = beta_s / (2 tanh (beta_s pi)) sech^2(beta_s theta) $
@@ -182,7 +206,8 @@ $ beta_s = cases(
 ) $
 $ epsilon = -0.4 + 0.8393 exp[-0.567 ln ( (omega / omega_p)^2 )] $
 
-=== Swell @Empirical-Spectra
+=== Swell 
+Citations: @Empirical-Spectra \
 Swell refers to the waves which have travelled out of their generating area @Empirical-Spectra. In practice, these would be the larger waves seen over a greater area. the directional spread function including swell is based on combining donelan-banner with a swell function as below. The integral seen in $Q_"final"$ is computed numerically using the rectangle rule. $Q_xi$ is a normalisation factor to satisfy the condition specified in equation (31) in @Empirical-Spectra, approximation taken from @Jump-Trajectory
 
 $ D_"final" (omega, theta) = Q_"final" (omega)  D_"base" (omega, theta) D_epsilon (omega, theta) $
@@ -195,7 +220,8 @@ $ Q_xi (s_xi) = cases(
 )
 $ 
 #pagebreak()
-=== Directional Spectrum Function @Empirical-Spectra
+=== Directional Spectrum Function 
+Citations: @Empirical-Spectra \
 The TMA spectrum below is an undirectional spectrum that considers depth.
 $ S_"TMA" (omega, h) = S_"JONSWAP" (omega) Phi (omega, h) $
 This takes inputs $omega, h$, whilst we need it to take input $arrow(k)$ per Tessendorf @JTessendorf - in order to do this we apply the following transformation @Empirical-Spectra. Similarly, to make the function directional, we also need to multiply it by the directional spread function  @Empirical-Spectra.
@@ -204,13 +230,15 @@ $ Delta k_x = Delta k_z = (2 pi) / L $
 
 #pagebreak()
 == Ocean Geometry & Foam
-=== Displacements @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz
+=== Displacements 
+Citations: @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz \
 For a field of dimensions $L_x$ and $L_z$, we calculate the displacements at positions $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf. By arranging the equations into a specific format, we can convert the frequency domain representation of the wave into the spatial domain using the inverse discrete fourier transform.
   $ "Vertical Displacement (y)": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement (x):" lambda D_x (arrow(x), t) = sum_arrow(k) -i arrow(k)_x / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement (z):" lambda D_z (arrow(x), t) = sum_arrow(k) -i arrow(k)_z / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
 
-=== Derivatives @JTessendorf @Jump-Trajectory
+=== Derivatives 
+Citations: @JTessendorf @Jump-Trajectory \
 For lighting calculations and the computation of the jacobian, we require the derivatives of the above displacements. As the derivative of a sum is equal to the sum of the derivatives, we compute exact derivatives using the following summations.
   $ "X Component of Normal": epsilon_x (arrow(x), t) = sum_(arrow(k)) i k_x hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Z Component of Normal": epsilon_z (arrow(x), t) = sum_(arrow(k)) i k_z hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
@@ -219,18 +247,21 @@ For lighting calculations and the computation of the jacobian, we require the de
   $ "Jacobian zz": (d D_x) / (d x) = sum_(arrow(k)) -k_z^2 /k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Jacobian xz": (d D_x) / (d z) = sum_(arrow(k)) -(k_x k_z) /k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
 
-=== Frequency Spectrum Function @JTessendorf @Jump-Trajectory @Acerola-FFT
+=== Frequency Spectrum Function
+Citations: @JTessendorf @Jump-Trajectory @Acerola-FFT \
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies. Note that the time dependant component of the exponent is pushed into this amplitude, in order to simplify the summation.
   $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S_"TMA" (arrow(k))) $ 
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i phi(k)t) + h_0 (-k) e^(-i phi(k) t) $
 
-=== Box-Muller Transform @Gaussian
+=== Box-Muller Transform 
+Citations: @Gaussian \
 The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean 0 and standard deviation 1, which we generate using the box-muller transform converting from uniform variates from 0..1. @JTessendorf. Derivation is from polar coordinates, by treating x and y as cartesian coordinates, more details at @Gaussian
 $ xi_r, xi_i ~ N(0, 1) $
 $ xi_r = sqrt(-2.0 ln (u_1)) cos (2 pi u_2) $
 $ xi_i = sqrt(-2.0 ln (u_1)) sin (2 pi u_2) $
 
-=== Foam, The Jacobian, and Decay @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra
+=== Foam, The Jacobian, and Decay 
+Citations: @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra \
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the displacements goes negative. Per Tessendorf @JTessendorf, we compute the determinant of the jacobian for the horizontal displacement, $D(arrow(x), t)$.
   $ J(arrow(x)) = J_"xx" J_"zz" - J_"xz" J_"zx" $
   $ J_"xx" = 1 + lambda (d D_x)/(d x) , J_"zz" = 1 + lambda (d D_z)/(d z) $
@@ -244,10 +275,12 @@ $ I = cases(
 ) $
 
 #pagebreak()
-=== Cascades @Jump-Trajectory @JTessendorf @Empirical-Spectra
+=== Cascades 
+Citations: @Jump-Trajectory @JTessendorf @Empirical-Spectra \
 The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
 
-=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform @Code-Motion @JTessendorf @Jump-Trajectory
+=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform 
+Citations: @Code-Motion @JTessendorf @Jump-Trajectory \
 The Cooley-Tukey FFT is a common implementation of the FFT, used for fast calculation of the DFT. The direct DFT is computed in $O(n^2)$ time whilst the FFT is computed in $O(n log n)$. This is a significant improvement as we are dealing with $n$ in the order of $10^4 - 10^6$, computed multiple times per frame. The FFT exploits the redundancy in DFT computation in order to increase performance, being able to do so only when $L_x = L_z = M = N = 2^x, x in ZZ$, the coordinates and wave vectors lie on a regular grid, and the summation is in the following format, which are all true save some differences in summation limits.
 $ "Inverse DFT:" F_n = sum_(m=0)^(N - 1) f_m e^(2 pi i m/N n ) $
 $ "Wave Summation:" h (arrow(x), t) = sum_(m=-N/2)^(N / 2) h (t) e^(2 pi i m/N n ) $
@@ -293,14 +326,16 @@ Definitions of the initial variables and parameters for post processing. Note th
   caption: [Post Processing Variable Definitions],
 ) <pp-variables>
 
-=== Rendering Equation @Atlas-Water @Acerola-FFT @Acerola-SOS
+=== Rendering Equation 
+Citations: @Atlas-Water @Acerola-FFT @Acerola-SOS \
 This abstract equation models how a light ray incoming to a viewer is "formed" (in the context of this simulation). Due to there only being a single light source (the sun), subsurface scattering @Atlas-Water can be used to replace the standard $L_"diffuse"$ and $L_"ambient"$ terms.
 
 To include surface foam, we _lerp_ between the foam color and $L_"eye"$ based on foam density @Atlas-Water. We also Increase the roughness in areas covered with foam for $L_"specular"$ @Atlas-Water.  
 
 $ L_"eye" = (1 - F) L_"scatter" + L_"specular" + F L_"env_reflected" $
 
-=== Normalisation  & Surface Normals @Blinn-Phong @JTessendorf @Jump-Trajectory
+=== Normalisation  & Surface Normals 
+Citations: @Blinn-Phong @JTessendorf @Jump-Trajectory \
 When computing lighting using vectors, we are only concerned with the direction of a given vector not the magnitude. In order to ensure the dot product of 2 vectors is equal to the cosine of their angle we normalise the vectors.
 \
 
@@ -311,7 +346,8 @@ In order to compute the surface normals we sum, for each lengthscale, the value 
   -epsilon_z (arrow(x), t),
   ) $
 
-=== Subsurface Scattering @Atlas-Water @Acerola-FFT
+=== Subsurface Scattering
+Citations: @Atlas-Water @Acerola-FFT \
 This is the phenomenon where some light absorbed by a material eventually re-exits and reaches the viewer. Modelling this realistically is impossible in a real time context (with my hardware). Specifically within the context of the ocean, we can approximate it particularly well as the majority of light is absorbed. An approximate formula taking into account geometric attenuation, a crude fresnel factor, lamberts cosine law, and an ambient light is used, alongside various artistic parameters to allow for adjustments. @Atlas-Water
   $ L_"scatter" = ((k_1 W_"max" angle.l hat(L), -hat(V) angle.r ^4 (0.5 - 0.5(hat(L) dot hat(N)))^3 + k_2 angle.l hat(V), hat(N) angle.r ^2) C_"ss" L_"sun") / (1 + lambda_"GGX") $
   $ L_"scatter" += k_3 angle.l hat(L), hat(N) angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
@@ -321,35 +357,42 @@ The fresnel factor is a multiplier that scales the amount of reflected light bas
   $ F(hat(N),hat(V)) = F_0 + (1 - F_0)(1 - hat(N) dot hat(V))^(S) $
   $ F_0 = ((n_1 - n_2) / (n_1 + n_2))^2 $
 
-=== Blinn-Phong Specular Reflection @Blinn-Phong @Acerola-BRDF
+=== Blinn-Phong Specular Reflection 
+Citations: @Blinn-Phong @Acerola-BRDF \
 This is a simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^B $
   $ hat(H) = hat(L) + hat(V) $
 
-=== Environment Reflections @Acerola-SOS @Blinn-Phong
+=== Environment Reflections 
+Citations: @Acerola-SOS @Blinn-Phong \
 In order to get the color of the reflection for a given pixel, we compute the reflected vector from the normal and view vector. We then sample the corresponding point on the skybox and use that color as the reflected color.
   $ hat(R) = 2 hat(N) ( hat(N) dot hat(V)) - hat(V) $
 
-=== GGX Distribution @CC-BRDF @Acerola-BRDF
+=== GGX Distribution 
+Citations: @CC-BRDF @Acerola-BRDF \
 The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
   $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)(hat(N) dot hat(H))^2 + 1)^2) $
 
-=== Geometric Attenuation @CC-BRDF
+=== Geometric Attenuation 
+Citations: @CC-BRDF \
 Used to counteract the fresnel term, mimics the phenomena of masking & shadowing presented by the microfactets. The $lambda_"GGX"$ term changes depending on the distribution function used (GGX). $hat(S)$ is either the light or view vector.
   $ G_2 = G_1 (hat(H), hat(L)) G_1 (hat(H), hat(V)) $
   $ G_1 (hat(H), hat(S)) = 1 / (1 + a lambda_"GGX") $
   $ a = (hat(H) dot hat(S)) / (alpha sqrt(1 - (hat(H) dot hat(S))^2)) $
   $ lambda_"GGX" = (-1 + sqrt( 1 + a^(-2))) / 2 $
 
-=== Microfacet BRDF @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF
+=== Microfacet BRDF 
+Citations: @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF \
 This BRDF (Bidirectional Reflectance Distribution Function) is used to determine the specular reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D$ can be any distribution function - the geometric attenuation function $G$ changing accordingly.
 $ L_"specular" = (L_"sun" F G_2 D_"GGX") / (4(hat(N) dot hat(L)) (hat(N) dot hat(V))   ) $ 
 
-=== Reinhard Tonemapping @HDR
+=== Reinhard Tonemapping
+Citations: @HDR \
 To account for the HDR output values of some lighting functions, we tonemap the final output to be within a 0..1 range by dividing a color $c$ as follows (given that $c$ is effectively a 3D Vector)
 $ c_"final" = c / (c + [1, 1, 1]) $
 
-=== Distance Fog & Sun @Acerola-SOS
+=== Distance Fog & Sun
+Citations: @Acerola-SOS \
 To hide the imperfect horizon line we use a distance fog attenuated based on height and distance. This is generated by exponentially decaying a fog factor based on the relative height of the fragment compared to the ocean, then _lerping_ between the fog color and sky_color based on this. For the ocean surface we instead _lerp_ based on the distance from camera compared to a max distance, and then decaying and offsetting based on input parameters.
 \
 To render the sun, I compare the dot product of the ray and sun directions to the cosine of the maximum sky angle the sun can occupy and then _lerp_ between the sun and sky color based on a linear falloff factor.
@@ -374,7 +417,7 @@ If given enough time I would like to implement the following:
 
 
 #pagebreak()
-== Project Objectives (Unfinished)
+== Project Objectives
 
 === Engine
 + there is an os window created on startup
@@ -388,7 +431,7 @@ If given enough time I would like to implement the following:
   + the user can resize the mesh
   + there are multiple instances of the mesh visible
   + the user can control how many instances there are
-+ a filepath can be specified such that a .exr texture is read into gpu memory from it
++ a filepath can be specified such that a single skybox .exr texture is read into GPU memory
 + the user can control the camera
   + the camera can only be controlled when left-click is held down
   + the camera's pitch can be controlled by moving the mouse
@@ -408,19 +451,6 @@ If given enough time I would like to implement the following:
   + the user can get the simulation resolution from the UI
   + the user can see the time elapsed from the UI
 
-=== Renderer
-+ the scene has a skybox
-  + the skybox is correctly transformed when the camera view direction is changed
-  + the skybox is correctly transformed when the camera zoom is changed
-  + the skybox is correctly transformed when the window is resized
-  + there is a sun interpolated into the skybox
-    + the sun is in the correct position in the sky relative to the light vector
-    + the sun is correctly transformed when the camera view direction is changed
-    + the sun is correctly transformed when the camera zoom is changed
-    + the sun is correctly transformed when the window is resized
-+ Scene will have visible depth
-+ Depth will remain consistent when view is changed
-+ Textures are sampled such that there is no visible pixelation
 
 === Simulation
 + The simulation exhibits gaussian variance in the possible waves
@@ -433,8 +463,9 @@ If given enough time I would like to implement the following:
   + all 3 low frequency cutoffs
   + all 3 high frequency cutoffs
 + the simulation should have a controllable size
-  + the user should have a slider to control the size of an individual tile
-  + the user should be able to input how many instances are tiled
+  + user adjustable tile size
+  + user adjustable instance quantity
+  + user adjustable simulation resolution
 + the simulation should support foam, with the following controllable conditions
   + the foam color
   + how fast the foam decays
@@ -442,45 +473,95 @@ If given enough time I would like to implement the following:
   + when foam is injected on breaking waves
   + how much foam is injected on breaking waves
 + the user should be able to control the ocean conditions
-  + user can control the ocean depth
-  + user can control the gravitational field strength
-  + user can control the wind speed
-  + user can control the wind angle
-  + user can control the fetch
-  + user can control the choppiness
-  + user can control the amount of swell
-  + user can control the integration step for swell computation
-  + user can control a height offset for the ocean surface
-=== Post Processing
-+ User can adjust parameters to change output color
+  + user adjustable ocean depth
+  + user adjustable gravitational field strength
+  + user adjustable wind speed
+  + user adjustable wind angle
+  + user adjustable fetch
+  + user adjustable choppiness
+  + user adjustable amount of swell
+  + user adjustable integration step for swell computation
+  + user adjustable height offset for the ocean surface
 
+=== Renderer
++ the scene has a skybox
+  + the skybox is correctly transformed when the camera view direction is changed
+  + the skybox is correctly transformed when the camera zoom is changed
+  + the skybox is correctly transformed when the window is resized
+  + there is a sun interpolated into the skybox
+    + the sun is in the correct position in the sky relative to the light vector
+    + the sun is correctly transformed when the camera view direction is changed
+    + the sun is correctly transformed when the camera zoom is changed
+    + the sun is correctly transformed when the window is resized
+    + the sun has user controllable parameters
+      + user adjustable sun color
+      + user adjustable sun x direction
+      + user adjustable sun y direction
+      + user adjustable sun z direction
+      + user adjustable sun angle
+      + user adjustable sun distance
+      + user adjustable sun size
+      + user adjustable sun falloff factor
++ displacement map sampled such that there is no visible pixelation in output
++ normal map sampled such that there is no visible pixelation in output
++ foam map sampled such that there is no visible pixelation in output
++ there is visible, user controllable, subsurface scattering for ocean base color
+  + user adjustable scatter color
+  + user adjustable bubble color
+  + user adjustable bubble density
+  + user adjustable height attenuation factor
+  + user adjustable reflection strength
+  + user adjustable diffuse lighting strength
+  + user adjustable ambient lighting strength
++ there is visible reflections from the environment
+  + user adjustable reflection strength
+  + there is visible fresnel reflectance affecting reflections
+    + user adjustable water refractive index
+    + user adjustable air refractive index
+    + user adjustable fresnel shine
+    + user adjustable fresnel effect scale factor
+    + user adjustable fresnel normals scale factor
++ there is non physically based specular reflections
+  + user toggleable pbr / non pbr specular
+  + user adjustable shininess of surface
++ there is user controllable physically based specular reflections
+  + user adjustable specular scale factor
+  + user adjustable pbr fresnel scale factor
+  + user adjustable pbr cutoff low
+  + user adjustable water roughness
+  + user adjustable foam roughness factor
++ there is user controllable distance fog
+  + user adjustable fog density
+  + user adjustable fog distance offset
+  + user adjustable fog falloff factor
+  + user adjustable fog height offset
 
 #pagebreak()
 = Documented Design
 == Technologies
-- Rust:
-  - Fast, memory efficient programming language
-- wgpu:
-  - Graphics library
-- Rust GPU:
-  - (Rust as a) shader language
-- Winit:
-  - cross platform window creation and event loop management library
-- Dear ImGui
-  - Bloat-free GUI library with minimal dependencies
-- GLAM:
-  - used for various linear algebra operations
-- Pollster / Env Logger:
-  - used to read errors, as wgpu does not log as would be standard
-- Image:
-  - used to read HDRIs from a file into memory for processing
-- Nix:
-  - Used to create a declarative, reproducible development environment
+#table(
+  columns: 4,
+  align: left,
+  [*Library*], [*Version*], [*Purpose*], [*Link*],
+  [Rust], [-], [Fast, memory-efficient programming language], [https://www.rust-lang.org/],
+  [wgpu], [23.0.1], [Graphics library], [https://github.com/gfx-rs/wgpu],
+  [Rust GPU], [git], [(Rust as a) shader language], [https://github.com/Rust-GPU/rust-gpu],
+  [winit], [0.29], [Cross-platform window creation and event loop management], [https://github.com/rust-windowing/winit],
+  [Dear ImGui], [0.12.0], [Bloat-free GUI library with minimal dependencies], [https://github.com/imgui-rs/imgui-rs],
+  [imgui-wgpu-rs], [0.24.0], [only rendering code used, snippets taken directly from source instead of library being imported], [https://github.com/yatekii/imgui-wgpu-rs],
+  [imgui-winit-support], [0.13.0], [only datatype translation code used, snippet taken directly from source instead of library being imported], [https://github.com/imgui-rs/imgui-winit-support],
+  [GLAM], [0.29], [Linear algebra operations], [https://github.com/bitshifter/glam-rs],
+  [Pollster], [0.3], [Used to read errors (async executor for wgpu)], [https://github.com/zesterer/pollster],
+  [Env Logger], [0.10], [Logging for debugging and error tracing], [https://github.com/env-logger-rs/env_logger],
+  [Image], [0.24], [Used to read a HDRI from a file into memory], [https://github.com/image-rs/image],
+  [Nix], [-], [Creating a declarative, reproducible development environment], [https://nixos.org/],
+)
+
 // TODO LINK TO UI.RS // TODO: properly credit and comment
 
-// INCLUDE COOL GRAPH OF TEXTURES
-== Algorithm Overview (Unfinished) @JTessendorf @Empirical-Spectra 
-// TODO: link to documented design
+#pagebreak()
+== Core Algorithm (Unfinished) @JTessendorf @Empirical-Spectra 
+=== Overview
 Below is a high-level explanation of the algorithm used in this project, primarily for providing context for the upcoming theory. It is explained in more detail in the documented design. 
 \
 On Startup:
@@ -503,6 +584,21 @@ Frame-by-Frame:
 - Combine values for all 3 lengthscales & offset vertices based on displacement map
 - Compute lighting value and render result to framebuffer
 
+#page(
+  flipped: true,
+  margin: 2cm,
+  align(
+    center,
+    figure(
+      image("assets/core_algorithm.png", fit: "contain", width: 100%),
+      caption: [
+        Core algorithm, white and black points are not consistent between images for demonstrative purposes 
+      ],
+    )
+  )
+)
+
+#pagebreak()
 == The Fourier Transform (Unfinished)
 === Butterfly Texture (Unfinished)
 
