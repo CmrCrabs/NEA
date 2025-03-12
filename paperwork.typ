@@ -1,8 +1,9 @@
-// Settings
+#import "@preview/zebraw:0.4.7": *
 #show table: set par(justify: false)
 #show link: underline
+#set raw(theme: "assets/kanagawa.tmTheme")
 #set page(
-  numbering: "1",
+  numbering: "1 of 1",
   margin: 2cm,
   paper: "us-letter",
 ) 
@@ -17,15 +18,33 @@
 #set math.mat(delim: "[");
 #set math.vec(delim: "[");
 
+#set table(
+    fill : (x , y) => 
+    if y == 0 { rgb("#F0F4F4") }
+)
+
+#let codeblock(body) = {
+  block(
+    width: 100%,
+    fill: rgb("#181616"),
+    inset: 10pt,
+    breakable: true,
+    text(
+      fill: rgb("#c5c9c5"),
+      body,
+    ),
+  )
+}
+
 #page(numbering: none, [
   #v(2fr)
   #align(center, [
     //#image("/Assets/ocean.png", width: 60%)
-    #text(23pt, weight: 700, [A-Level Computer Science NEA])
+    #text(23pt, weight: 700, [Real-Time, Empirical, Ocean Simulation & Physically Based Renderer])
     #v(0.1fr)
-    #text(23pt, weight: 700, [Real-Time, Empirical Ocean Simulation & Physically Based Renderer])
+    #text(18pt, weight: 600, [A-Level Computer Science NEA])
     #v(0.1fr)
-    #text(23pt, weight: 500, [Zayaan Azam])
+    #text(18pt, weight: 500, [Zayaan Azam])
     #v(1.1fr)
   ])
   #v(2fr)
@@ -51,38 +70,43 @@ The client is Jahleel Abraham. They are a game developer who require a physicall
 
 == Interview Questions
 Interview notes are paraphrased.
-Q: What specific ocean phenomena need to be simulated?
-A: The simulation should include waves in all real-world conditions and generate foam. If possible, it should also simulate other ocean phenomena.
-
-Q: What parameters of the simulation need to be configurable?
-A: All necessary parameters for simulating real-world conditions, including tile size and individual wave quantity.
-
-Q: Does there need to be an accompanying GUI?
-A: Yes, the GUI should allow control over parameters and tile size, display frametime, and show the current state of all parameters.
-
-Q: Do I need to implement an atmosphere/skybox?
-A: A basic skybox would be nice, and an atmosphere shader should be included if possible.
-
-Q: Do I need to implement a PBR water shader?
-A: Yes, the simulation should use a physically based rendering (PBR) water shader with a microfacet BRDF.
-
-Q: Do I need to implement caustics, reflections, or other light-related phenomena?
-A: Caustics are out of scope. Implement approximate subsurface scattering and use GGX distribution with the BRDF to simulate reflections.
-
-Q: Are there any limitations due to existing technology?
-A: The client has not started technical implementation, so they are not limited by an existing technical stack.
-
-Q: Does this need to interoperate with existing code?
-A: See the response to technical limitations (no existing stack constraints).
-
-Q: Are there limitations due to the target device(s)?
-A: The simulation should run on both x86 and ARM64 devices.
-
-Q: Are there other performance-intensive systems in place?
-A: See the response to technical limitations.
-
-Q: Is the product targeted to low/mid/high-end systems?
-A: The simulation is primarily targeted at mid-to-high-end systems, but ideally, it should also be performant on lower-end hardware.
+#grid(
+  columns: (auto, 1fr),
+  gutter: 8pt,
+  
+  [*Q:*], [What specific ocean phenomena need to be simulated?],
+  [*A:*], [The simulation should include waves in all real-world conditions and generate foam. If possible, it should also simulate other ocean phenomena.],
+  
+  [*Q:*], [What parameters of the simulation need to be configurable?],
+  [*A:*], [All necessary parameters for simulating real-world conditions, including tile size and individual wave quantity.],
+  
+  [*Q:*], [Does there need to be an accompanying GUI?],
+  [*A:*], [Yes, the GUI should allow control over parameters and tile size, display frametime, and show the current state of all parameters.],
+  
+  [*Q:*], [Do I need to implement an atmosphere/skybox?],
+  [*A:*], [A basic skybox would be nice, and an atmosphere shader should be included if possible.],
+  
+  [*Q:*], [Do I need to implement a PBR water shader?],
+  [*A:*], [Yes, the simulation should use a physically based rendering (PBR) water shader with a microfacet BRDF.],
+  
+  [*Q:*], [Do I need to implement caustics, reflections, or other light-related phenomena?],
+  [*A:*], [Caustics are out of scope. Implement approximate subsurface scattering and use GGX distribution with the BRDF to simulate reflections.],
+  
+  [*Q:*], [Are there any limitations due to existing technology?],
+  [*A:*], [The client has not started technical implementation, so they are not limited by an existing technical stack.],
+  
+  [*Q:*], [Does this need to interoperate with existing code?],
+  [*A:*], [See the response to technical limitations (no existing stack constraints).],
+  
+  [*Q:*], [Are there limitations due to the target device(s)?],
+  [*A:*], [The simulation should run on both x86 and ARM64 devices.],
+  
+  [*Q:*], [Are there other performance-intensive systems in place?],
+  [*A:*], [See the response to technical limitations.],
+  
+  [*Q:*], [Is the product targeted to low/mid/high-end systems?],
+  [*A:*], [The simulation is primarily targeted at mid-to-high-end systems, but ideally, it should also be performant on lower-end hardware.],
+)
 
 == Similar Solutions
 As this is a fairly niche simulation that is generally used in closed source applications, there were only a few sources I could find that are relevant and have available information in relation to their implementation. Understanding existing implementations, particularly in regard to their spectrum synthesis, has allowed me to develop the correct balance between fidelity and performance.
@@ -91,7 +115,7 @@ Sea of thieves is by far the highest profile game utilising an FFT ocean. It foc
 - Does not have exact PBR lighting, but still derives its lighting from PBR theory
 - Is intended to have minimal frametime impact while operating on low end hardware, so has a lower resolution, using a less complicated spectrum
 - Has a more detailed foam simulation, where they convolve the foam map with a stylised texture, and use Unreal Engine's particle system to simulate sea spray
-The implementation is closed source, so I do not have access to any source code. Any information I could find was primarily from a conference they held on its development.
+The implementation is closed source, so I do not have access to any detailed implementation information. Anything I could find was primarily from a conference they held on its development.
 === Acerola
 Acerola's ocean simulation was made as part of a pseudo-educational youtube series on simulating water in games. It has a few notable similarities, and key benefits over others:
 - It is a realistic simulation, using a spectrum that is (As far as I am aware) fully in-line with the most recent oceanographic literature
@@ -231,7 +255,7 @@ $ Delta k_x = Delta k_z = (2 pi) / L $
 #pagebreak()
 == Ocean Geometry & Foam
 === Displacements 
-Citations: @Code-Motion @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz \
+Citations:  @Jump-Trajectory @Acerola-FFT @JTessendorf @Keith-Lantz \
 For a field of dimensions $L_x$ and $L_z$, we calculate the displacements at positions $arrow(x)$ by summating multiple sinusoids with complex, time dependant amplitudes.  @JTessendorf. By arranging the equations into a specific format, we can convert the frequency domain representation of the wave into the spatial domain using the inverse discrete fourier transform.
   $ "Vertical Displacement (y)": h(arrow(x),t) = sum_(arrow(k)) hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Horizontal Displacement (x):" lambda D_x (arrow(x), t) = sum_arrow(k) -i arrow(k)_x / k hat(h)(arrow(k), t) e^(i arrow(k) dot arrow(x)) $
@@ -261,7 +285,7 @@ $ xi_r = sqrt(-2.0 ln (u_1)) cos (2 pi u_2) $
 $ xi_i = sqrt(-2.0 ln (u_1)) sin (2 pi u_2) $
 
 === Foam, The Jacobian, and Decay 
-Citations: @JTessendorf @Acerola-FFT @Code-Motion @Empirical-Spectra \
+Citations: @JTessendorf @Acerola-FFT  @Empirical-Spectra \
 The jacobian describes the "uniqueness" of a transformation. This is useful as where the waves would crash, the jacobian determinant of the displacements goes negative. Per Tessendorf @JTessendorf, we compute the determinant of the jacobian for the horizontal displacement, $D(arrow(x), t)$.
   $ J(arrow(x)) = J_"xx" J_"zz" - J_"xz" J_"zx" $
   $ J_"xx" = 1 + lambda (d D_x)/(d x) , J_"zz" = 1 + lambda (d D_z)/(d z) $
@@ -280,7 +304,7 @@ Citations: @Jump-Trajectory @JTessendorf @Empirical-Spectra \
 The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
 
 === 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform 
-Citations: @Code-Motion @JTessendorf @Jump-Trajectory \
+Citations: @JTessendorf @Jump-Trajectory \
 The Cooley-Tukey FFT is a common implementation of the FFT, used for fast calculation of the DFT. The direct DFT is computed in $O(n^2)$ time whilst the FFT is computed in $O(n log n)$. This is a significant improvement as we are dealing with $n$ in the order of $10^4 - 10^6$, computed multiple times per frame. The FFT exploits the redundancy in DFT computation in order to increase performance, being able to do so only when $L_x = L_z = M = N = 2^x, x in ZZ$, the coordinates and wave vectors lie on a regular grid, and the summation is in the following format, which are all true save some differences in summation limits.
 $ "Inverse DFT:" F_n = sum_(m=0)^(N - 1) f_m e^(2 pi i m/N n ) $
 $ "Wave Summation:" h (arrow(x), t) = sum_(m=-N/2)^(N / 2) h (t) e^(2 pi i m/N n ) $
@@ -352,13 +376,13 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   $ L_"scatter" = ((k_1 W_"max" angle.l hat(L), -hat(V) angle.r ^4 (0.5 - 0.5(hat(L) dot hat(N)))^3 + k_2 angle.l hat(V), hat(N) angle.r ^2) C_"ss" L_"sun") / (1 + lambda_"GGX") $
   $ L_"scatter" += k_3 angle.l hat(L), hat(N) angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
 
-=== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks @Acerola-BRDF
+=== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks 
 The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
   $ F(hat(N),hat(V)) = F_0 + (1 - F_0)(1 - hat(N) dot hat(V))^(S) $
   $ F_0 = ((n_1 - n_2) / (n_1 + n_2))^2 $
 
 === Blinn-Phong Specular Reflection 
-Citations: @Blinn-Phong @Acerola-BRDF \
+Citations: @Blinn-Phong  \
 This is a simplistic, empirical model to determine the specular reflections of a material. It allows you to simulate isotropic surfaces with varying roughnesses whilst remaining very computationally efficient. The model uses "shininess" as an input parameter, whilst the standard to use roughness (due to how PBR models work). In order to account for this when wishing to increase roughness we decrease shininess.
   $ L_"specular" = (hat(N) dot hat(H))^B $
   $ hat(H) = hat(L) + hat(V) $
@@ -369,7 +393,7 @@ In order to get the color of the reflection for a given pixel, we compute the re
   $ hat(R) = 2 hat(N) ( hat(N) dot hat(V)) - hat(V) $
 
 === GGX Distribution 
-Citations: @CC-BRDF @Acerola-BRDF \
+Citations: @CC-BRDF  \
 The distribution function used in the BRDF to model the proportion of microfacet normals aligned with the halfway vector. This is an improvement over the beckmann distribution due to the graph never reaching 0 and only tapering off at the extremes.
   $ D_"GGX" = (alpha ^2) / (pi ( (alpha^2 - 1)(hat(N) dot hat(H))^2 + 1)^2) $
 
@@ -382,7 +406,7 @@ Used to counteract the fresnel term, mimics the phenomena of masking & shadowing
   $ lambda_"GGX" = (-1 + sqrt( 1 + a^(-2))) / 2 $
 
 === Microfacet BRDF 
-Citations: @Atlas-Water @Acerola-FFT @CC-BRDF @Acerola-BRDF \
+Citations: @Atlas-Water @Acerola-FFT @CC-BRDF  \
 This BRDF (Bidirectional Reflectance Distribution Function) is used to determine the specular reflectance of a sample. There are many methods of doing this - the one used here is derived from microfacet theory. $D$ can be any distribution function - the geometric attenuation function $G$ changing accordingly.
 $ L_"specular" = (L_"sun" F G_2 D_"GGX") / (4(hat(N) dot hat(L)) (hat(N) dot hat(V))   ) $ 
 
@@ -561,7 +585,7 @@ If given enough time I would like to implement the following:
 
 #pagebreak()
 == Core Algorithm @JTessendorf @Empirical-Spectra 
-Below is a high-level explanation of the algorithm used in this project, primarily for providing context for the upcoming theory. It is explained in more detail in the documented design. 
+Below is a high-level explanation of the core algorithm for the simulation. A visual representation can be seen on the next page.
 \
 On Startup:
 - Generate gaussian random number pairs, and store them into a texture, on the CPU
@@ -586,9 +610,12 @@ Frame-by-Frame:
 #page(
   flipped: true,
   figure(
-    image("assets/core_algorithm.png", fit: "contain", width: 100%),
+    align(
+      center,
+      image("assets/core_algorithm.png", fit: "contain", width: 100%),
+    ),
     caption: [
-      white / black points of images are not consistent for ease of demonstration
+      Texture white / black points are not consistent for ease of demonstration
     ]
   )
 )
@@ -601,16 +628,120 @@ Frame-by-Frame:
 
 === Permutation (Unfinished)
 
+#pagebreak()
+== Event Loop Control Flow
+#figure(
+    align(
+      center,
+      image("assets/control_flow.png", fit: "contain", height: 90%),
+    ),
+    caption: [
+      Abstracted Event Loop Control Flow Flowchart
+    ]
+  )
+=== UI Event Flow
+#figure(
+    align(
+      center,
+      image("assets/ui_flow.png", fit: "contain", height: 90%),
+    ),
+    caption: [
+      UI Event Handling Flowchart
+    ]
+  )
+=== Camera Controller Flow
+#figure(
+    align(
+      center,
+      image("assets/camera_flow.png", fit: "contain", height: 60%),
+    ),
+    caption: [
+      UI Event Handling Flowchart
+    ]
+  )
+#pagebreak()
 == Other Algorithms
 === Cascades
 
-=== Event Loop
-
 === Index Buffer
+To enable proper backface culling, the vertices of the mesh are connected in a specific (counterclockwise) ordering such that the GPU can discern whether the face is pointed towards the camera. The GPU decides the ordering based on an index buffer, which specifies the index of which vertex is to be connected. The algorithm below only works for a square mesh, and was designed by me so is more than likely innefficient.
+#codeblock(
+```rust
+fn square_mesh_indices(size: u32) -> Vec<u32> {
+  let mut indices: Vec<u32> = vec![];
+  for y in 0..size - 1 {
+      for x in 0..size - 1 {
+          indices.push(x + y * size);
+          indices.push((x + 1) + (y + 1) * size);
+          indices.push(x + (y + 1) * size);
+          indices.push(x + y * size);
+          indices.push((x + 1) + y * size);
+          indices.push((x + 1) + (y + 1) * size);
+      }
+  }
+  indices
+}
+```
+)
 
-== Equirectangles
+== The Skybox & Equirectangular Projection
+A standard skybox is rendered using a cubemap, which consists of 6 square textures that are projected onto a cube that is placed surrounding the scene. An alternative method is to use an equirectangular skybox, which is where a single 2D texture is sampled using a 3D vector which is transformed using polar coordinates. Ordinarily, cubemaps are chosen because they can be sampled directly, saving computation, however given that I would have to load the cubemap, pass it to the GPU and manually render the actual sky cube, the performance overhead is worth the significant ease of implementation. 
+\
+\
+Instead, we send a draw call of only 3 vertices to the GPU, which we then map to create a triangle large enough to cover the screen, which all skybox details are rendererd to. Below we offset the vertices based on their index to form the triangle in the $[0, 1]$ space, and then convert it to clip space $[-1, 1]$.
+#codeblock(
+```rust
+// Vertex Shader
+let out_uv1 = Vec2::new(
+    ((vertex_index << 1) & 2) as f32,
+    (vertex_index & 2) as f32,
+);
+*out_pos = Vec4::new(out_uv1.x * 2.0 - 1.0,out_uv1.y * 2.0 - 1.0, 0.0, 1.0);
+```
+)
 
+in the fragment shader, we take the 2D fragment coord and convert it to the same $[-1, 1]$ clip space, such that we can then inverse the camera view and projection affine transforms, converting the screen space 2 dimensional coordinate to a 3 dimensional world space coordinate. 
+#codeblock(
+```rust
+// Fragment Shader
+let uv = Vec2::new(
+    frag_coord.x / consts.width * 2.0 - 1.0,
+    1.0 - frag_coord.y / consts.height * 2.0,
+);
 
+let target = proj_inverse * Vec4::new(uv.x, uv.y, 1.0, 1.0);
+let view_pos = (target.truncate() / target.w).extend(1.0);
+let world_pos = view_inverse * view_pos;
+let ray_dir = world_pos.truncate().normalize();
+```
+)
+The 3D normalised direction vector is then used to sample the equirectangular HDRI cubemap texture, with the resulting value used to color the skybox. 
+#codeblock(
+```rust
+// 3D direction vector -> 2D vector for texture reading
+fn equirectangular_to_uv(v: Vec3) -> Vec2 {
+    Vec2::new(
+        (v.z.atan2(v.x) + consts::PI) / consts::TAU,
+        v.y.acos() / consts::PI,
+    )
+}
+```
+)
+
+= Technical Solution
+#zebraw(
+  background-color: rgb("#181616"),
+  text(
+    fill: rgb("#c5c9c5"),
+    ```rust
+      let example = skibidi;
+    ```
+  )
+)
+
+= Testing
+
+= Evaluation
 #pagebreak()
 = Bibliography
 #bibliography(

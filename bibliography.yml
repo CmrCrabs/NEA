@@ -78,21 +78,6 @@ CC-BRDF:
     value: https://boksajak.github.io/files/CrashCourseBRDF.pdf
     date: 2024-09-17
 
-Acerola-BRDF:
-  type: video
-  title: The Secret Behind Photorealistic And Stylized Graphics 
-  author: Acerola
-  url: 
-    value: https://youtu.be/KkOkx0FiHDA
-    date: 2024-09-17
-
-Code-Motion:
-  type: conference
-  title: An introduction to Realistic Ocean Rendering through FFT - Fabio Suriano - Codemotion Rome 2017
-  url: 
-    value: https://www.slideshare.net/slideshow/an-introduction-to-realistic-ocean-rendering-through-fft-fabio-suriano-codemotion-rome-2017/74458025
-    date: 2024-09-25
-
 Keith-Lantz:
   type: article
   title: Ocean simulation part one:using the discrete fourier Fourier transform
@@ -140,3 +125,18 @@ HDR:
     value: https://learnopengl.com/Advanced-Lighting/HDR
     date: 2025-03-02
 
+Kloofendal:
+  type: misc
+  title: Kloofendal 43d Clear (Pure Sky)
+  author: Polyhaven
+  url:
+    value: https://polyhaven.com/a/kloofendal_43d_clear_puresky
+    date: 25-03-12
+
+Kanagawa:
+  type: misc
+  title: kanagawa.nvim
+  author: rebelot 
+  url:
+    value: https://github.com/rebelot/kanagawa.nvim/blob/master/extras/tmTheme/kanagawa.tmTheme
+    date: 25-03-12
