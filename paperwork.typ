@@ -560,8 +560,7 @@ If given enough time I would like to implement the following:
 // TODO LINK TO UI.RS // TODO: properly credit and comment
 
 #pagebreak()
-== Core Algorithm (Unfinished) @JTessendorf @Empirical-Spectra 
-=== Overview
+== Core Algorithm @JTessendorf @Empirical-Spectra 
 Below is a high-level explanation of the algorithm used in this project, primarily for providing context for the upcoming theory. It is explained in more detail in the documented design. 
 \
 On Startup:
@@ -586,15 +585,11 @@ Frame-by-Frame:
 
 #page(
   flipped: true,
-  margin: 2cm,
-  align(
-    center,
-    figure(
-      image("assets/core_algorithm.png", fit: "contain", width: 100%),
-      caption: [
-        Core algorithm, white and black points are not consistent between images for demonstrative purposes 
-      ],
-    )
+  figure(
+    image("assets/core_algorithm.png", fit: "contain", width: 100%),
+    caption: [
+      white / black points of images are not consistent for ease of demonstration
+    ]
   )
 )
 
@@ -606,11 +601,15 @@ Frame-by-Frame:
 
 === Permutation (Unfinished)
 
-== Cascades
+== Other Algorithms
+=== Cascades
 
-== Application State
+=== Event Loop
 
-== Event Loop
+=== Index Buffer
+
+== Equirectangles
+
 
 #pagebreak()
 = Bibliography
