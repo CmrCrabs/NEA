@@ -170,7 +170,8 @@ impl<'a> Engine<'a> {
                                 workgroup_size,
                                 workgroup_size,
                             );
-
+                            // updates mesh based on mesh_step input, technically redundant to do
+                            // on every param change but not an issue in any practical sense
                             self.scene.mesh = Mesh::new(&self.device, &self.scene.consts);
                         }
 
@@ -228,7 +229,6 @@ impl<'a> Engine<'a> {
                         surface.present();
                     }
                     WindowEvent::Resized(size) => {
-                        // Update Config
                         self.config = wgpu::SurfaceConfiguration {
                             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                             format: FORMAT,

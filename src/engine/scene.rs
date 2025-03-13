@@ -94,6 +94,7 @@ impl Scene {
             label: Some("Consts Bind Group"),
         });
 
+        // set to true so the initial spectrum is computed for frame 1
         let consts_changed = true;
 
         Self {
@@ -128,7 +129,7 @@ impl Scene {
             Mat4::from_rotation_y(self.consts.shader.sun_angle) * self.consts.shader.light;
         self.consts.sim.logsize = self.consts.sim.size.ilog2();
 
-        // "Redraw"
+        // update incase resized
         let dimensions = window.inner_size();
         self.consts.width = dimensions.width as f32;
         self.consts.height = dimensions.height as f32;
@@ -162,6 +163,7 @@ impl Mesh {
     pub fn new(device: &wgpu::Device, consts: &Constants) -> Self {
         let scale = consts.sim.size;
         let step = consts.sim.mesh_step;
+        // create vertices, stepping from 0,0 towards the top right, offset in shader for centring
         let mut vertices: Vec<Vertex> = vec![];
         for z in 0..scale {
             for x in 0..scale {
@@ -220,10 +222,12 @@ impl Camera {
                 zoom * yaw.cos() * pitch.cos(),
             ),
             target: Vec3::new(0.0, 0.0, 0.0),
+            // defined y axis as up
             up: Vec3::new(0.0, 1.0, 0.0),
             aspect: window.inner_size().width as f32 / window.inner_size().height as f32,
             fovy: PI / 4.0,
             znear: 0.1,
+            // set high enough to not be an issue
             zfar: 100000.0,
             proj: Mat4::ZERO,
             view: Mat4::ZERO,
@@ -253,6 +257,7 @@ impl Camera {
 
     pub fn pan(&mut self, position: PhysicalPosition<f64>, window: &Window) {
         let PhysicalPosition { x, y } = position;
+        // +0.01 to prevent edge case at screen borders
         self.yaw = (PI / window.inner_size().height as f32)
             * (y as f32 - (window.inner_size().height as f32 / 2.0) + 0.01);
         self.pitch = ((2.0 * PI) / window.inner_size().width as f32)

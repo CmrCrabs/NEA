@@ -121,6 +121,7 @@ impl Texture {
     }
 
     pub fn from_file(device: &wgpu::Device, queue: &Queue, label: &str, file: &str) -> Self {
+        // cant include_bytes! as filepath is non static
         let mut file_data = Vec::new();
         File::open(file)
             .expect("failed to open file")
@@ -140,7 +141,6 @@ impl Texture {
             depth_or_array_layers: 1,
         };
 
-        // TEXTURE
         let texture = device.create_texture_with_data(
             queue,
             &wgpu::TextureDescriptor {
@@ -178,6 +178,8 @@ impl Texture {
     }
 }
 
+
+// debatably redundant as not app agnositc, but reduces LOC significantly
 pub fn bind_group_descriptor(
     binding: u32,
     format: wgpu::TextureFormat,

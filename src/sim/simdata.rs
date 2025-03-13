@@ -69,6 +69,7 @@ impl SimData {
         }
         data
     }
+    // box muller transform, gaussian pair technically not needed but is slightly cooler
     fn gaussian_number(u1: f32, u2: f32) -> Vec2 {
         Vec2::new(
             (-2.0 * u1.ln()).sqrt() * (2.0 * std::f32::consts::PI * u2).cos(),

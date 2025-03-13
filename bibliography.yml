@@ -140,3 +140,19 @@ Kanagawa:
   url:
     value: https://github.com/rebelot/kanagawa.nvim/blob/master/extras/tmTheme/kanagawa.tmTheme
     date: 25-03-12
+
+Fullscreen-Tri:
+  type: article
+  title: Optimizing Triangles for a Full-screen Pass
+  author: Chris k. Wallis 
+  url: 
+    value: https://wallisc.github.io/rendering/2021/04/18/Fullscreen-Pass.html
+    date: 2025-03-02
+
+WGPU:
+  type: article
+  title: A Perspective Camera
+  author: sotrh
+  url:
+    value: https://sotrh.github.io/learn-wgpu/beginner/tutorial6-uniforms/
+    date: 2024-10-20

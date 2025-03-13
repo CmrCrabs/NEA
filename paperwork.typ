@@ -39,7 +39,6 @@
 #page(numbering: none, [
   #v(2fr)
   #align(center, [
-    //#image("/Assets/ocean.png", width: 60%)
     #text(23pt, weight: 700, [Real-Time, Empirical, Ocean Simulation & Physically Based Renderer])
     #v(0.1fr)
     #text(18pt, weight: 600, [A-Level Computer Science NEA])
@@ -55,7 +54,6 @@
 // TODO: 
 // replicate old academic paper style
 // https://journals.ametsoc.org/view/journals/phoc/5/3/1520-0485_1975_005_0410_optoer_2_0_co_2.xml?tab_body=pdf
-
 
 // Contents Page
 #page(outline(indent: true, depth: 3))
@@ -271,7 +269,7 @@ For lighting calculations and the computation of the jacobian, we require the de
   $ "Jacobian zz": (d D_x) / (d x) = sum_(arrow(k)) -k_z^2 /k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Jacobian xz": (d D_x) / (d z) = sum_(arrow(k)) -(k_x k_z) /k hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
 
-=== Frequency Spectrum Function
+=== Frequency Spectrum Function <spectrum_eq>
 Citations: @JTessendorf @Jump-Trajectory @Acerola-FFT \
 This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies. Note that the time dependant component of the exponent is pushed into this amplitude, in order to simplify the summation.
   $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S_"TMA" (arrow(k))) $ 
@@ -303,7 +301,7 @@ $ I = cases(
 Citations: @Jump-Trajectory @JTessendorf @Empirical-Spectra \
 The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
 
-=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform 
+=== 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform <ifft_exp>
 Citations: @JTessendorf @Jump-Trajectory \
 The Cooley-Tukey FFT is a common implementation of the FFT, used for fast calculation of the DFT. The direct DFT is computed in $O(n^2)$ time whilst the FFT is computed in $O(n log n)$. This is a significant improvement as we are dealing with $n$ in the order of $10^4 - 10^6$, computed multiple times per frame. The FFT exploits the redundancy in DFT computation in order to increase performance, being able to do so only when $L_x = L_z = M = N = 2^x, x in ZZ$, the coordinates and wave vectors lie on a regular grid, and the summation is in the following format, which are all true save some differences in summation limits.
 $ "Inverse DFT:" F_n = sum_(m=0)^(N - 1) f_m e^(2 pi i m/N n ) $
@@ -615,18 +613,140 @@ Frame-by-Frame:
       image("assets/core_algorithm.png", fit: "contain", width: 100%),
     ),
     caption: [
-      Texture white / black points are not consistent for ease of demonstration
+      Visualisation of the core algorithm. Texture white / black points are not consistent for ease of demonstration
     ]
   )
 )
 
 #pagebreak()
-== The Fourier Transform (Unfinished)
-=== Butterfly Texture (Unfinished)
+== The Fourier Transform
+Citations: @GPGPU @Biebras @Jump-Trajectory @Acerola-FFT \
+The IFFT algorithm I am using consists of 3 phases. The first phase involves precomputing the butterfly texture that holds the twiddle factors and input indices on the GPU. The second phase executes horizontal IFFT operations on the GPU, alternating between reading and writing to/from the input texture and a pingpong texture based on the pingpong push constant. The Third phase performs vertical IFFT operations on the same 2 textures. 
+\
+Note that the "id" referenced in any pseudocode corresponds to the workgroup global invocation id, which is analogous in this context to the pixel coordinate of the texture we are operating over.
 
-=== Butterfly Operations (Unfinished)
+#codeblock(
+```rust
+let pingpong = 0;
+for i in 0..log_2(size) {
+  dispatch_horizontal_IFFT_shader(i);
+  pingpong = (pingpong + 1) % 2;
+}
+for i in 0..log_2(size) {
+  dispatch_vertical_IFFT_shader(i);
+  pingpong = (pingpong + 1) % 2;
+}
+dispatch_permute_shader();
+```
+)
+#figure(
+    align(
+      center,
+      image("assets/fft_alg.png", fit: "contain", height: 50%),
+    ),
+    caption: [
+      Visualised IFFT Algorithm showing the horizontal and vertical operations on an input texture
+    ]
+  ) <IFFT>
+#pagebreak()
 
-=== Permutation (Unfinished)
+=== Butterfly Texture
+Citations: @GPGPU \
+For the following butterfly operations, input twiddle factors and indices are required. Following @GPGPU, we generate a texture with width $log_2 N$ and height $N$, storing the real and complex parts of the twiddle factor into the r and g channels of the texture. We then store the input x/y indices into the b and a channels.
+\ 
+the twiddle factor at n is a complex number $W_n^k$ such that 
+$ k = y_"current" n / 2^("stage" + 1) "mod" n $
+$ W_n^k = exp((- 2 pi i k) / n) $ 
+which we represent in code using eulers formula as 
+$ W_n^k = cos((- 2 pi i k) / n) + i sin((-2 pi i k) / n) $ 
+for the input indices, we compute a $y_t$ and $y_b$, being the indices of the top and bottom wing respectively. for the first stage we sort our data in bit reversed order, meaning if we are in the first column of the texture, we should perform a bit reverse on the resulting indices.
+\
+We determine whether we are operating in the upper or lower "wing" based on the following equation, where we map 1 to be true and 0 to be false.
+$ "wing" = y_"current" mod 2^("stage" + 1) $
+
+#codeblock(
+```rust
+let yt = id.y;
+let yb = id.y;
+if id.x == 0 {
+  if wing {
+      yb += 1;
+  } else {
+      yt -= 1;
+  }
+  yt.bit_reverse();
+  yb.bit_reverse();
+} else {
+  if wing {
+      yb += step as u32;
+  } else {
+      yt -= step as u32;
+  }
+}
+```
+)
+#pagebreak()
+=== Butterfly Operations
+Citations: @GPGPU @Biebras \
+The FFT algorithm is designed to operate over 1D data, however our input is a 2D texture. To amend this, we perform a 1D IFFT on each row horizontally, and each column vertically, as shown in @IFFT. As our textures have 4 channels that can store 2 complex numbers each, we perform the butterfly operation twice per invocation, effectively cutting the needed IFFTs in half.
+
+#figure(
+codeblock(
+```rust
+let twiddle_factor = butterfly_texture.read(stage, id.x).rg();
+let indices = butterfly_texture.read(stage, id.x).ba();
+let top_signal = pingpong0.read(indices.x, id.y);
+let bottom_signal = pingpong0.read(indices.y, id.y);
+output = top_signal + complex_mult(twiddle_factor, bottom_signal);
+```
+),
+    caption: [
+      Horizontal Butterfly Operation, over two sets of inputs
+    ]
+)
+
+#figure(
+codeblock(
+```rust
+let twiddle_factor = butterfly_texture.read(stage, id.y).xy();
+let indices = butterfly_texture.read(stage, id.y).zw();
+let top_signal = pingpong0.read(id.x, indices.x);
+let bottom_signal = pingpong0.read(id.x, indices.y);
+output = top_signal + complex_mult(twiddle_factor, bottom_signal);
+```
+),
+    caption: [
+      Vertical Butterfly Operation, over two sets of inputs
+    ]
+)
+
+=== Permutation
+Citations: @GPGPU \
+Our data needs to be permuted, as per @ifft_exp our summation limits are offset compared to those used by the IFFT algorithm. The offset causes our data to flip signs in a gridlike pattern, as is visible in @IFFT. 
+
+#codeblock(
+```rust
+if (id.x+ id.y) % 2 == 0.0 {
+  sign = 1.0;
+} else {
+  sign = -1.0;
+}
+output = sign * pingpong0.read(id.x, id.y);
+```
+)
+
+#pagebreak()
+=== FFT Stage Visualisation
+#figure(
+    align(
+      center,
+      image("assets/fft_steps.png", fit: "contain", height: 90%),
+    ),
+    caption: [
+      Visualised FFT Steps, black / white points are not consistent for demonstrative purposes. 
+    ]
+  )
+
 
 #pagebreak()
 == Event Loop Control Flow
@@ -636,7 +756,7 @@ Frame-by-Frame:
       image("assets/control_flow.png", fit: "contain", height: 90%),
     ),
     caption: [
-      Abstracted Event Loop Control Flow Flowchart
+      Abstracted event loop control flow flowchart
     ]
   )
 === UI Event Flow
@@ -662,7 +782,22 @@ Frame-by-Frame:
 #pagebreak()
 == Other Algorithms
 === Cascades
-
+Citations: @Jump-Trajectory @Biebras \
+To prevent any overlap and wasted computation, we choose lengthscales and cutoffs such that we only have to sample the spectrum at a given lengthscale only once. We select a larger lengthscale for bigger waves, and smaller lengthscale for smaller waves. For a visually pleasing ocean, we follow 3 key principles:
+1. Avoid smaller waves in larger cascades as they have a course spatial resolution
+2. Avoid larger waves in small cascades, as they will cause visible tiling
+3. Cutoffs should be chosen such that there are no large gaps in spectrum coverage
+Given this, we arrive at the following base cascade setup, altho there is room to change any of the parameters depending on the desired outcome.
+#figure(
+    align(
+      center,
+      image("assets/cascades.png", fit: "contain", height: 50%),
+    ),
+    caption: [
+      Graphical approximation of the spectrum for demonstrative purposes
+    ]
+  )
+#pagebreak()
 === Index Buffer
 To enable proper backface culling, the vertices of the mesh are connected in a specific (counterclockwise) ordering such that the GPU can discern whether the face is pointed towards the camera. The GPU decides the ordering based on an index buffer, which specifies the index of which vertex is to be connected. The algorithm below only works for a square mesh, and was designed by me so is more than likely innefficient.
 #codeblock(
@@ -684,11 +819,12 @@ fn square_mesh_indices(size: u32) -> Vec<u32> {
 ```
 )
 
-== The Skybox & Equirectangular Projection
+== The Skybox & Equirectangular Projection 
+Citations: @Fullscreen-Tri \
 A standard skybox is rendered using a cubemap, which consists of 6 square textures that are projected onto a cube that is placed surrounding the scene. An alternative method is to use an equirectangular skybox, which is where a single 2D texture is sampled using a 3D vector which is transformed using polar coordinates. Ordinarily, cubemaps are chosen because they can be sampled directly, saving computation, however given that I would have to load the cubemap, pass it to the GPU and manually render the actual sky cube, the performance overhead is worth the significant ease of implementation. 
 \
 \
-Instead, we send a draw call of only 3 vertices to the GPU, which we then map to create a triangle large enough to cover the screen, which all skybox details are rendererd to. Below we offset the vertices based on their index to form the triangle in the $[0, 1]$ space, and then convert it to clip space $[-1, 1]$.
+Instead, we send a draw call of only 3 vertices to the GPU, which we then map to create a triangle large enough to cover the screen @Fullscreen-Tri, which all skybox details are rendererd to. Below we offset the vertices based on their index to form the triangle in the $[0, 1]$ space, and then convert it to clip space $[-1, 1]$.
 #codeblock(
 ```rust
 // Vertex Shader
@@ -715,7 +851,7 @@ let world_pos = view_inverse * view_pos;
 let ray_dir = world_pos.truncate().normalize();
 ```
 )
-The 3D normalised direction vector is then used to sample the equirectangular HDRI cubemap texture, with the resulting value used to color the skybox. 
+The 3D normalised direction vector is then used to sample the equirectangular HDRI texture, with the resulting value used to color the skybox. 
 #codeblock(
 ```rust
 // 3D direction vector -> 2D vector for texture reading
@@ -728,6 +864,22 @@ fn equirectangular_to_uv(v: Vec3) -> Vec2 {
 ```
 )
 
+== Spectrum Conjugates
+Citations: @Biebras @JTessendorf @Jump-Trajectory \
+From Tessendorf @JTessendorf, we need to compute the spectrum and its conjugate in order to ensure a real output per @spectrum_eq. "The symmetry of the fourier series allows us to mirror the amplitudes,eliminiating the need for complex conjugate recalculation" @Biebras. Below is pseudocode of the concept from @Biebras / @Jump-Trajectory, where $N$ corresponds to the simulation resolution.
+#codeblock(
+```rust
+// The Computed Spectrum
+let h0 = spectrum_tex.read(id.x, id.y);
+// The Conjugate Spectrum
+let h0c = spectrum_tex.read(
+  (N - id.x) % N,
+  (N - id.y) % N,
+);
+```
+)
+
+#pagebreak()
 = Technical Solution
 #zebraw(
   background-color: rgb("#181616"),
@@ -740,8 +892,14 @@ fn equirectangular_to_uv(v: Vec3) -> Vec2 {
 )
 
 = Testing
+== Testing Strategy
+== Testing Table
 
 = Evaluation
+== Evaluation Against Criteria
+== Client Feedback
+== Evaluation of Feedback
+
 #pagebreak()
 = Bibliography
 #bibliography(

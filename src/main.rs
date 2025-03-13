@@ -14,6 +14,7 @@ pub const WG_SIZE: u32 = 8;
 
 fn main() -> Result {
     env_logger::builder().filter_level(LevelFilter::Info).init();
+    // Forces application to run in XWayland on Linux, allows graphics debugger to run
     std::env::remove_var("WAYLAND_DISPLAY");
     let event_loop = EventLoop::new()?;
     let window = WindowBuilder::new().with_title("NEA").build(&event_loop)?;

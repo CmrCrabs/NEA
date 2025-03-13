@@ -164,6 +164,7 @@ impl UI {
             0,
         );
 
+        // Logic taken from https://github.com/Yatekii/imgui-wgpu-rs/blob/master/src/lib.rs
         if (self.idx_buf.size() as usize) < indices.len() * mem::size_of::<u16>() {
             self.idx_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 contents: cast_slice(&indices),
@@ -192,6 +193,7 @@ impl UI {
         renderpass.set_vertex_buffer(0, self.vtx_buf.slice(..));
         renderpass.set_index_buffer(self.idx_buf.slice(..), wgpu::IndexFormat::Uint16);
 
+        // Logic taken from https://github.com/Yatekii/imgui-wgpu-rs/blob/master/src/lib.rs
         let mut vtx_offset = 0;
         let mut idx_offset = 0;
         for draw_list in draw_data.draw_lists() {
@@ -214,7 +216,6 @@ impl UI {
             vtx_offset += draw_list.vtx_buffer().len();
             idx_offset += draw_list.idx_buffer().len();
         }
-        drop(renderpass);
     }
 
     pub fn update_cursor(&mut self, window: &Window) {
@@ -259,6 +260,7 @@ impl UI {
                 io.mouse_pos = [position.x as _, position.y as _];
             }
             WindowEvent::MouseWheel { delta, .. } => {
+                // Adjusting scroll speed
                 let sf = 0.01;
                 let (h, v) = match delta {
                     MouseScrollDelta::LineDelta(h, v) => (*h, *v),
@@ -327,6 +329,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
                 ui.slider("Injection Amount", 0.00, 2.0, &mut consts.sim.injection_amount);
                 ui.text("Misc");
                 ui.slider("Instances per Axis",1, 10, &mut consts.sim.instances);
+                ui.slider("Instance micro Offset",0.9, 1.0, &mut consts.sim.instance_micro_offset);
                 ui.slider("Mesh Step", 0.0, 1.0, &mut consts.sim.mesh_step);
                 ui.slider("Integration Step*", 0.001, 0.02, &mut consts.sim.integration_step);
             }
@@ -383,6 +386,7 @@ pub fn build(ui: &Ui, consts: &mut Constants) -> bool {
     focused
 }
 
+// code adapted from https://github.com/imgui-rs/imgui-winit-support
 fn to_winit_cursor(cursor: MouseCursor) -> CursorIcon {
     match cursor {
         MouseCursor::Arrow => CursorIcon::Default,
@@ -397,6 +401,7 @@ fn to_winit_cursor(cursor: MouseCursor) -> CursorIcon {
     }
 }
 
+// code adapted from https://github.com/imgui-rs/imgui-winit-support
 fn to_imgui_keys(keycode: KeyCode) -> &'static [Key] {
     match keycode {
         KeyCode::Tab => &[Key::Tab],

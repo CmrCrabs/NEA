@@ -63,7 +63,6 @@ impl FourierTransform {
         }
     }
 
-    // algorithm referenced from GPGPU TODO: credit
     pub fn ifft2d<'a>(
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,
@@ -120,6 +119,7 @@ impl FourierTransform {
     }
 }
 
+// abstraction of the pipeline is just to make code significantly nicer
 pub struct PipelineFFT {
     pipeline: wgpu::ComputePipeline,
 }

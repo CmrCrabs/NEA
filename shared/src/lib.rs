@@ -86,7 +86,7 @@ impl Default for ShaderConstants {
             fresnel_sf: 1.0,
             fresnel_pbr_sf: 1.0,
             pbr_sf: 1.0,
-            fresnel_normal_sf: 0.20,
+            fresnel_normal_sf: 0.60,
             fresnel_shine: 4.5,
             sun_size: 0.02,
             sun_falloff: 5000.0,
@@ -135,13 +135,17 @@ pub struct SimConstants {
     pub injection_amount: f32,
     pub height_offset: f32,
     pub instances: u32,
+    pub instance_micro_offset: f32,
 }
 impl Default for SimConstants {
     fn default() -> Self {
+        // Defining simulation resolution, cannot be updated at runtime so defined here
         let size = 256;
         Self {
             depth: 500.0,
             size,
+            // Calm Ocean
+            //
             lengthscale0: 40,
             cutoff_low0: 0.00000001,
             cutoff_high0: 1.0,
@@ -157,6 +161,9 @@ impl Default for SimConstants {
             wind_speed: 5.0,
             fetch: 4000.0,
             choppiness: 0.2,
+           
+            // Choppy Ocean
+            //
             //lengthscale0: 80,
             //cutoff_low0: 0.00000001,
             //cutoff_high0: 1.0,
@@ -189,6 +196,7 @@ impl Default for SimConstants {
             injection_amount: 1.0,
             height_offset: 4.5,
             instances: 5,
+            instance_micro_offset: 0.99,
         }
     }
 }

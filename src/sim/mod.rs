@@ -180,6 +180,9 @@ impl Simulation {
             workgroup_size,
         );
     }
+    // creating a proper abstraction for a compute pass would just involve recreating a
+    // computepipeline struct from scratch, so instead as this isnt a true "engine" i have just
+    // special cased a computepass that requires push constants
     pub fn compute_initial<'a>(
         &'a self,
         encoder: &'a mut wgpu::CommandEncoder,

@@ -203,6 +203,7 @@ impl Renderer {
         pass.set_bind_group(0, &scene.consts_bind_group, &[]);
         pass.set_bind_group(1, &self.hdri.bind_group, &[]);
         pass.set_bind_group(2, &self.sampler_bind_group, &[]);
+        // Draw fullscreen triangle
         pass.draw(0..3, 0..1);
     }
 
@@ -242,6 +243,7 @@ impl Renderer {
         }
         pass.set_vertex_buffer(0, mesh.vtx_buf.slice(..));
         pass.set_index_buffer(mesh.idx_buf.slice(..), wgpu::IndexFormat::Uint32);
+        // Draw multiple mesh instances for tiling
         pass.draw_indexed(0..(mesh.length as _), 0, 0..(instances * instances));
     }
 }

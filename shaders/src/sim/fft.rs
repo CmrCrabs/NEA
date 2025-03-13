@@ -8,7 +8,6 @@ use shared::{Constants, FFTData};
 use spirv_std::glam::{UVec3, UVec2, Vec3Swizzles, Vec2, Vec4, Vec4Swizzles};
 
 
-// algorithm referenced from GPGPU TODO: credit
 #[spirv(compute(threads(8,8)))]
 pub fn hstep_ifft(
     #[spirv(global_invocation_id)] id: UVec3,
@@ -48,7 +47,6 @@ pub fn hstep_ifft(
     }
 }
 
-// algorithm referenced from GPGPU TODO: credit
 #[spirv(compute(threads(8,8)))]
 pub fn vstep_ifft(
     #[spirv(global_invocation_id)] id: UVec3,
@@ -88,7 +86,6 @@ pub fn vstep_ifft(
     }
 }
 
-// algorithm referenced from biebras: credit
 #[spirv(compute(threads(8,8)))]
 pub fn permute(
     #[spirv(global_invocation_id)] id: UVec3,
@@ -106,7 +103,6 @@ pub fn permute(
     }
 }
 
-// algorithm referenced from GPGPU TODO: credit
 #[spirv(compute(threads(1,8)))]
 pub fn precompute_butterfly(
     #[spirv(global_invocation_id)] id: UVec3,
@@ -114,7 +110,6 @@ pub fn precompute_butterfly(
     #[spirv(descriptor_set = 1, binding = 1)] butterfly_tex: &StorageImage,
 ) {
     let k = (id.y as f32 * consts.sim.size as f32 / 2.0_f32.powf(id.x as f32 + 1.0)) % consts.sim.size as f32;
-    // TODO TODO TDODO CHECK MINUS
     let exp = -2.0 * consts::PI * k / consts.sim.size as f32;
     let twiddle = Vec2::new(exp.cos(), exp.sin());
 

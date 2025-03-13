@@ -157,7 +157,6 @@ fn d_epsilon(omega: f32, omega_p: f32, theta: f32, consts: &Constants) -> f32 {
     normalisation_factor(s) * (theta / 2.0).cos().abs().powf(2.0 * s)
 }
 
-// from gasgiant
 fn normalisation_factor(s: f32) -> f32 {
     let s2 = s * s;
     let s3 = s2 * s;
