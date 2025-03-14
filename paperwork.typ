@@ -9,7 +9,6 @@
 ) 
 #set text(
   hyphenate: false,
-  font: "EB Garamond",
 )
 #set heading(numbering: "1.", offset: 0)
 #set text(12pt)
@@ -20,7 +19,10 @@
 
 #set table(
     fill : (x , y) => 
-    if y == 0 { rgb("#F0F4F4") }
+    if y == 0 { rgb("#F0F4F4") },
+    columns: (auto, auto, auto, auto),
+    align: left,
+    stroke: 0.7pt,
 )
 
 #let codeblock(body) = {
@@ -28,13 +30,24 @@
     width: 100%,
     fill: rgb("#181616"),
     inset: 10pt,
-    breakable: true,
     text(
       fill: rgb("#c5c9c5"),
       body,
     ),
   )
 }
+
+#let sourcecode(lang, path) = {
+  zebraw(
+    background-color: rgb("#181616"),
+    text(
+      fill: rgb("#c5c9c5"),
+      size: 10pt,
+      raw(lang: lang, block: true, read("./" + path))
+    )
+  )
+}
+
 
 #page(numbering: none, [
   #v(2fr)
@@ -50,13 +63,14 @@
 ])
 
 #set par(justify: true)
+#set page(margin: 2cm, footer: [*Centre Number:* 22147  #h(1fr) #context counter(page).display("1") #h(1fr) *Candidate Number:* 9484])
 
 // TODO: 
 // replicate old academic paper style
 // https://journals.ametsoc.org/view/journals/phoc/5/3/1520-0485_1975_005_0410_optoer_2_0_co_2.xml?tab_body=pdf
 
 // Contents Page
-#page(outline(indent: true, depth: 3))
+#page(outline(indent: true, depth: 4))
 
 == Abstract
 // TODO: SYNOPSIS
@@ -880,22 +894,209 @@ let h0c = spectrum_tex.read(
 )
 
 #pagebreak()
-= Technical Solution
-#zebraw(
-  background-color: rgb("#181616"),
-  text(
-    fill: rgb("#c5c9c5"),
-    ```rust
-      let example = skibidi;
-    ```
-  )
+== Xoshiro256plus Pseudorandom Number Generator
+Citations: @xoshiro \
+In order to have consistency between different instances of the simulation, we seed the gaussian numbers such that there is reproducability. To do so, I have chosen the Xoshiro256plus PRNG as it operates in O(1) in both space & time complexity, runs in nanoseconds and is relatively simple to implement. Below is pseudocode showcasing the method.
+#codeblock(
+```rust
+  fn next(&mut self) -> u64 {
+      let result = self.seed[0].wrapping_add(self.seed[3]);
+      let t = self.s[1] << 17;
+
+      self.seed[2] ^= self.seed[0];
+      self.seed[3] ^= self.seed[1];
+      self.seed[1] ^= self.seed[2];
+      self.seed[0] ^= self.seed[3];
+
+      self.seed[2] ^= t;
+      self.seed[3] = rol64(self.seed[3], 45);
+
+      result
+  }
+```
 )
 
+#page(
+  flipped: true,
+  figure(
+    [
+      == Code Structure
+      #image("assets/data_structure.png", fit: "contain", width: 100%),
+    ],
+    caption: [
+      Projects Data structure, in terms of "key" data types - structs, pipelines & textures
+    ]
+  )
+)
+#set par(justify: false)
+#pagebreak()
+= Technical Solution
+#page(
+  flipped: true,
+  [
+== Skills Demonstrated
+I believe the GPU / CPU can be seen as an equivalent model to Client / Server. This is because they follow similar key concepts, being:
+  - Task Delegation, the CPU sends tasks to the GPU in a similar way to server processing requests from clients
+  - Concurrency / Parallellism, executing and managing data from many GPU threads in parallel is similar to a server handling multiple clients, as both must handle resource allocation and data synchronization
+  - Communication Overhead, there are similar data transfer bottlenecks for both client/server & gpu/cpu, as I have had to consider data alignment, padding and typing when passing data to the gpu, as well as synchronizing the updating of data between passes and individual invocations
+  - Synchronization, I have to manage updating data throughout an individual invocation through push constants in a similar manner to how a server would have to update data on a client
+#table(
+  columns: (auto, auto, auto, auto),
+  inset: 10pt,
+  align: left,
+  stroke: 0.7pt,
+  [*Group*], [*Skill*], [*Description / Reasoning*], [*Evidence*],
+  [A], [Complex Scientific Model], [Entire Spectrum Synthesis], [`shaders/sim/initial_spectra.rs` entire file],
+  [A], [Complex Mathematical Model], [Implementation of a PBR Lighting Model], [`shaders/lib.rs` entire file],
+  [A], [Complex Mathematical Model], [The computing, storing and processing of a large amount of complex numbers], [`shaders/evolve_spectra.rs`, `shaders/process_deltas.rs` entire file(s)],
+  [A], [Complex Control Model], [The entire applications event loop and resultitng control flow], [`engine/mod.rs` line 92 onwards],
+  [A], [List Operations], [Generation of gaussian texture data, generation of index buffer, manipulation of indices for use in fft], [`shaders/fft.rs`, `sim/simdata.rs`, `engine/scene.rs`],
+  [A], [Hashing], [Xoshiro256++ PRNG Implementation], [`sim/simdata.rs` line 83 onwards],
+  [A], [Advanced Matrix Operations], [Various screen / world space transformations, reversing affine transformations], [`shaders/skybox.rs` fragment shader, `shaders/lib.rs` vertex shader],
+  [A], [Recursive Algorithms], [the 2D GPGPU IFFT I have manually recurses, due to it being on the GPU], [`sim/fft.rs` `66-120`, should be clearer after seeing `shaders/fft.rs`],
+  [A], [Complex User Defined Algorithms], [Computation of the index buffer for the mesh drawing], [`engine/scene.rs` lines `181-191` ],
+  [A], [Complex OOP model], [Program is based around different objects and classes, objects are generated / regenerated based on user input, designed with composition and inheritence in mind], [most demonstrated in `engine/mod.rs` entire file],
+  [A], [Complex client-server model], [explained in preamble], [`engine/mod.rs` `run()` function, `sim/compute.rs`, `engine/renderer.rs`, `sim/fft.rs`, `sim/mod.rs` whole file(s)],
+  [B], [Multi-Dimensional Arrays], [Usage of textures throughout entire project (analagous to 2D arrays), managing data between FFT passes], [`shaders/*`],
+  [B], [Simple Mathematical Model], [Box-Muller Transform, gaussian random number generation], [`sim/simdata.rs` line `62` function(s)]
+)
+]
+)
+
+== Completeness of Solution
+Everything specified in objectives has been completed, the performance has not been tested on a gtx 1060 level GPU, but given that it is performant at ~40-50fps on an Intel Iris Xe integrated graphics card at 256x256x3, it will be easily performant on a discrete GPU. At a more reasonable (given the system) resolution of 128x128x3, the simulation easily reaches 90+fps, while still looking reasonably good. From the additional features, swell has been included in the spectrum synthesis.
+
+== Coding Style
+I have followed the rust programming conventions and principles for this project, using the result type for error handling where possible. As the vast majority of possible errors come from wgpu/rust-gpu, errors are in majority handled via the pollster and env_logger crates, where any errors comign from wgpu / rust-gpu are passed up the chain and outputted from the standard log using env_logger. Shader code is written following "standard" shader conventions, with notable stylings being an emphasis on defining variables for every interim step, and swizzling vectors / avoiding unncessary abstractions where convenient. Smaller things like manually computing the power where convenient and "pre"computing certain values into variables and reusing them where possible are also done.
+
+== Source Code
+=== main.rs <main>
+#sourcecode("rust", "src/main.rs")
+#pagebreak()
+=== engine
+==== mod.rs <enginemod>
+#sourcecode("rust", "src/engine/mod.rs")
+#pagebreak()
+==== renderer.rs <renderer>
+#sourcecode("rust", "src/engine/renderer.rs")
+#pagebreak()
+==== scene.rs <scene>
+#sourcecode("rust", "src/engine/scene.rs")
+#pagebreak()
+==== ui.rs <ui>
+#sourcecode("rust", "src/engine/ui.rs")
+#pagebreak()
+==== util.rs <util>
+#sourcecode("rust", "src/engine/util.rs")
+#pagebreak()
+=== simulation
+==== mod.rs <simmod>
+#sourcecode("rust", "src/sim/mod.rs")
+#pagebreak()
+==== simdata.rs <simdata>
+#sourcecode("rust", "src/sim/simdata.rs")
+#pagebreak()
+==== cascade.rs <cascade>
+#sourcecode("rust", "src/sim/cascade.rs")
+#pagebreak()
+==== compute.rs <compute>
+#sourcecode("rust", "src/sim/compute.rs")
+#pagebreak()
+==== fft.rs <simfft>
+#sourcecode("rust", "src/sim/fft.rs")
+#pagebreak()
+
+=== shaders
+==== lib.rs <shaderlib>
+#sourcecode("rust", "shaders/src/lib.rs")
+#pagebreak()
+==== skybox.rs <skybox>
+#sourcecode("rust", "shaders/src/skybox.rs")
+#pagebreak()
+==== ui.rs <ui>
+#sourcecode("rust", "shaders/src/ui.rs")
+#pagebreak()
+==== sim/mod.rs <simmod>
+#sourcecode("rust", "shaders/src/sim/mod.rs")
+#pagebreak()
+===== evolve_spectra.rs <evolve_spectra>
+#sourcecode("rust", "shaders/src/sim/evolve_spectra.rs")
+#pagebreak()
+===== fft.rs <shaderfft>
+#sourcecode("rust", "shaders/src/sim/fft.rs")
+#pagebreak()
+===== initial_spectra.rs <initial_spectra>
+#sourcecode("rust", "shaders/src/sim/initial_spectra.rs")
+#pagebreak()
+===== process_deltas.rs <process_deltas>
+#sourcecode("rust", "shaders/src/sim/process_deltas.rs")
+#pagebreak()
+=== build.rs <build>
+#sourcecode("rust", "build.rs")
+#pagebreak()
+=== shared/lib.rs <sharedlib>
+#sourcecode("rust", "shared/src/lib.rs")
+#pagebreak()
+=== cargo.toml <cargotoml>
+#sourcecode("toml", "Cargo.toml")
+=== rust-toolchain.toml <toolchaintoml>
+#sourcecode("toml", "rust-toolchain.toml")
+=== default.nix <nix>
+#sourcecode("nix", "default.nix")
+
+#pagebreak()
 = Testing
 == Testing Strategy
 == Testing Table
 
+#pagebreak()
 = Evaluation
+== Results
+#figure(
+    align(
+      center,
+      image("assets/ocean.png", fit: "contain", width: 100%),
+    ),
+    caption: [
+      Calm Ocean. $L_0 = 40$, $L_1 = 106$, $L_2 = 180$, $U_10 = 5$, $F = 4000$, $lambda = 0.2$, $h = 500$
+    ]
+  )
+#figure(
+    align(
+      center,
+      image("assets/ocean2.png", fit: "contain", width: 100%),
+    ),
+    caption: [
+      Choppy Ocean. $L_0 = 55$, $L_1 = 102$, $L_2 = 256$, $U_10 = 36$, $F = 10000$, $lambda = 0.2$, $h = 500$
+    ]
+  )
+#figure(
+    align(
+      center,
+      image("assets/ocean4.png", fit: "contain", width: 100%),
+    ),
+    caption: [
+      Stormy Ocean. $L_0 = 41$, $L_1 = 106$, $L_2 = 180$, $U_10 = 62$, $F = 10000$, $lambda = 0.8$, $h = 500$
+    ]
+  )
+#figure(
+    align(
+      center,
+      image("assets/ocean3.png", fit: "contain", width: 100%),
+    ),
+    caption: [
+      Alternative Angle. $L_0 = 41$, $L_1 = 106$, $L_2 = 180$, $U_10 = 62$, $F = 10000$, $lambda = 0.8$, $h = 500$
+    ]
+  )
+#figure(
+    align(
+      center,
+      image("assets/ocean5.png", fit: "contain", width: 100%),
+    ),
+    caption: [
+      Early Morning Ocean. $L_0 = 20$, $L_1 = 124$, $L_2 = 256$, $U_10 = 0.5$, $F = 100000$, $lambda = 0.1$, $h = 30$
+    ]
+  )
 == Evaluation Against Criteria
 == Client Feedback
 == Evaluation of Feedback

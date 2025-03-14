@@ -156,3 +156,11 @@ WGPU:
   url:
     value: https://sotrh.github.io/learn-wgpu/beginner/tutorial6-uniforms/
     date: 2024-10-20
+
+xoshiro:
+  type: article
+  title: xoshiro / xoroshiro generators and the PRNG shootout
+  author: PRNG Shootout
+  url:
+    value: https://prng.di.unimi.it/
+    date: 2025-03-13
