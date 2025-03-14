@@ -141,36 +141,16 @@ pub struct SimConstants {
 impl Default for SimConstants {
     fn default() -> Self {
         // Defining simulation resolution, cannot be updated at runtime so defined here
-        let size = 256;
+        let size = 128;
         // Defining seed for gaussian number
         let seed = 1;
         Self {
             depth: 500.0,
             size,
-            // Calm Ocean
-            //
-            //lengthscale0: 40,
-            //cutoff_low0: 0.00000001,
-            //cutoff_high0: 1.0,
-            //lengthscale0_sf: 1.0,
-            //lengthscale1: 106,
-            //cutoff_low1: 1.0,
-            //cutoff_high1: 2.0, 
-            //lengthscale1_sf: 1.0,
-            //lengthscale2: 180,
-            //cutoff_low2: 2.0,
-            //cutoff_high2: 999.0,
-            //lengthscale2_sf: 1.0,
-            //wind_speed: 5.0,
-            //fetch: 4000.0,
-            //choppiness: 0.2,
-           
-            // Choppy Ocean
-            //
             lengthscale0: 20,
             cutoff_low0: 0.00000001,
             cutoff_high0: 1.0,
-            lengthscale0_sf: 1.0,
+            lengthscale0_sf: 0.8,
             lengthscale1: 124,
             cutoff_low1: 1.0,
             cutoff_high1: 2.0, 

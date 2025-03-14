@@ -79,9 +79,9 @@
 #page(outline(indent: true, depth: 4))
 
 == Abstract
-This report details the development of a fourier transform based ocean simulation and physically based renderer. The simulation works by synthesizing and evolving an empirical wave spectrum in the frequency domain, and then converting it to the spatial domain using the inverse fast fourier transform. The resultant maps are used to offset the ocean's mesh and compute physically based lighting for the surface.
+This report details the development of a Fourier transform based ocean simulation and physically based renderer. The simulation works by synthesizing and evolving an empirical wave spectrum in the frequency domain, and then converting it to the spatial domain using the inverse fast fourier transform. The resultant maps are used to offset the ocean's mesh and compute physically based lighting for the surface.
 \
-The technical implementation uses rust as its language of choice due to its low level control while being memory safe and performant. wgpu is chosen as the graphics library as it is cross platform while providing a reasonable amount control over the GPU, with rustgpu / spir-v used as the shader language.
+The technical implementation uses rust as its language of choice due to its low level control while being memory-safe and performant. wgpu is chosen as the graphics library as it is cross-platform while providing a reasonable amount control over the GPU, with rustgpu / spir-v used as the shader language.
 \
 The final result(s) can be seen in @results
 = Analysis
@@ -131,13 +131,13 @@ Interview notes are paraphrased.
 == Similar Solutions
 As this is a fairly niche simulation that is generally used in closed source applications, there were only a few sources I could find that are relevant and have available information in relation to their implementation. Understanding existing implementations, particularly in regard to their spectrum synthesis, has allowed me to develop the correct balance between fidelity and performance.
 === Sea of Thieves
-Sea of thieves is by far the highest profile game utilising an FFT ocean. It focuses on developing a stylised ocean scene over a realistic one so differs in the following ways:
+Sea of Thieves is by far the highest profile game utilising an FFT ocean. It focuses on developing a stylised ocean scene over a realistic one so differs in the following ways:
 - Does not have exact PBR lighting, but still derives its lighting from PBR theory
 - Is intended to have minimal frametime impact while operating on low end hardware, so has a lower resolution, using a less complicated spectrum
 - Has a more detailed foam simulation, where they convolve the foam map with a stylised texture, and use Unreal Engine's particle system to simulate sea spray
 The implementation is closed source, so I do not have access to any detailed implementation information. Anything I could find was primarily from a conference they held on its development.
 === Acerola
-Acerola's ocean simulation was made as part of a pseudo-educational youtube series on simulating water in games. It has a few notable similarities, and key benefits over others:
+Acerola's ocean simulation was made as part of a pseudo-educational YouTube series on simulating water in games. It has a few notable similarities, and key benefits over others:
 - It is a realistic simulation, using a spectrum that is (As far as I am aware) fully in-line with the most recent oceanographic literature
 - Uses a highly performant FFT implementation, based on Nvidia WaveWorks
 - Is built upon unity and utilises full PBR lighting, as derived from microfacet theory
@@ -172,7 +172,7 @@ Jump trajectory created a very detailed video explaining the process of creating
 #pagebreak()
 == Spectrum Synthesis
 === Nomenclature
-To compute the inital spectra, we rely on various input parameters and definitions shared between various functions and parts of the program. @sim-variables lists the relevant symbols, meanings and relationships where appropriate. Note that throughout this project we are defining the positive $y$ direction as "up".
+To compute the initial spectra, we rely on various input parameters and definitions shared between various functions and parts of the program. @sim-variables lists the relevant symbols, meanings and relationships where appropriate. Note that throughout this project we are defining the positive $y$ direction as "up".
 \
 \
 \
@@ -283,7 +283,7 @@ For a field of dimensions $L_x$ and $L_z$, we calculate the displacements at pos
 
 === Derivatives 
 Citations: @JTessendorf @Jump-Trajectory \
-For lighting calculations and the computation of the jacobian, we require the derivatives of the above displacements. As the derivative of a sum is equal to the sum of the derivatives, we compute exact derivatives using the following summations.
+For lighting calculations and the computation of the Jacobian, we require the derivatives of the above displacements. As the derivative of a sum is equal to the sum of the derivatives, we compute exact derivatives using the following summations.
   $ "X Component of Normal": epsilon_x (arrow(x), t) = sum_(arrow(k)) i k_x hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
   $ "Z Component of Normal": epsilon_z (arrow(x), t) = sum_(arrow(k)) i k_z hat(h) (arrow(k), t) e ^ (i arrow(k) dot arrow(x)) $
 
@@ -293,13 +293,13 @@ For lighting calculations and the computation of the jacobian, we require the de
 
 === Frequency Spectrum Function <spectrum_eq>
 Citations: @JTessendorf @Jump-Trajectory @Acerola-FFT \
-This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies. Note that the time dependant component of the exponent is pushed into this amplitude, in order to simplify the summation.
+This function defines the amplitude of the wave at a given point in space at a given time depending on it's frequency. The frequency is generated via the combination of 2 Gaussian random numbers and a energy spectrum in order to simulate real world ocean variance and energies. Note that the time dependant component of the exponent is pushed into this amplitude, in order to simplify the summation.
   $ hat(h)_0(arrow(k)) = 1 / sqrt(2) (xi_r + i xi_i) sqrt( S_"TMA" (arrow(k))) $ 
   $ hat(h)(arrow(k), t) = hat(h)_0(arrow(k)) e^(i phi(k)t) + h_0 (-k) e^(-i phi(k) t) $
 
 === Box-Muller Transform 
 Citations: @Gaussian \
-The ocean exhibits gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by gaussian random numbers with mean 0 and standard deviation 1, which we generate using the box-muller transform converting from uniform variates from 0..1. @JTessendorf. Derivation is from polar coordinates, by treating x and y as cartesian coordinates, more details at @Gaussian
+The ocean exhibits Gaussian variance in the possible waves. Due to this the frequency spectrum function is varied by Gaussian random numbers with mean 0 and standard deviation 1, which we generate using the box-muller transform converting from uniform variates from 0..1. @JTessendorf. Derivation is from polar coordinates, by treating x and y as cartesian coordinates, more details at @Gaussian
 $ xi_r, xi_i ~ N(0, 1) $
 $ xi_r = sqrt(-2.0 ln (u_1)) cos (2 pi u_2) $
 $ xi_i = sqrt(-2.0 ln (u_1)) sin (2 pi u_2) $
@@ -321,7 +321,7 @@ $ I = cases(
 #pagebreak()
 === Cascades 
 Citations: @Jump-Trajectory @JTessendorf @Empirical-Spectra \
-The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
+The periodicity of sinusoidal waves leads to visible tiling, even with an amount of waves of order $10^6$. It is possible to increase the simulation resolution to counteract this, but even the FFT becomes computationally impractical at large enough scales. To counteract this, we instead compute the entire simulation multiples times with different lengthscales at a lower resolution - combining the results such that there is no longer any visual tiling. This results in an output with comparable quality to an increase in resolution, while requiring less overall calculations, e.g. $3(256^2) < 512^2$. To do this, we have to select low and high cutoffs for each lengthscale such that the waves do not overlap and superposition.
 
 === 2D GPGPU Cooley-Tukey Radix-2 Inverse Fast Fourier Transform <ifft_exp>
 Citations: @JTessendorf @Jump-Trajectory \
@@ -396,7 +396,8 @@ This is the phenomenon where some light absorbed by a material eventually re-exi
   $ L_"scatter" = ((k_1 W_"max" angle.l hat(L), -hat(V) angle.r ^4 (0.5 - 0.5(hat(L) dot hat(N)))^3 + k_2 angle.l hat(V), hat(N) angle.r ^2) C_"ss" L_"sun") / (1 + lambda_"GGX") $
   $ L_"scatter" += k_3 angle.l hat(L), hat(N) angle.r C_"ss" L_"sun" + k_4 P_f C_f L_"sun" $
 
-=== Fresnel Reflectance (Schlick's Approximation)  @Acerola-SOS @Blinn-Phong @Schlicks 
+=== Fresnel Reflectance (Schlick's Approximation)  
+Citations: @Acerola-SOS @Blinn-Phong @Schlicks \
 The fresnel factor is a multiplier that scales the amount of reflected light based on the viewing angle. The more grazing the angle the more light is refleceted.
   $ F(hat(N),hat(V)) = F_0 + (1 - F_0)(1 - hat(N) dot hat(V))^(S) $
   $ F_0 = ((n_1 - n_2) / (n_1 + n_2))^2 $
@@ -496,7 +497,7 @@ If given enough time I would like to implement the following:
 
 
 === Simulation
-+ The simulation exhibits gaussian variance in the possible waves
++ The simulation exhibits Gaussian variance in the possible waves
 + The simulation is performant, being able to run at above 60fps on mid-range gaming hardware (gtx 1060+)
 + the simulation should have sensible default parameters
 + the simulations input parameters should be clamped such that changing parameters cannot permanently break the simulation
@@ -586,16 +587,16 @@ If given enough time I would like to implement the following:
   columns: 4,
   align: left,
   [*Library*], [*Version*], [*Purpose*], [*Link*],
-  [Rust], [-], [Fast, memory-efficient programming language], [https://www.rust-lang.org/],
+  [Rust], [-], [Programming language of choice], [https://www.rust-lang.org/],
   [wgpu], [23.0.1], [Graphics library], [https://github.com/gfx-rs/wgpu],
   [Rust GPU], [git], [(Rust as a) shader language], [https://github.com/Rust-GPU/rust-gpu],
-  [winit], [0.29], [Cross-platform window creation and event loop management], [https://github.com/rust-windowing/winit],
+  [winit], [0.29.15], [Cross-platform window creation and event loop management], [https://github.com/rust-windowing/winit],
   [Dear ImGui], [0.12.0], [Bloat-free GUI library with minimal dependencies], [https://github.com/imgui-rs/imgui-rs],
   [imgui-wgpu-rs], [0.24.0], [only rendering code used, snippets taken directly from source instead of library being imported], [https://github.com/yatekii/imgui-wgpu-rs],
   [imgui-winit-support], [0.13.0], [only datatype translation code used, snippet taken directly from source instead of library being imported], [https://github.com/imgui-rs/imgui-winit-support],
-  [GLAM], [0.29], [Linear algebra operations], [https://github.com/bitshifter/glam-rs],
-  [Pollster], [0.3], [Used to read errors (async executor for wgpu)], [https://github.com/zesterer/pollster],
-  [Env Logger], [0.10], [Logging for debugging and error tracing], [https://github.com/env-logger-rs/env_logger],
+  [glam], [0.29], [Linear algebra operations], [https://github.com/bitshifter/glam-rs],
+  [pollster], [0.3], [Used to read errors], [https://github.com/zesterer/pollster],
+  [env_logger], [0.10], [Logging for debugging and error tracing], [https://github.com/env-logger-rs/env_logger],
   [Image], [0.24], [Used to read a HDRI from a file into memory], [https://github.com/image-rs/image],
   [Nix], [-], [Creating a declarative, reproducible development environment], [https://nixos.org/],
 )
@@ -603,11 +604,12 @@ If given enough time I would like to implement the following:
 // TODO LINK TO UI.RS // TODO: properly credit and comment
 
 #pagebreak()
-== Core Algorithm @JTessendorf @Empirical-Spectra 
+== Core Algorithm 
+Citations: @JTessendorf @Empirical-Spectra \
 Below is a high-level explanation of the core algorithm for the simulation. A visual representation can be seen on the next page.
 \
 On Startup:
-- Generate gaussian random number pairs, and store them into a texture, on the CPU
+- Generate Gaussian random number pairs, and store them into a texture, on the CPU
 - Compute the butterfly operation's twiddle factors, and indices, and store them into a texture
 On Parameter Change (For Every Lengthscale):
 - Compute the initial wave vectors and dispersion relation, and store into a texture
@@ -678,7 +680,7 @@ For the following butterfly operations, input twiddle factors and indices are re
 the twiddle factor at n is a complex number $W_n^k$ such that 
 $ k = y_"current" n / 2^("stage" + 1) "mod" n $
 $ W_n^k = exp((- 2 pi i k) / n) $ 
-which we represent in code using eulers formula as 
+which we represent in code using Euler's formula as 
 $ W_n^k = cos((- 2 pi i k) / n) + i sin((-2 pi i k) / n) $ 
 for the input indices, we compute a $y_t$ and $y_b$, being the indices of the top and bottom wing respectively. for the first stage we sort our data in bit reversed order, meaning if we are in the first column of the texture, we should perform a bit reverse on the resulting indices.
 \
@@ -820,7 +822,7 @@ Given this, we arrive at the following base cascade setup, altho there is room t
   )
 #pagebreak()
 === Index Buffer
-To enable proper backface culling, the vertices of the mesh are connected in a specific (counterclockwise) ordering such that the GPU can discern whether the face is pointed towards the camera. The GPU decides the ordering based on an index buffer, which specifies the index of which vertex is to be connected. The algorithm below only works for a square mesh, and was designed by me so is more than likely innefficient.
+To enable proper backface culling, the vertices of the mesh are connected in a specific (counterclockwise) ordering such that the GPU can discern whether the face is pointed towards the camera. The GPU decides the ordering based on an index buffer, which specifies the index of which vertex is to be connected. The algorithm below only works for a square mesh, and was designed by me so is more than likely inefficient.
 #codeblock(
 ```rust
 fn square_mesh_indices(size: u32) -> Vec<u32> {
@@ -845,7 +847,7 @@ Citations: @Fullscreen-Tri \
 A standard skybox is rendered using a cubemap, which consists of 6 square textures that are projected onto a cube that is placed surrounding the scene. An alternative method is to use an equirectangular skybox, which is where a single 2D texture is sampled using a 3D vector which is transformed using polar coordinates. Ordinarily, cubemaps are chosen because they can be sampled directly, saving computation, however given that I would have to load the cubemap, pass it to the GPU and manually render the actual sky cube, the performance overhead is worth the significant ease of implementation. 
 \
 \
-Instead, we send a draw call of only 3 vertices to the GPU, which we then map to create a triangle large enough to cover the screen @Fullscreen-Tri, which all skybox details are rendererd to. Below we offset the vertices based on their index to form the triangle in the $[0, 1]$ space, and then convert it to clip space $[-1, 1]$.
+Instead, we send a draw call of only 3 vertices to the GPU, which we then map to create a triangle large enough to cover the screen @Fullscreen-Tri, which all skybox details are rendered to. Below we offset the vertices based on their index to form the triangle in the $[0, 1]$ space, and then convert it to clip space $[-1, 1]$.
 #codeblock(
 ```rust
 // Vertex Shader
@@ -857,7 +859,7 @@ let out_uv1 = Vec2::new(
 ```
 )
 
-in the fragment shader, we take the 2D fragment coord and convert it to the same $[-1, 1]$ clip space, such that we can then inverse the camera view and projection affine transforms, converting the screen space 2 dimensional coordinate to a 3 dimensional world space coordinate. 
+in the fragment shader, we take the 2D fragment coord and convert it to the same $[-1, 1]$ clip space, such that we can then inverse the camera view and projection affine transforms, converting the screen space 2-dimensional coordinate to a 3-dimensional world space coordinate. 
 #codeblock(
 ```rust
 // Fragment Shader
@@ -887,7 +889,7 @@ fn equirectangular_to_uv(v: Vec3) -> Vec2 {
 
 == Spectrum Conjugates
 Citations: @Biebras @JTessendorf @Jump-Trajectory \
-From Tessendorf @JTessendorf, we need to compute the spectrum and its conjugate in order to ensure a real output per @spectrum_eq. "The symmetry of the fourier series allows us to mirror the amplitudes,eliminiating the need for complex conjugate recalculation" @Biebras. Below is pseudocode of the concept from @Biebras / @Jump-Trajectory, where $N$ corresponds to the simulation resolution.
+From Tessendorf @JTessendorf, we need to compute the spectrum and its conjugate in order to ensure a real output per @spectrum_eq. "The symmetry of the fourier series allows us to mirror the amplitudes, eliminating the need for complex conjugate recalculation" @Biebras. Below is pseudocode of the concept from @Biebras / @Jump-Trajectory, where $N$ corresponds to the simulation resolution.
 #codeblock(
 ```rust
 // The Computed Spectrum
@@ -903,7 +905,7 @@ let h0c = spectrum_tex.read(
 #pagebreak()
 == Xoshiro256plus Pseudorandom Number Generator
 Citations: @xoshiro \
-In order to have consistency between different instances of the simulation, we seed the gaussian numbers such that there is reproducability. To do so, I have chosen the Xoshiro256plus PRNG as it operates in O(1) in both space & time complexity, runs in nanoseconds and is relatively simple to implement. Below is pseudocode showcasing the method.
+In order to have consistency between different instances of the simulation, we seed the Gaussian numbers such that there is reproducubility. To do so, I have chosen the Xoshiro256plus PRNG as it operates in O(1) in both space & time complexity, runs in nanoseconds and is relatively simple to implement. Below is pseudocode showcasing the method.
 #codeblock(
 ```rust
   fn next(&mut self) -> u64 {
@@ -938,43 +940,40 @@ In order to have consistency between different instances of the simulation, we s
 #set par(justify: false)
 #pagebreak()
 = Technical Solution
-#page(
-  flipped: true,
-  [
 == Skills Demonstrated
 I believe the GPU / CPU can be seen as an equivalent model to Client / Server. This is because they follow similar key concepts, being:
   - Task Delegation, the CPU sends tasks to the GPU in a similar way to server processing requests from clients
-  - Concurrency / Parallellism, executing and managing data from many GPU threads in parallel is similar to a server handling multiple clients, as both must handle resource allocation and data synchronization
+  - Concurrency / Parallelism, executing and managing data from many GPU threads in parallel is similar to a server handling multiple clients, as both must handle resource allocation and data synchronization
   - Communication Overhead, there are similar data transfer bottlenecks for both client/server & gpu/cpu, as I have had to consider data alignment, padding and typing when passing data to the gpu, as well as synchronizing the updating of data between passes and individual invocations
   - Synchronization, I have to manage updating data throughout an individual invocation through push constants in a similar manner to how a server would have to update data on a client
+
 #table(
   columns: (auto, auto, auto, auto),
   inset: 10pt,
-  align: left,
+  align: (center, left, left, center),
   stroke: 0.7pt,
   [*Group*], [*Skill*], [*Description / Reasoning*], [*Evidence*],
   [A], [Complex Scientific Model], [Entire Spectrum Synthesis], [`shaders/sim/initial_spectra.rs` entire file],
   [A], [Complex Mathematical Model], [Implementation of a PBR Lighting Model], [`shaders/lib.rs` entire file],
   [A], [Complex Mathematical Model], [The computing, storing and processing of a large amount of complex numbers], [`shaders/evolve_spectra.rs`, `shaders/process_deltas.rs` entire file(s)],
-  [A], [Complex Control Model], [The entire applications event loop and resultitng control flow], [`engine/mod.rs` line 92 onwards],
-  [A], [List Operations], [Generation of gaussian texture data, generation of index buffer, manipulation of indices for use in fft], [`shaders/fft.rs`, `sim/simdata.rs`, `engine/scene.rs`],
+  [A], [Complex Control Model], [The entire applications event loop and resulting control flow], [`engine/mod.rs` line 92 onwards],
+  [A], [List Operations], [Generation of Gaussian texture data, generation of index buffer, manipulation of indices for use in fft], [`shaders/fft.rs`, `sim/simdata.rs`, `engine/scene.rs`],
   [A], [Hashing], [Xoshiro256++ PRNG Implementation], [`sim/simdata.rs` line 83 onwards],
   [A], [Advanced Matrix Operations], [Various screen / world space transformations, reversing affine transformations], [`shaders/skybox.rs` fragment shader, `shaders/lib.rs` vertex shader],
   [A], [Recursive Algorithms], [the 2D GPGPU IFFT I have manually recurses, due to it being on the GPU], [`sim/fft.rs` `66-120`, should be clearer after seeing `shaders/fft.rs`],
   [A], [Complex User Defined Algorithms], [Computation of the index buffer for the mesh drawing], [`engine/scene.rs` lines `181-191` ],
-  [A], [Complex OOP model], [Program is based around different objects and classes, objects are generated / regenerated based on user input, designed with composition and inheritence in mind], [most demonstrated in `engine/mod.rs` entire file],
+  [A], [Complex OOP model], [Program is based around different objects and classes, objects are generated / regenerated based on user input, designed with composition and inheritance in mind], [most demonstrated in `engine/mod.rs` entire file],
   [A], [Complex client-server model], [explained in preamble], [`engine/mod.rs` `run()` function, `sim/compute.rs`, `engine/renderer.rs`, `sim/fft.rs`, `sim/mod.rs` whole file(s)],
-  [B], [Multi-Dimensional Arrays], [Usage of textures throughout entire project (analagous to 2D arrays), managing data between FFT passes], [`shaders/*`],
-  [B], [Simple Mathematical Model], [Box-Muller Transform, gaussian random number generation], [`sim/simdata.rs` line `62` function(s)]
-)
-]
+  [B], [Multi-Dimensional Arrays], [Usage of textures throughout entire project (analogous to 2D arrays), managing data between FFT passes], [`shaders/*`],
+  [B], [Simple Mathematical Model], [Box-Muller Transform, Gaussian random number generation], [`sim/simdata.rs` line `62` function(s)]
 )
 
+#pagebreak()
 == Completeness of Solution
 Everything specified in objectives has been completed, the performance has not been tested on a gtx 1060 level GPU, but given that it is performant at ~40-50fps on an Intel Iris Xe integrated graphics card at 256x256x3, it will be easily performant on a discrete GPU. At a more reasonable (given the system) resolution of 128x128x3, the simulation easily reaches 90+fps, while still looking reasonably good. From the additional features, swell has been included in the spectrum synthesis.
 
 == Coding Style
-I have followed the rust programming conventions and principles for this project, using the result type for error handling where possible. As the vast majority of possible errors come from wgpu/rust-gpu, errors are in majority handled via the pollster and env_logger crates, where any errors comign from wgpu / rust-gpu are passed up the chain and outputted from the standard log using env_logger. Shader code is written following "standard" shader conventions, with notable stylings being an emphasis on defining variables for every interim step, and swizzling vectors / avoiding unncessary abstractions where convenient. Smaller things like manually computing the power where convenient and "pre"computing certain values into variables and reusing them where possible are also done.
+I have followed the rust programming conventions and principles for this project, using the result type for error handling where possible. As the vast majority of possible errors come from wgpu/rust-gpu, errors are in majority handled via the pollster and env_logger crates, where any errors coming from wgpu / rust-gpu are passed up the chain and outputted from the standard log using env_logger. Shader code is written following "standard" shader conventions, with notable stylings being an emphasis on defining variables for every interim step, and swizzling vectors / avoiding unnecessary abstractions where convenient. Smaller things like manually computing the power where convenient and "pre"computing certain values into variables and reusing them where possible are also done.
 
 == Source Code
 === main.rs <main>
@@ -1019,28 +1018,22 @@ I have followed the rust programming conventions and principles for this project
 #pagebreak()
 ==== skybox.rs <skybox>
 #sourcecode("rust", "shaders/src/skybox.rs")
-#pagebreak()
 ==== ui.rs <ui>
 #sourcecode("rust", "shaders/src/ui.rs")
 #pagebreak()
 ==== sim/mod.rs <simmod>
 #sourcecode("rust", "shaders/src/sim/mod.rs")
-#pagebreak()
 ===== evolve_spectra.rs <evolve_spectra>
 #sourcecode("rust", "shaders/src/sim/evolve_spectra.rs")
-#pagebreak()
 ===== fft.rs <shaderfft>
 #sourcecode("rust", "shaders/src/sim/fft.rs")
 #pagebreak()
 ===== initial_spectra.rs <initial_spectra>
 #sourcecode("rust", "shaders/src/sim/initial_spectra.rs")
-#pagebreak()
 ===== process_deltas.rs <process_deltas>
 #sourcecode("rust", "shaders/src/sim/process_deltas.rs")
-#pagebreak()
 === build.rs <build>
 #sourcecode("rust", "build.rs")
-#pagebreak()
 === shared/lib.rs <sharedlib>
 #sourcecode("rust", "shared/src/lib.rs")
 #pagebreak()
@@ -1211,14 +1204,14 @@ All testing timestamps can be seen in testing1.mp4. Those that can be seen in te
 === Renderer Tests
 #test_table(renderer_tests)
 
-=== Pixellation
+=== Pixelation
 #figure(
     align(
       center,
       image("assets/pixellation.png", fit: "contain", width: 50%),
     ),
     caption: [
-      No visible pixellation, at 128x128, zoomed in heavily
+      No visible pixelation, at 128x128, zoomed in heavily
     ]
   )
 #pagebreak()
@@ -1271,10 +1264,14 @@ A demo video is attached "demo.mp4", showcasing the scene in @ocean5 with the sk
     ]
   ) <ocean5>
 == Evaluation Against Criteria
-I believe I have achieved, to at least some degree, every metric set out in the success criteria @criteria. I Do believe that the camera controller can be improved by adding momentum and a cursor lock, as well as the logic related to camera movement during color selection in the UI. I believe that the overall simulation works as intended, and that the PBR Renderer has achieved the goal of looking "physically based".
+I believe I have achieved, to at least some degree, every metric set out in the success criteria @criteria. I do believe that the camera controller can be improved by adding momentum and a cursor lock, as well as the logic related to camera movement during color selection in the UI. I believe that the overall simulation works as intended, and that the PBR Renderer has achieved the goal of looking "physically based".
+
+#pagebreak()
 == Client Feedback
+"This simulation is a very accurate representation of how the real world would behave. The simulation shown across different weather conditions is a nice touch gives me confidence in this programs ability to meet my needs. One thing that I could see being better is colour control. Right now, despite the ocean having different shades, the colours feel muted across the entire scene. Better dynamic range and contrast between the ocean and the skybox would bring this to the next level."
+
 == Tester Feedback
-Overall testers found the ocean to be visually pleasing and that it looked fairly physically based.Below is some feedback from a few testers:
+Overall testers found the ocean to be visually pleasing and that it looked fairly physically based. Below is some feedback from a few testers:
 - "The colors of the ocean work well and really show the detail of the waves"
 - "The realistic visuals and intuitive camera controls result in an overall pleasant viewer experience - I really like how I can choose how rough the waves look, it makes it fun and interactive"
 - "The simulation and rendering are incredibly realistic, and the ability to modify the parameters in real time is very cool. One feature I feel was missing is the ability to change skybox images at runtime, or perhaps using dynamically generated sky colours."

@@ -94,7 +94,6 @@ impl FourierTransform {
             );
             data.pingpong = (data.pingpong + 1) % 2;
         }
-
         for stage in 0..scene.consts.sim.size.ilog2() {
             data.stage = stage;
             self.v_ifft.compute(
@@ -123,7 +122,6 @@ impl FourierTransform {
 pub struct PipelineFFT {
     pipeline: wgpu::ComputePipeline,
 }
-
 impl PipelineFFT {
     pub fn new(
         bind_group_layouts: &[&wgpu::BindGroupLayout],
@@ -162,7 +160,6 @@ impl PipelineFFT {
             timestamp_writes: None,
             label: Some(label),
         });
-
         pass.set_pipeline(&self.pipeline);
         for (i, bind_group) in bind_groups.iter().enumerate() {
             pass.set_bind_group(i as _, *bind_group, &[]);
