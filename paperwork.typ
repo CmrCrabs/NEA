@@ -57,7 +57,6 @@
     #text(18pt, weight: 600, [A-Level Computer Science NEA])
     #v(0.1fr)
     #text(18pt, weight: 500, [Zayaan Azam])
-    #image("assets/ocean.png")
     #v(1.1fr)
   ])
   #v(2fr)
