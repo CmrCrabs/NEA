@@ -53,10 +53,16 @@
   #v(2fr)
   #align(center, [
     #text(23pt, weight: 700, [Real-Time, Empirical, Ocean Simulation & Physically Based Renderer])
-    #v(0.1fr)
-    #text(18pt, weight: 600, [A-Level Computer Science NEA])
-    #v(0.1fr)
-    #text(18pt, weight: 500, [Zayaan Azam])
+    #v(0.3fr)
+    #image("./assets/cover.png", width: 70%, height: 20%)
+    #v(0.3fr)
+    #text(18pt, weight: 600, [Zayaan Azam])
+    #v(0.3fr)
+    #text(18pt, weight: 500, [A-Level Computer Science NEA])
+    #v(0.2fr)
+    #text(16pt, weight: 500, [Hills Road Sixth Form College])
+    #v(0.2fr)
+    #text(16pt, weight: 500, [2025])
     #v(1.1fr)
   ])
   #v(2fr)
@@ -73,10 +79,11 @@
 #page(outline(indent: true, depth: 4))
 
 == Abstract
-// TODO: SYNOPSIS
-// I am developing a blah blah that doesn blah balh
-
-\/\/ synopsis
+This report details the development of a fourier transform based ocean simulation and physically based renderer. The simulation works by synthesizing and evolving an empirical wave spectrum in the frequency domain, and then converting it to the spatial domain using the inverse fast fourier transform. The resultant maps are used to offset the ocean's mesh and compute physically based lighting for the surface.
+\
+The technical implementation uses rust as its language of choice due to its low level control while being memory safe and performant. wgpu is chosen as the graphics library as it is cross platform while providing a reasonable amount control over the GPU, with rustgpu / spir-v used as the shader language.
+\
+The final result(s) can be seen in @results
 = Analysis
 == Client Introduction
 The client is Jahleel Abraham. They are a game developer who require a physically based, performant, configurable simulation of an ocean for use in their game. They also require a physically based lighting model derived from microfacet theory, including PBR specular, and empirical subsurface scattering. Also expected is a fully featured GUI allowing direct control over every input parameter, and a functioning camera controller.
@@ -142,7 +149,7 @@ Jump trajectory created a very detailed video explaining the process of creating
 - Decays foam non-exponentially, using a flat base color for foam
 
 #pagebreak()
-== Success Criteria
+== Success Criteria <criteria>
 +  The application opens with a titled, resizable, movable, and closable OS window that follows OS styling.
 +  A single skybox texture can be loaded from a specified filepath.
 +  The camera can be controlled via mouse input, with left-click activation, full panning, scroll-based zoom, and stable field of view across window resizes.
@@ -1216,7 +1223,7 @@ All testing timestamps can be seen in testing1.mp4. Those that can be seen in te
   )
 #pagebreak()
 = Evaluation
-== Results
+== Results <results>
 A demo video is attached "demo.mp4", showcasing the scene in @ocean5 with the skybox from @ocean1
 #figure(
     align(
@@ -1264,8 +1271,15 @@ A demo video is attached "demo.mp4", showcasing the scene in @ocean5 with the sk
     ]
   ) <ocean5>
 == Evaluation Against Criteria
+I believe I have achieved, to at least some degree, every metric set out in the success criteria @criteria. I Do believe that the camera controller can be improved by adding momentum and a cursor lock, as well as the logic related to camera movement during color selection in the UI. I believe that the overall simulation works as intended, and that the PBR Renderer has achieved the goal of looking "physically based".
 == Client Feedback
-== Evaluation of Feedback
+== Tester Feedback
+Overall testers found the ocean to be visually pleasing and that it looked fairly physically based.Below is some feedback from a few testers:
+- "The colors of the ocean work well and really show the detail of the waves"
+- "The realistic visuals and intuitive camera controls result in an overall pleasant viewer experience - I really like how I can choose how rough the waves look, it makes it fun and interactive"
+- "The simulation and rendering are incredibly realistic, and the ability to modify the parameters in real time is very cool. One feature I feel was missing is the ability to change skybox images at runtime, or perhaps using dynamically generated sky colours."
+== Future Improvements
+For future improvements, I plan on improving the visuals of the simulation. This first and foremost involves adding a bloom pass, wherein I seperate the high light value portions of the screen into a seperate texture, blur them and then composite it back with the actual render. I would then ideally implement a working atmosphere simulation such that I can simulate a day / night cycle and some other interesting situations. I would also consider optimising the IFFT even further, but I am unsure how to do that as of now.
 
 #pagebreak()
 = Bibliography
