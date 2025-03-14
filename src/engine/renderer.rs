@@ -40,7 +40,7 @@ impl Renderer {
             label: None,
         });
 
-        let hdri = Texture::from_file(device, queue, "HDRI", "./assets/industrial.exr");
+        let hdri = Texture::from_file(device, queue, "HDRI", "./assets/kloofendal.exr");
 
         let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: None,

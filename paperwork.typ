@@ -479,7 +479,6 @@ If given enough time I would like to implement the following:
   + the cameras view direction does not change upon window resize
 + the user can only control the camera if the UI is not selected
 + the user can access a user interface
-  + the user can resize the UI
   + the user can move the UI
   + the user can collapse the UI
   + the user can edit colors using the UI
@@ -1048,11 +1047,177 @@ I have followed the rust programming conventions and principles for this project
 #pagebreak()
 = Testing
 == Testing Strategy
-== Testing Table
+The testing will be done primarily with a video, as the ocean is best showcased in movement.
+== Testing Table(s)
 
+#let test_table(tests) = {
+  table(
+    columns: (auto, auto, auto),
+    inset: 10pt,
+    align: (left, center, left),
+    fill : (x , y) => 
+    if y == 0 { rgb("#F0F4F4") },
+    stroke: 0.75pt,
+    [*Test Description*], [*Status*], [*Timestamp*],
+    ..tests.slice(2).flatten()
+    //..tests.flatten()
+  )
+}
+
+#let window_tests = (
+  ([OS window created on startup], [Pass], [0:08]),
+  ([Window follows OS conventions and compositor styling], [Pass], [0:08]),
+  ([Window can be resized without breaking simulation], [Pass], [0:11]),
+  ([Window can be moved], [Pass], [0:09]),
+  ([Window can move between monitors without breaking], [Pass], [0:14]),
+  ([Window can be closed by pressing escape key], [Pass], [6:24]),
+)
+
+#let mesh_tests = (
+  ([Multiple instances of mesh visible], [Pass], [0:11]),
+  ([User can control number of instances], [Pass], [2:41]),
+  ([User can resize mesh], [Pass], [2:52]),
+)
+
+#let ui_tests = (
+  ([UI can be moved], [Pass], [0:18]),
+  ([UI displays FPS], [Pass], [0:18]),
+  ([UI displays simulation resolution], [Pass], [0:18]),
+  ([UI displays time elapsed], [Pass], [0:18]),
+  ([UI can be collapsed], [Pass], [0:23]),
+  ([UI allows color editing], [Pass], [4:24]),
+  ([UI allows slider control], [Pass], [throughout]),
+)
+
+#let skybox_tests = (
+  ([Skybox transforms correctly with camera view direction changes], [Pass], [6:13]),
+  ([Skybox transforms correctly with camera zoom changes], [Pass], [(2) 0:44]),
+  ([Skybox transforms correctly with window resize], [Pass], [0:11]),
+  ([Sun is interpolated into skybox], [Pass], [0:11]),
+  ([Sun color is user adjustable], [Pass], [0:29]),
+  ([Sun X direction is user adjustable], [Pass], [0:33]),
+  ([Sun Y direction is user adjustable], [Pass], [0:36]),
+  ([Sun Z direction is user adjustable], [Pass], [0:40]),
+  ([Sun angle is user adjustable], [Pass], [0:40]),
+  ([Sun distance is user adjustable], [Pass], [0:43]),
+  ([Sun size is user adjustable], [Pass], [0:46]),
+  ([Sun falloff factor is user adjustable], [Pass], [0:49]),
+  ([Sun position is correct relative to light vector], [Pass], [0:33]),
+  ([Sun transforms correctly with camera view direction changes], [Pass], [6:13]),
+  ([Sun transforms correctly with camera zoom changes], [Pass], [(2) 0:44]),
+  ([Sun transforms correctly with window resize], [Pass], [0:12]),
+)
+
+#let simulation_tests = (
+  ([Performance above 60fps on mid-range hardware (GTX 1060+)], [Pass], [0:11]),
+  ([Simulation has sensible default parameters], [Pass], [0:11]),
+  ([Input parameters clamped to prevent simulation breakage], [Pass], [throughout]),
+  ([No obvious visible tiling in simulation], [Pass], [0:11]),
+  ([Simulation has 3 lengthscales with user control], [Pass], [1:33]),
+  ([User can control all 3 low frequency cutoffs], [Pass], [1:33]),
+  ([User can control all 3 high frequency cutoffs], [Pass], [1:33]),
+  ([User can adjust instance quantity], [Pass], [2:41]),
+  ([User can adjust tile size], [Pass], [2:52]),
+  ([User can adjust simulation resolution], [Pass], [0:01]),
+  ([Foam color is user controllable], [Pass], [(2) 0:03]),
+  ([Foam decay rate is user controllable], [Pass], [2:16]),
+  ([Foam visibility amount is user controllable], [Pass], [2:22]),
+  ([Breaking wave foam injection threshold is user controllable], [Pass], [2:29]),
+  ([Breaking wave foam injection amount is user controllable], [Pass], [2:33]),
+  ([Ocean depth is user adjustable], [Pass], [1:01]),
+  ([Gravitational field strength is user adjustable], [Pass], [1:05]),
+  ([Wind speed is user adjustable], [Pass], [1:09]),
+  ([Wind angle is user adjustable], [Pass], [1:16]),
+  ([Fetch is user adjustable], [Pass], [1:19]),
+  ([Choppiness is user adjustable], [Pass], [1:24]),
+  ([Swell amount is user adjustable], [Pass], [1:27]),
+  ([Swell computation integration step is user adjustable], [Pass], [2:58]),
+  ([Ocean surface height offset is user adjustable], [Pass], [0:52]),
+)
+
+#let renderer_tests = (
+  ([Displacement map sampled without visible pixelation], [Pass], [below image]),
+  ([Normal map sampled without visible pixelation], [Pass], [below image]),
+  ([Foam map sampled without visible pixelation], [Pass], [below image]),
+  ([Subsurface scattering visible and user controllable], [Pass], [4:15]),
+  ([Scatter color is user adjustable], [Pass], [4:25]),
+  ([Bubble color is user adjustable], [Pass], [4:36]),
+  ([Bubble density is user adjustable], [Pass], [5:10]),
+  ([Height attenuation factor is user adjustable], [Pass], [4:56]),
+  ([Reflection strength is user adjustable], [Pass], [5:00]),
+  ([Diffuse lighting strength is user adjustable], [Pass], [5:03]),
+  ([Ambient lighting strength is user adjustable], [Pass], [5:06]),
+  ([Environment reflections are visible], [Pass], [4:15]),
+  ([Reflection strength is user adjustable], [Pass], [6:01]),
+  ([Fresnel reflectance affects reflections visibly], [Pass], [4:15]),
+  ([Water refractive index is user adjustable], [Pass], [3:50]),
+  ([Air refractive index is user adjustable], [Pass], [3:57]),
+  ([Fresnel shine is user adjustable], [Pass], [4:01]),
+  ([Fresnel effect scale factor is user adjustable], [Pass], [4:05]),
+  ([Fresnel normals scale factor is user adjustable], [Pass], [4:10]),
+  ([Non-PBR specular reflections are visible], [Pass], [3:07]),
+  ([PBR/non-PBR specular toggle works], [Pass], [3:07]),
+  ([Surface shininess is user adjustable], [Pass], [5:55]),
+  ([PBR specular reflections are visible and user controllable], [Pass], [3:10]),
+  ([Specular scale factor is user adjustable], [Pass], [3:10]),
+  ([PBR fresnel scale factor is user adjustable], [Pass], [3:19]),
+  ([PBR cutoff low is user adjustable], [Pass], [3:23]),
+  ([Water roughness is user adjustable], [Pass], [3:28]),
+  ([Foam roughness factor is user adjustable], [Pass], [3:40]),
+  ([Distance fog is visible and user controllable], [Pass], [5:22]),
+  ([Fog color is user adjustable], [Pass], [(2) 0:24]),
+  ([Fog density is user adjustable], [Pass], [5:22]),
+  ([Fog distance offset is user adjustable], [Pass], [5:27]),
+  ([Fog falloff factor is user adjustable], [Pass], [5:33]),
+  ([Fog height offset is user adjustable], [Pass], [5:43]),
+)
+
+#let camera_tests = (
+  ([Camera render distance sufficient to see entire ocean], [Pass], [0:11]),
+  ([Camera FOV unchanged on window resize], [Pass], [0:11]),
+  ([Camera view direction unchanged on window resize], [Pass], [0:11]),
+  ([Camera only controllable when left-click held down], [Pass], [6:10]),
+  ([Camera pitch controlled by mouse movement], [Pass], [6:10]),
+  ([Camera yaw controlled by mouse movement], [Pass], [6:10]),
+  ([Camera zoom controlled by scroll wheel], [Pass], [(2) 0:44]),
+  ([Camera controllable when UI not selected], [Pass], [6:10]),
+)
+All testing timestamps can be seen in testing1.mp4. Those that can be seen in testing2.mp4 are marked with (2) in the timestamps. The closing and restarting of the window is me restarting it to reset settings. Alot of parameter tweaking is required for the ocean to look good, adjusting individual parameters without compensating with others generally does not lead to a visually pleasing ocean.
+=== Window Tests
+#test_table(window_tests)
+
+=== Mesh Tests
+#test_table(mesh_tests)
+
+=== Skybox Tests
+#test_table(skybox_tests)
+
+=== Camera Tests
+#test_table(camera_tests)
+
+=== UI Tests
+#test_table(ui_tests)
+
+=== Simulation Tests
+#test_table(simulation_tests)
+
+=== Renderer Tests
+#test_table(renderer_tests)
+
+=== Pixellation
+#figure(
+    align(
+      center,
+      image("assets/pixellation.png", fit: "contain", width: 50%),
+    ),
+    caption: [
+      No visible pixellation, at 128x128, zoomed in heavily
+    ]
+  )
 #pagebreak()
 = Evaluation
 == Results
+A demo video is attached "demo.mp4", showcasing the scene in @ocean5 with the skybox from @ocean1
 #figure(
     align(
       center,
@@ -1061,7 +1226,7 @@ I have followed the rust programming conventions and principles for this project
     caption: [
       Calm Ocean. $L_0 = 40$, $L_1 = 106$, $L_2 = 180$, $U_10 = 5$, $F = 4000$, $lambda = 0.2$, $h = 500$
     ]
-  )
+  ) <ocean1>
 #figure(
     align(
       center,
@@ -1097,7 +1262,7 @@ I have followed the rust programming conventions and principles for this project
     caption: [
       Early Morning Ocean. $L_0 = 20$, $L_1 = 124$, $L_2 = 256$, $U_10 = 0.5$, $F = 100000$, $lambda = 0.1$, $h = 30$
     ]
-  )
+  ) <ocean5>
 == Evaluation Against Criteria
 == Client Feedback
 == Evaluation of Feedback

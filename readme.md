@@ -1,6 +1,8 @@
 # A real time physically based ocean simulation and renderer
 
-90fps at 512x512x1 on an intel integrated iris xe gpu
+~50fps at 256x256x3 on an intel integrated iris xe gpu
+
+[demo](./assets/demo.mp4)
 
 - you need to download a hdri and store it at assets/<hdri_name>.exr
 - currently defaulting to "kloofendal.exr"
