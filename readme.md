@@ -3,6 +3,7 @@
 ~50fps at 256x256x3 on an intel integrated iris xe gpu
 
 [demo](./assets/demo.mp4)
+<video src='./assets/demo.mp4' width=180/>
 
 - you need to download a hdri and store it at assets/<hdri_name>.exr
 - currently defaulting to "kloofendal.exr"
