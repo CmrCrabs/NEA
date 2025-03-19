@@ -12,7 +12,7 @@ https://polyhaven.com/a/kloofendal_43d_clear_puresky
 
 ## Previews
 
-[calm](./assets/ocean.png)
-[stormy](./assets/ocean4.png)
-[tropical?](./assets/ocean5.png)
-[overhead](./assets/ocean3.png)
+![calm](./assets/ocean.png)
+![stormy](./assets/ocean4.png)
+![tropical?](./assets/ocean5.png)
+![overhead](./assets/ocean3.png)
